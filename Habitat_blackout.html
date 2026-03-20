@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>⚡ HABITAT BLACKOUT — ATLAS Mission 5</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg0:#04060d; --bg1:#0b1224; --bg2:#111a31;
+  --text:#eef4ff; --muted:rgba(225,235,255,.72);
+  --line:rgba(255,255,255,.11); --card:rgba(255,255,255,.05);
+  --cyan:#66e3ff; --gold:#ffd166; --green:#48d597; --red:#ff6b6b; --orange:#ff9f43; --violet:#a78bfa;
+  --shadow:0 12px 28px rgba(0,0,0,.35); --r:18px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --ui: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 20% 10%, #182445 0%, var(--bg0) 55%),var(--bg0);color:var(--text);font-family:var(--ui);overflow:hidden}
+button,input,select{font:inherit}
+.hidden{display:none !important}
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 390px;
+  grid-template-rows:auto auto 1fr auto;
+}
+@media (max-width:1080px){
+  html,body{overflow:auto}
+  .app{height:auto;min-height:100vh;grid-template-columns:1fr;grid-template-rows:auto auto minmax(50vh,58vh) auto auto}
+  .side{border-left:none;border-top:1px solid var(--line)}
+}
+header{
+  grid-column:1/-1;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:10px 12px;
+  background:linear-gradient(180deg, rgba(10,16,30,.96), rgba(10,16,30,.84));
+  border-bottom:1px solid var(--line);
+  position:relative;z-index:3;
+}
+.title{display:flex;align-items:center;gap:10px;font-family:var(--mono);letter-spacing:.05em}
+.badge{padding:4px 9px;border-radius:999px;border:1px solid rgba(102,227,255,.35);background:rgba(102,227,255,.12);font-size:.72rem;color:var(--cyan)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.stat{
+  min-width:82px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.04);
+  border:1px solid var(--line);text-align:center
+}
+.stat .v{font-family:var(--mono);font-size:1rem}
+.stat .k{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.formula-strip{
+  grid-column:1/-1;padding:8px 12px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  font-family:var(--mono);display:flex;gap:12px;flex-wrap:wrap;align-items:center
+}
+.pill{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.04);font-size:.82rem}
+.stage{position:relative;min-height:420px;background:
+ radial-gradient(900px 450px at 50% 0%, rgba(167,139,250,.10), transparent 60%),
+ radial-gradient(600px 400px at 0% 100%, rgba(72,213,151,.08), transparent 55%),
+ linear-gradient(180deg, rgba(4,6,13,.7), rgba(4,6,13,.95))}
+canvas{width:100%;height:100%;min-height:420px;display:block}
+.stageOverlay{
+  position:absolute;left:10px;bottom:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none
+}
+.toast{
+  background:rgba(0,0,0,.42);border:1px solid var(--line);border-radius:999px;padding:7px 10px;
+  color:rgba(240,244,255,.9);font-size:.78rem;backdrop-filter:blur(4px)
+}
+.side{
+  border-left:1px solid var(--line);background:linear-gradient(180deg, rgba(10,16,30,.78), rgba(10,16,30,.58));
+  padding:12px;overflow:auto
+}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;
+  box-shadow:var(--shadow);margin-bottom:10px
+}
+.card h3{
+  margin:0 0 10px 0;font-size:.84rem;letter-spacing:.11em;text-transform:uppercase;font-family:var(--mono);
+  color:rgba(240,244,255,.92)
+}
+.mini{color:var(--muted);font-size:.82rem;line-height:1.35}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:7px 0;border-top:1px dashed rgba(255,255,255,.10)}
+.row:first-of-type{border-top:none}
+.row .k{color:var(--muted);font-size:.82rem}
+.row .v{font-family:var(--mono);text-align:right}
+.route-list,.profile-list{display:grid;gap:8px}
+.pick{
+  width:100%;text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);
+  padding:10px 12px;border-radius:14px;cursor:pointer;transition:.16s transform,.16s border-color,.16s background
+}
+.pick:hover{transform:translateY(-1px)}
+.pick.active{border-color:rgba(102,227,255,.45);background:rgba(102,227,255,.10)}
+.pick small{display:block;color:var(--muted);margin-top:5px}
+.kbd{font-family:var(--mono);padding:2px 6px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:.75rem}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{
+  border:none;cursor:pointer;border-radius:14px;padding:11px 12px;letter-spacing:.05em;font-family:var(--mono);
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);transition:.16s transform,.16s opacity,.16s background
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.primary{background:linear-gradient(135deg, rgba(255,209,102,.96), rgba(255,153,0,.95));color:#111827;border-color:rgba(255,209,102,.65)}
+.btn.hint{background:rgba(102,227,255,.10);border-color:rgba(102,227,255,.30)}
+.btn.danger{background:rgba(255,107,107,.11);border-color:rgba(255,107,107,.32)}
+.btn.full{grid-column:1/-1}
+.statusline{margin-top:8px;font-size:.9rem;line-height:1.35}
+
+.step-guide{display:grid;gap:8px}
+.stepItem{
+  display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:flex-start;
+  padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)
+}
+.stepNum{
+  width:28px;height:28px;border-radius:999px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:.82rem;border:1px solid var(--line);background:rgba(255,255,255,.05)
+}
+.stepItem .stepText{font-size:.84rem;line-height:1.35;color:var(--muted)}
+.stepItem.now{border-color:rgba(102,227,255,.34);background:rgba(102,227,255,.08)}
+.stepItem.now .stepNum{border-color:rgba(102,227,255,.4);background:rgba(102,227,255,.16);color:var(--cyan)}
+.stepItem.done{border-color:rgba(72,213,151,.34);background:rgba(72,213,151,.08)}
+.stepItem.done .stepNum{border-color:rgba(72,213,151,.4);background:rgba(72,213,151,.16);color:var(--green)}
+.winBox{
+  margin-top:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,209,102,.24);
+  background:rgba(255,209,102,.08);font-size:.83rem;line-height:1.35
+}
+.good{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--orange)} .accent{color:var(--cyan)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{padding:7px 6px;border-top:1px dashed rgba(255,255,255,.10);text-align:right}
+th:first-child, td:first-child{text-align:left}
+tfoot td{font-weight:700}
+.footer{
+  grid-column:1/-1;padding:9px 12px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(10,16,30,.8);font-size:.8rem;color:var(--muted)
+}
+.overlay{
+  position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:rgba(3,6,12,.76);
+  backdrop-filter:blur(6px);z-index:20
+}
+.modal{
+  width:min(980px,96vw);max-height:min(92vh,920px);overflow:auto;border-radius:24px;
+  background:linear-gradient(180deg, rgba(13,19,35,.98), rgba(9,14,26,.98));
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.5);padding:18px
+}
+.modal h1,.modal h2,.modal h3{margin:.2rem 0 .7rem 0}
+.modal-grid{display:grid;grid-template-columns:1.2fr .9fr;gap:14px}
+@media (max-width:900px){.modal-grid{grid-template-columns:1fr}}
+.story{
+  padding:14px;border-radius:18px;border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(102,227,255,.08), rgba(102,227,255,.03));line-height:1.45
+}
+.story .who{color:var(--gold);font-family:var(--mono)}
+.story .em{color:var(--cyan)}
+.story .par{color:var(--green);font-family:var(--mono)}
+.optionRow{display:flex;gap:8px;flex-wrap:wrap}
+.toggle{
+  border:none;cursor:pointer;padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);color:var(--text)
+}
+.toggle.active{background:rgba(102,227,255,.12);border-color:rgba(102,227,255,.34)}
+input[type="number"]{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:10px 12px
+}
+.note{font-size:.79rem;color:var(--muted);line-height:1.32}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:720px){.two-col{grid-template-columns:1fr}}
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:820px){.analysis-grid{grid-template-columns:1fr}}
+.metric{
+  background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:10px 12px
+}
+.metric .big{font-family:var(--mono);font-size:1.25rem}
+.bar{
+  height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08)
+}
+.bar > span{display:block;height:100%;background:linear-gradient(90deg, rgba(102,227,255,.95), rgba(72,213,151,.95))}
+.choiceBtns{display:flex;gap:8px;flex-wrap:wrap}
+.log{max-height:154px;overflow:auto;font-size:.8rem;line-height:1.35;padding-right:6px}
+.log-entry{padding:6px 0;border-top:1px dashed rgba(255,255,255,.08)}
+.log-entry:first-child{border-top:none}
+textarea{
+  width:100%;min-height:90px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);
+  border-radius:14px;padding:12px;resize:vertical
+}
+.smallchart{display:grid;gap:8px}
+.attemptBar{display:grid;grid-template-columns:70px 1fr 62px;gap:8px;align-items:center}
+.attemptBar .bar{height:12px}
+.hr{height:1px;background:rgba(255,255,255,.10);margin:10px 0}
+.help-list{margin:.3rem 0 0 1rem;color:var(--muted);line-height:1.45}
+.flash-good{animation:okflash .7s ease}
+.flash-bad{animation:badflash .7s ease}
+@keyframes okflash{0%{box-shadow:0 0 0 rgba(72,213,151,0)}35%{box-shadow:0 0 24px rgba(72,213,151,.35)}100%{box-shadow:0 0 0 rgba(72,213,151,0)}}
+@keyframes badflash{0%{box-shadow:0 0 0 rgba(255,107,107,0)}35%{box-shadow:0 0 26px rgba(255,107,107,.38)}100%{box-shadow:0 0 0 rgba(255,107,107,0)}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+<div id="introOverlay" class="overlay">
+  <div class="modal">
+    <div class="modal-grid">
+      <div>
+        <h1 id="introTitle"></h1>
+        <div id="introDialogue" class="story"></div>
+        <div class="card" style="margin-top:12px">
+          <h3 id="learningTargetLabel"></h3>
+          <div id="learningTargetText" class="mini"></div>
+          <div class="hr"></div>
+          <h3 id="bigIdeaLabel"></h3>
+          <div id="bigIdeaText" class="mini"></div>
+          <div class="hr"></div>
+          <h3 id="modelLabel"></h3>
+          <div id="modelText" class="mini"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h3 id="difficultyLabel"></h3>
+          <div class="optionRow" id="difficultyPicks"></div>
+          <div class="hr"></div>
+          <div class="row"><div class="k" id="misconceptionLabel"></div><div class="v" id="misconceptionText"></div></div>
+          <div class="row"><div class="k" id="subideasLabel"></div><div class="v" id="subideasText"></div></div>
+          <div class="row"><div class="k" id="controlsLabel"></div><div class="v" id="controlsText"></div></div>
+          <div class="row"><div class="k" id="accessLabel"></div><div class="v" id="accessText"></div></div>
+          <div class="row"><div class="k" id="hintCostLabel"></div><div class="v" id="hintCostText"></div></div>
+          <p class="note" id="introHintNote" style="margin-top:10px"></p>
+        </div>
+        <div class="btns">
+          <button class="btn" id="reduceMotionBtn"></button>
+          <button class="btn primary" id="startBtn"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pauseOverlay" class="overlay hidden">
+  <div class="modal">
+    <h2 id="pauseTitle"></h2>
+    <p id="pauseSubtitle" class="mini"></p>
+    <div class="analysis-grid" style="margin-top:12px">
+      <div class="card">
+        <h3 id="computePanelTitle"></h3>
+        <p id="computeHelp" class="mini"></p>
+        <div class="two-col" style="margin-top:10px">
+          <div>
+            <label id="guessILabel" for="guessI"></label>
+            <input id="guessI" type="number" step="0.1" inputmode="decimal"/>
+          </div>
+          <div>
+            <label id="guessVLabel" for="guessV"></label>
+            <input id="guessV" type="number" step="0.1" inputmode="decimal"/>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label id="guessPLabel" for="guessP"></label>
+          <input id="guessP" type="number" step="1" inputmode="decimal"/>
+        </div>
+        <div class="btns" style="margin-top:12px">
+          <button class="btn primary" id="checkMathBtn"></button>
+          <button class="btn" id="resumeBtn"></button>
+        </div>
+        <div id="notebookResult" class="statusline" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <h3 id="pauseMissionTitle"></h3>
+        <div class="mini" id="pauseMissionText"></div>
+        <div class="hr"></div>
+        <div class="mini" id="formulaNote"></div>
+        <ul class="help-list" id="formulaList"></ul>
+        <div class="hr"></div>
+        <div class="mini" id="antiRandomText"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay hidden">
+  <div class="modal">
+    <h2 id="endTitle"></h2>
+    <div id="endStatus" class="statusline"></div>
+    <div class="analysis-grid" style="margin-top:12px">
+      <div class="card">
+        <h3 id="resultsTitle"></h3>
+        <div class="metric"><div class="mini" id="scoreLabel"></div><div class="big" id="finalScore"></div></div>
+        <div class="two-col" style="margin-top:10px">
+          <div class="metric"><div class="mini" id="medalLabel"></div><div class="big" id="finalMedal"></div></div>
+          <div class="metric"><div class="mini" id="errorLabel"></div><div class="big" id="finalError"></div></div>
+        </div>
+        <div class="two-col" style="margin-top:10px">
+          <div class="metric"><div class="mini" id="attemptsLabel"></div><div class="big" id="finalAttempts"></div></div>
+          <div class="metric"><div class="mini" id="reserveLabel"></div><div class="big" id="finalReserve"></div></div>
+        </div>
+        <div class="two-col" style="margin-top:10px">
+          <div class="metric"><div class="mini" id="recoveryLabel"></div><div class="big" id="finalRecovery"></div></div>
+          <div class="metric"><div class="mini" id="missionGradeLabel"></div><div class="big" id="finalMissionGrade"></div></div>
+        </div>
+        <div class="hr"></div>
+        <div class="smallchart" id="attemptChart"></div>
+      </div>
+
+      <div class="card">
+        <h3 id="analysisTitle"></h3>
+        <div class="mini" id="analysisText"></div>
+        <div class="hr"></div>
+        <div class="row"><div class="k" id="theoryVsSimTitle"></div><div class="v" id="theoryVsSimValue"></div></div>
+        <div class="row"><div class="k" id="bestChoiceLabel"></div><div class="v" id="bestChoiceValue"></div></div>
+        <div class="row"><div class="k" id="diagnosisLabel"></div><div class="v" id="diagnosisValue"></div></div>
+        <div class="hr"></div>
+        <h3 id="rubricTitle"></h3>
+        <div class="mini" id="rubricHelp"></div>
+        <div class="row"><div class="k" id="rubLifeLabel"></div><div class="v" id="rubLifeVal"></div></div>
+        <div class="row"><div class="k" id="rubCalcLabel"></div><div class="v" id="rubCalcVal"></div></div>
+        <div class="row"><div class="k" id="rubReserveLabel"></div><div class="v" id="rubReserveVal"></div></div>
+        <div class="row"><div class="k" id="rubRecoveryLabel"></div><div class="v" id="rubRecoveryVal"></div></div>
+      </div>
+    </div>
+
+    <div class="analysis-grid" style="margin-top:12px">
+      <div class="card">
+        <h3 id="misTitle"></h3>
+        <p id="misText" class="mini"></p>
+        <div class="choiceBtns" style="margin-top:10px">
+          <button class="btn" id="misTrueBtn"></button>
+          <button class="btn" id="misFalseBtn"></button>
+        </div>
+        <div id="misFeedback" class="statusline" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <h3 id="reflectionTitle"></h3>
+        <p id="reflectionText" class="mini"></p>
+        <textarea id="reflectionBox"></textarea>
+      </div>
+    </div>
+
+    <div class="btns" style="margin-top:12px">
+      <button class="btn" id="retryBtn"></button>
+      <button class="btn primary" id="newMissionBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <header>
+    <div class="title">
+      <span>⚡ <span id="headerTitle"></span></span>
+      <span class="badge" id="headerBadge"></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="missionVal">1</div><div class="k" id="missionStatLabel"></div></div>
+      <div class="stat"><div class="v" id="attemptVal">0</div><div class="k" id="attemptStatLabel"></div></div>
+      <div class="stat"><div class="v" id="scoreVal">100</div><div class="k" id="scoreStatLabel"></div></div>
+      <div class="stat"><div class="v" id="timerVal">--</div><div class="k" id="timerStatLabel"></div></div>
+    </div>
+  </header>
+
+  <div class="formula-strip">
+    <span class="pill">V = IR</span>
+    <span class="pill">P = VI</span>
+    <span class="pill">P = I²R</span>
+    <span class="pill">1 / R<sub>parallel</sub> = Σ(1 / R<sub>i</sub>)</span>
+    <span class="pill">V<sub>bus</sub> = V<sub>s</sub> · R<sub>parallel</sub> / (R<sub>line</sub> + R<sub>parallel</sub>)</span>
+  </div>
+
+  <section class="stage">
+    <canvas id="gameCanvas" width="1200" height="760"></canvas>
+    <div class="stageOverlay">
+      <div class="toast" id="toastLine1"></div>
+      <div class="toast" id="toastLine2"></div>
+      <div class="toast" id="toastLine3"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <h3 id="stepsTitle"></h3>
+      <div id="stepGuide" class="step-guide"></div>
+      <div id="winBox" class="winBox"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="objectiveTitle"></h3>
+      <div class="row"><div class="k" id="reactorLabel"></div><div class="v" id="reactorVal"></div></div>
+      <div class="row"><div class="k" id="batteryLabel"></div><div class="v" id="batteryVal"></div></div>
+      <div class="row"><div class="k" id="lifeThresholdLabel"></div><div class="v" id="lifeThresholdVal"></div></div>
+      <div class="row"><div class="k" id="busVoltageLabel"></div><div class="v" id="busVoltageVal"></div></div>
+      <div class="statusline" id="objectiveText"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="routeTitle"></h3>
+      <div id="routeList" class="route-list"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="profileTitle"></h3>
+      <div id="profileList" class="profile-list"></div>
+      <p class="note" id="profileNote"></p>
+    </div>
+
+    <div class="card">
+      <h3 id="candidateTitle"></h3>
+      <table>
+        <thead>
+          <tr><th id="metricHead"></th><th id="predHead"></th><th id="actualHead"></th></tr>
+        </thead>
+        <tbody>
+          <tr><td id="rowITotalLabel">I total (A)</td><td id="predI">—</td><td id="actI">—</td></tr>
+          <tr><td id="rowVBusLabel">V bus (V)</td><td id="predV">—</td><td id="actV">—</td></tr>
+          <tr><td id="rowPLifeLabel">P life (W)</td><td id="predP">—</td><td id="actP">—</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td id="meanErrLabel"></td><td colspan="2" id="meanErrVal">—</td></tr>
+        </tfoot>
+      </table>
+      <div class="statusline" id="candidateStatus"></div>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn" id="testBtn"></button>
+        <button class="btn primary" id="commitBtn"></button>
+        <button class="btn" id="pauseBtn"></button>
+        <button class="btn hint" id="hintBtn"></button>
+        <button class="btn danger full" id="resetBtn"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="telemetryTitle"></h3>
+      <div class="row"><div class="k" id="routeRLabel"></div><div class="v" id="routeRVal">—</div></div>
+      <div class="row"><div class="k" id="fuseLabel"></div><div class="v" id="fuseVal">—</div></div>
+      <div class="row"><div class="k" id="eqRLabel"></div><div class="v" id="eqRVal">—</div></div>
+      <div class="row"><div class="k" id="loadsOnLabel"></div><div class="v" id="loadsOnVal">—</div></div>
+      <div class="row"><div class="k" id="reserveNowLabel"></div><div class="v" id="reserveNowVal">—</div></div>
+      <div class="statusline" id="mainStatus"></div>
+      <div class="hr"></div>
+      <div class="mini" id="jokeLine"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="logTitle"></h3>
+      <div id="log" class="log"></div>
+    </div>
+  </aside>
+
+  <div class="footer">
+    <div id="footerLeft"></div>
+    <div id="footerRight"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const I18N = {
+  en: {
+    introTitle: 'HABITAT BLACKOUT — Mission 5',
+    introDialogue:
+      '<span class="who">FLIGHT:</span> “Cascading fault on the habitat bus. Life support is dimming.”<br>' +
+      '<span class="who">NEWTON:</span> “Electricity is not vibes. Do the numbers.”<br>' +
+      '<span class="who">YOU:</span> “Route resistance, fuse margin, battery reserve. Copy. Also… nobody breathe dramatically.”',
+    learningTargetLabel: 'Learning Target',
+    learningTargetText: 'Use Ohm’s law, power relations, and series/parallel reasoning to keep life support online without tripping a fuse or draining the backup battery.',
+    bigIdeaLabel: 'Big Idea Hook',
+    bigIdeaText: 'Big Idea #5: Astronomy benefits from and stimulates technology development. Space exploration works only when the engineering systems work.',
+    modelLabel: 'Model / Assumptions',
+    modelText: 'DC backup bus, resistive loads, one active reroute path, line resistance in series with a parallel load network. We ignore battery internal-resistance changes and transient spikes. SI units: V, A, W, Ω.',
+    difficultyLabel: 'Difficulty',
+    stepsTitle: 'Mission Steps',
+    step1: 'Choose one reroute path (A, B, or C). Compare line resistance and fuse limit.',
+    step2: 'Choose one load profile. More active systems mean more current and more voltage drop.',
+    step3: 'Open the notebook. Calculate I total, V bus, and P life. Then press CHECK MY MATH.',
+    step4: 'Read the Candidate Check table, then commit only if the route looks safe.',
+    winRule: 'You win if I_total stays below the fuse, life support stays at or above 500 W, and battery reserve stays non-negative until reboot.',
+    misconceptionLabel: 'Misconception target',
+    misconceptionText: '“Current gets used up” and “the shortest reroute is always best.”',
+    subideasLabel: 'Big Idea support',
+    subideasText: '#5 technology matters • spacecraft survival depends on real systems, not movie buttons',
+    controlsLabel: 'Controls',
+    controlsText: 'Space/Enter: test or commit • P: pause notebook • R: reset • H: hint',
+    accessLabel: 'Accessibility',
+    accessText: 'Keyboard + touch buttons + route tap on canvas + reduced motion toggle',
+    hintCostLabel: 'Hint penalty',
+    hintCostText: '-5 score each',
+    introHintNote: 'Tip: open PAUSE / COMPUTE before committing. Thinking beats random reroutes.',
+    reduceMotionOn: 'REDUCED MOTION: OFF',
+    reduceMotionOff: 'REDUCED MOTION: ON',
+    startBtn: 'START MISSION',
+    pauseTitle: 'PAUSE & COMPUTE',
+    pauseSubtitle: 'Use the mission notebook before you commit. A clicked switch is not a solved circuit.',
+    computePanelTitle: 'Mission Notebook',
+    computeHelp: 'Enter your predicted total current, bus voltage, and life-support power for the currently selected route + load profile. Then check your math.',
+    guessILabel: 'Your I total (A)',
+    guessVLabel: 'Your V bus (V)',
+    guessPLabel: 'Your P life support (W)',
+    checkMathBtn: 'CHECK MY MATH',
+    resumeBtn: 'RESUME',
+    pauseMissionTitle: 'Notebook Reminder',
+    pauseMissionText: 'Life support survives only if the selected path can carry the current, keep V_bus high enough, and leave enough battery reserve until the reactor restarts.',
+    formulaNote: 'Use these classroom relations:',
+    antiRandomText: 'Anti-random rule: route choice and load profile are your variables. Wrong logic causes visible mission consequences.',
+    objectiveTitle: 'Mission Facts',
+    reactorLabel: 'Reactor reboot in',
+    batteryLabel: 'Backup battery',
+    lifeThresholdLabel: 'Life-support minimum',
+    busVoltageLabel: 'Source bus',
+    objectiveText: 'This is an electrical rescue mission: compare route resistance, fuse limit, and battery use until reactor reboot.',
+    routeTitle: 'Reroute Paths',
+    profileTitle: 'Load Profile',
+    profileNote: 'Less load means less current and less voltage drop — but slower recovery after reboot.',
+    candidateTitle: 'Candidate Check',
+    metricHead: 'Metric',
+    predHead: 'Predicted',
+    actualHead: 'Actual',
+    meanErrLabel: 'Mean error',
+    telemetryTitle: 'Telemetry',
+    routeRLabel: 'Line resistance',
+    fuseLabel: 'Fuse limit',
+    eqRLabel: 'Parallel load R',
+    loadsOnLabel: 'Active loads',
+    reserveNowLabel: 'Battery after reboot',
+    testBtn: 'STEP 3: OPEN NOTEBOOK',
+    commitBtn: 'STEP 4: COMMIT REROUTE',
+    pauseBtn: 'HOW TO PLAY',
+    hintBtn: 'HINT (-5)',
+    resetBtn: 'RESET MISSION',
+    missionStatLabel: 'Mission',
+    attemptStatLabel: 'Attempts',
+    scoreStatLabel: 'Score',
+    timerStatLabel: 'Reboot',
+    headerTitle: 'HABITAT BLACKOUT',
+    headerBadge: 'ATLAS • ENGLISH-ONLY v1',
+    logTitle: 'Mission Log',
+    footerLeft: 'Space: TEST • Enter: COMMIT • P: NOTEBOOK • R: RESET • H: HINT',
+    footerRight: 'Big Idea #5 • V = IR • No hard-coded magic • Ohm is watching 👀',
+    mainStatusReady: 'Step 1: choose a route. Step 2: choose a load profile. Step 3: open the notebook and calculate before you commit.',
+    mainStatusPaused: 'Paused. Notebook open.',
+    notebookMissing: 'Next move: open the notebook, enter your predicted I total, V bus, and P life, then press CHECK MY MATH.',
+    notebookOk: 'Notebook checked. Your calculation error is {x}%.',
+    notebookGreat: 'Notebook check complete. Nice! Your mean error is {x}%.',
+    notebookOops: 'Notebook check complete. Math is off by {x}%. Adjust before you commit.',
+    easterEgg: '🥚 Easter egg: 23.5! Axial tilt called. Wrong mission, same universe.',
+    hintLines: [
+      'Hint: More active loads in parallel -> smaller R_parallel -> larger total current.',
+      'Hint: A low-resistance route can still fail if its fuse rating is too small.',
+      'Hint: If P_life is low, the problem is usually voltage drop across the line.',
+      'Hint: “Balanced” is often the grown-up compromise between panic and overkill.'
+    ],
+    jokeLines: [
+      'Newton says: “Current is not being eaten by the first resistor. That is not how any of this works.”',
+      'Kepler is not required for this mission, but he still judges your significant figures.',
+      'Space engineers call this “load management.” Students call it “why did the fuse explode?”'
+    ],
+    testStatus: 'Candidate tested. Check the actual numbers and decide.',
+    testStatusFail: 'The candidate is measurable… and slightly alarming.',
+    commitSuccess: '✅ Life support holds. The habitat survives the blackout window.',
+    commitFailFuse: '💥 Fuse trip. Total current exceeded the route limit.',
+    commitFailLife: '⚠️ Life support underpowered. Voltage drop stole too much bus power.',
+    commitFailReserve: '🪫 Battery dies before reactor reboot. You saved the next minute, not the mission.',
+    commitSafeButWeak: '🟡 Safe, but not elegant. You can probably recover faster or keep more reserve.',
+    endTitle: 'MISSION DEBRIEF',
+    resultsTitle: 'Results',
+    scoreLabel: 'Academy score',
+    medalLabel: 'Medal',
+    errorLabel: 'Error %',
+    attemptsLabel: 'Attempts',
+    reserveLabel: 'Reserve left',
+    recoveryLabel: 'Recovery time',
+    missionGradeLabel: 'ATLAS rubric',
+    analysisTitle: 'Analysis',
+    analysisText: 'Mission score follows the official blackout logic: keep life support online, calculate correctly, preserve reserve, and reduce recovery delay.',
+    theoryVsSimTitle: 'Theory vs simulation',
+    bestChoiceLabel: 'Best safe choice',
+    diagnosisLabel: 'Diagnosis',
+    rubricTitle: 'Rubric Breakdown',
+    rubricHelp: 'Displayed as the ATLAS-style mission rubric: 35% life support, 35% calculation quality, 20% reserve, 10% recovery speed.',
+    rubLifeLabel: 'Life-support continuity',
+    rubCalcLabel: 'Circuit / load reasoning',
+    rubReserveLabel: 'Remaining reserve',
+    rubRecoveryLabel: 'Recovery time',
+    misTitle: 'Misconception Check',
+    misText: '“Current gets used up by the first device, so the later devices get less current just because they are later in the path.”',
+    misTrueBtn: 'TRUE',
+    misFalseBtn: 'FALSE',
+    misFeedbackGood: 'Correct. In this model the line current is the same through the series path, and each parallel branch current depends on the bus voltage and branch resistance.',
+    misFeedbackBad: 'Not quite. “Current gets used up” is the trap. In the series line the same current flows, while branch currents split according to voltage and resistance.',
+    reflectionTitle: 'Mini-reflection',
+    reflectionText: 'What did you change between attempts — route, profile, or calculations — and why?',
+    retryBtn: 'RETRY SAME DIFFICULTY',
+    newMissionBtn: 'NEW MISSION',
+    theoryGood: 'Correct circuit reasoning predicted the visible system behaviour.',
+    theoryBad: 'The simulation punished a bad model: fuse overload, too much line drop, or too little reserve.',
+    diagnosisFuse: 'Your selected path needed more current than the fuse allowed.',
+    diagnosisLife: 'Route resistance + load profile dropped V_bus so far that life support fell below threshold.',
+    diagnosisReserve: 'Your load choice consumed more energy than the blackout window allowed.',
+    diagnosisSafe: 'Your route was safe. The remaining question is efficiency: reserve and recovery speed.',
+    medalGold: '🥇',
+    medalSilver: '🥈',
+    medalBronze: '🥉',
+    medalHeart: '💔',
+    choiceFull: 'FULL OPS',
+    choiceBalanced: 'BALANCED',
+    choiceSurvival: 'SURVIVAL',
+    rowITotalLabel: 'I total (A)',
+    rowVBusLabel: 'V bus (V)',
+    rowPLifeLabel: 'P life (W)',
+    loadLife: 'Life Support',
+    loadThermal: 'Thermal Pump',
+    loadComms: 'Comms',
+    loadLab: 'Science Rack',
+    routeAName: 'Ares Spur',
+    routeBName: 'Short Bypass',
+    routeCName: 'Long Loop',
+    routeDamagedName: 'Damaged Spine',
+    routeFarLoopName: 'Far Loop',
+    canvasBattery: 'BACKUP BATTERY',
+    canvasPrimaryFault: 'PRIMARY TRUNK FAULT',
+    canvasBus: 'EMERGENCY BUS',
+    canvasSelectHint: 'Select + test a candidate',
+    canvasLoadSnap: 'Load power snapshot',
+    logMissionPrefix: 'Mission',
+    logNotebookPrefix: 'Notebook',
+    logAttemptPrefix: 'Attempt',
+    logNoNotebook: 'Committed without notebook check for the same candidate.',
+    routeTapHint: 'Tap a route on the canvas or use the buttons.',
+    routeUnavailable: 'Faulted line. Decorative sparks only.',
+    clickedRoute: 'Route selected from the canvas.',
+    bestSafePrefix: 'Best safe:',
+    noSafeChoice: 'No safe choice was found. (That would be a bad mission design, so report it.)'
+  }
+};
+
+const state = {
+  language: 'en',
+  difficulty: 'medium',
+  reduceMotion: false,
+  missionIndex: 1,
+  mission: null,
+  selectedRouteId: null,
+  selectedProfileId: null,
+  notebook: null,
+  attempts: 0,
+  hintsUsed: 0,
+  score: 100,
+  lastEval: null,
+  logs: [],
+  endShown: false,
+  paused: false,
+  animationT: 0,
+  highlightRouteId: null,
+  misAnswered: false,
+  routeRects: [],
+  toastQueue: [],
+  hoverPulse: 0
+};
+
+const PROFILES = [
+  {id:'full', key:'choiceFull', loads:['life','thermal','comms','lab'], recoveryPenalty:0, utility:100},
+  {id:'balanced', key:'choiceBalanced', loads:['life','thermal','comms'], recoveryPenalty:40, utility:84},
+  {id:'survival', key:'choiceSurvival', loads:['life','thermal'], recoveryPenalty:92, utility:70}
+];
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+const fmt = (n,d=1)=> Number.isFinite(n) ? Number(n).toFixed(d) : '—';
+const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+const lerp = (a,b,t)=> a + (b-a)*t;
+const TAU = Math.PI*2;
+
+function t(k){
+  const lang = state.language;
+  const v = I18N[lang][k];
+  return v !== undefined ? v : k;
+}
+function setText(id, key){ $(id).textContent = t(key); }
+
+function buildMission(diff){
+  const commonLoads = {
+    life:   {id:'life',   nameKey:'loadLife', R:24,  minPower:500, color:'#48d597', critical:true},
+    thermal:{id:'thermal',nameKey:'loadThermal', R:30,  minPower:0,   color:'#66e3ff'},
+    comms:  {id:'comms',  nameKey:'loadComms',        R:60,  minPower:0,   color:'#ffd166'},
+    lab:    {id:'lab',    nameKey:'loadLab', R:120, minPower:0,   color:'#a78bfa'}
+  };
+
+  if(diff==='easy'){
+    return {
+      difficulty:'easy',
+      Vs:120,
+      rebootMin:28,
+      batteryWh:1200,
+      loads: commonLoads,
+      routes: [
+        {id:'A', nameKey:'routeAName',   lineR:1.0, fuseA:12.5, damaged:false, available:true,  baseRecovery:54},
+        {id:'B', nameKey:'routeBName',lineR:0.4, fuseA:8.2,  damaged:false, available:true,  baseRecovery:46},
+        {id:'C', nameKey:'routeCName',   lineR:2.6, fuseA:13.5, damaged:false, available:true,  baseRecovery:76}
+      ],
+      story:'One fault, fewer loads, generous battery margin.',
+      faults:['Primary trunk open. Use one spare reroute.'],
+      disableLoad:'lab'
+    };
+  }
+  if(diff==='hard'){
+    return {
+      difficulty:'hard',
+      Vs:120,
+      rebootMin:45,
+      batteryWh:930,
+      loads: {
+        life:   {id:'life',   nameKey:'loadLife', R:24, minPower:500, color:'#48d597', critical:true},
+        thermal:{id:'thermal',nameKey:'loadThermal', R:30, minPower:0,   color:'#66e3ff'},
+        comms:  {id:'comms',  nameKey:'loadComms',        R:48, minPower:0,   color:'#ffd166'},
+        lab:    {id:'lab',    nameKey:'loadLab', R:96, minPower:0,   color:'#a78bfa'}
+      },
+      routes: [
+        {id:'A', nameKey:'routeDamagedName', lineR:1.2, fuseA:12.0, damaged:true,  available:true,  baseRecovery:65},
+        {id:'B', nameKey:'routeBName',  lineR:0.4, fuseA:7.8,  damaged:false, available:true,  baseRecovery:47},
+        {id:'C', nameKey:'routeFarLoopName',      lineR:2.8, fuseA:13.0, damaged:false, available:true,  baseRecovery:86}
+      ],
+      story:'Damaged branch, lower reserve, and nastier trade-offs.',
+      faults:['Cascading fault: primary trunk open.', 'Damage on Route A adds resistance.', 'Battery margin is shrinking.'],
+      disableLoad:null
+    };
+  }
+  return {
+    difficulty:'medium',
+    Vs:120,
+    rebootMin:36,
+    batteryWh:1080,
+    loads: commonLoads,
+    routes: [
+      {id:'A', nameKey:'routeAName',   lineR:1.0, fuseA:13.0, damaged:false, available:true,  baseRecovery:58},
+      {id:'B', nameKey:'routeBName',lineR:0.6, fuseA:8.6,  damaged:false, available:true,  baseRecovery:48},
+      {id:'C', nameKey:'routeCName',   lineR:2.4, fuseA:11.8, damaged:false, available:true,  baseRecovery:78}
+    ],
+    story:'Cascading fault with four subsystems and tighter battery math.',
+    faults:['Primary trunk open.', 'Crew requests multiple subsystems. Your calculator does not care.'],
+    disableLoad:null
+  };
+}
+
+function activeProfileLoads(profileId){
+  const profile = PROFILES.find(p=>p.id===profileId) || PROFILES[1];
+  const loads = profile.loads.slice();
+  if(state.mission.disableLoad){
+    return loads.filter(x=>x !== state.mission.disableLoad);
+  }
+  return loads;
+}
+
+function evaluate(routeId, profileId){
+  const mission = state.mission;
+  const route = mission.routes.find(r=>r.id===routeId);
+  const activeIds = activeProfileLoads(profileId);
+  const loadObjs = activeIds.map(id=>mission.loads[id]);
+  const invSum = loadObjs.reduce((s,l)=> s + 1/l.R, 0);
+  const Rparallel = 1/invSum;
+  const Itotal = mission.Vs / (route.lineR + Rparallel);
+  const Vbus = Itotal * Rparallel;
+  const powers = {};
+  let totalPower = 0;
+  Object.values(mission.loads).forEach(load=>{
+    powers[load.id] = activeIds.includes(load.id) ? (Vbus*Vbus/load.R) : 0;
+    totalPower += powers[load.id];
+  });
+  const Plife = powers.life || 0;
+  const fuseOk = Itotal <= route.fuseA + 1e-9;
+  const lifeOk = Plife >= mission.loads.life.minPower - 1e-9;
+  const reserveWh = mission.batteryWh - totalPower * (mission.rebootMin/60);
+  const reserveOk = reserveWh >= 0;
+  const profile = PROFILES.find(p=>p.id===profileId);
+  const recoverySec = route.baseRecovery + profile.recoveryPenalty + (route.damaged ? 22 : 0);
+  const utility = profile.utility;
+  const safe = fuseOk && lifeOk && reserveOk;
+  const lifeScore = clamp((Plife/mission.loads.life.minPower)*100, 0, 100);
+  return {
+    route, profile, activeIds, loadObjs,
+    Rparallel, Itotal, Vbus, powers, totalPower, Plife,
+    fuseOk, lifeOk, reserveWh, reserveOk, safe, recoverySec, utility, lifeScore
+  };
+}
+
+function bestSafeChoice(){
+  let best = null;
+  for(const route of state.mission.routes){
+    if(!route.available) continue;
+    for(const profile of PROFILES){
+      const e = evaluate(route.id, profile.id);
+      if(!e.safe) continue;
+      const quality = 0.5*(e.reserveWh/state.mission.batteryWh)*100 + 0.25*((120 - e.recoverySec)/120)*100 + 0.25*e.utility;
+      e.quality = quality;
+      if(!best || quality > best.quality) best = e;
+    }
+  }
+  return best;
+}
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function pushLog(text, cls=''){
+  const box = $('log');
+  const el = document.createElement('div');
+  el.className = 'log-entry ' + cls;
+  el.textContent = text;
+  box.prepend(el);
+}
+
+function queueToast(a,b,c){
+  $('toastLine1').textContent = a || '';
+  $('toastLine2').textContent = b || '';
+  $('toastLine3').textContent = c || '';
+}
+
+function setStatus(msg, kind='accent'){
+  $('mainStatus').innerHTML = '<span class="' + kind + '">' + msg + '</span>';
+}
+
+function updateScoreDisplay(){
+  $('scoreVal').textContent = Math.round(state.score);
+}
+
+function attemptScore(){
+  return clamp(100 - (state.attempts-1)*15 - state.hintsUsed*5, 25, 100);
+}
+
+function medalForError(err){
+  if(err < 5) return t('medalGold');
+  if(err < 10) return t('medalSilver');
+  if(err < 20) return t('medalBronze');
+  return t('medalHeart');
+}
+
+function routeDescription(route){
+  return 'R=' + fmt(route.lineR,1) + ' Ω • fuse ' + fmt(route.fuseA,1) + ' A' + (route.damaged ? ' • damaged' : '');
+}
+
+function profileDescription(profile){
+  const active = activeProfileLoads(profile.id).map(id=>t(state.mission.loads[id].nameKey)).join(', ');
+  return active + ' • utility ' + profile.utility + '%';
+}
+
+function applyLanguage(){
+  [
+    'introTitle','learningTargetLabel','learningTargetText','bigIdeaLabel','bigIdeaText','modelLabel','modelText',
+    'difficultyLabel','misconceptionLabel','controlsLabel','accessLabel','hintCostLabel','introHintNote','startBtn',
+    'pauseTitle','pauseSubtitle','computePanelTitle','computeHelp','guessILabel','guessVLabel','guessPLabel','checkMathBtn','resumeBtn',
+    'pauseMissionTitle','pauseMissionText','formulaNote','antiRandomText','stepsTitle','objectiveTitle','reactorLabel','batteryLabel',
+    'lifeThresholdLabel','busVoltageLabel','objectiveText','routeTitle','profileTitle','profileNote','candidateTitle',
+    'metricHead','predHead','actualHead','meanErrLabel','rowITotalLabel','rowVBusLabel','rowPLifeLabel','telemetryTitle','routeRLabel','fuseLabel','eqRLabel',
+    'loadsOnLabel','reserveNowLabel','testBtn','commitBtn','pauseBtn','hintBtn','resetBtn',
+    'missionStatLabel','attemptStatLabel','scoreStatLabel','timerStatLabel','headerTitle','headerBadge','logTitle',
+    'footerLeft','footerRight','endTitle','resultsTitle','scoreLabel','medalLabel','errorLabel','attemptsLabel',
+    'reserveLabel','recoveryLabel','missionGradeLabel','analysisTitle','analysisText','theoryVsSimTitle','bestChoiceLabel',
+    'diagnosisLabel','rubricTitle','rubricHelp','rubLifeLabel','rubCalcLabel','rubReserveLabel','rubRecoveryLabel',
+    'misTitle','misText','misTrueBtn','misFalseBtn','reflectionTitle','reflectionText','retryBtn','newMissionBtn'
+  ].forEach(id=> setText(id,id));
+
+  $('introDialogue').innerHTML = t('introDialogue');
+  $('misconceptionText').textContent = t('misconceptionText');
+  $('subideasText').textContent = t('subideasText');
+  $('controlsText').textContent = t('controlsText');
+  $('accessText').textContent = t('accessText');
+  $('hintCostText').textContent = t('hintCostText');
+  $('reduceMotionBtn').textContent = state.reduceMotion ? t('reduceMotionOff') : t('reduceMotionOn');
+
+  const formulaItems = [
+    'I = V_s / (R_line + R_parallel)',
+    'V_bus = I · R_parallel',
+    'P_life = V_bus² / R_life',
+    'E_used = P_total · t',
+    'safe if I ≤ fuse, P_life ≥ threshold, reserve ≥ 0'
+  ];
+  $('formulaList').innerHTML = formulaItems.map(s=>'<li>'+s+'</li>').join('');
+
+  renderDifficultyButtons();
+}
+
+function renderDifficultyButtons(){
+  const box = $('difficultyPicks');
+  box.innerHTML = '';
+  ['easy','medium','hard'].forEach(diff=>{
+    const btn = document.createElement('button');
+    btn.className = 'toggle' + (state.difficulty===diff ? ' active':'');
+    btn.textContent = diff.toUpperCase();
+    btn.dataset.diff = diff;
+    btn.addEventListener('click', ()=>{
+      state.difficulty = diff;
+      renderDifficultyButtons();
+    });
+    box.appendChild(btn);
+  });
+}
+
+function startMission(newIndex){
+  resizeCanvas();
+  state.missionIndex = newIndex || state.missionIndex;
+  state.mission = buildMission(state.difficulty);
+  state.selectedRouteId = state.mission.routes[0].id;
+  state.selectedProfileId = PROFILES[0].id;
+  if(state.mission.disableLoad){
+    state.selectedProfileId = 'full';
+  }
+  state.notebook = null;
+  state.attempts = 0;
+  state.hintsUsed = 0;
+  state.score = 100;
+  state.lastEval = null;
+  state.logs = [];
+  state.endShown = false;
+  state.paused = false;
+  state.hoverPulse = 0;
+  state.misAnswered = false;
+  $('misFeedback').textContent = '';
+  $('reflectionBox').value = '';
+  $('attemptVal').textContent = '0';
+  $('missionVal').textContent = String(state.missionIndex);
+  $('timerVal').textContent = state.mission.rebootMin + ' min';
+  $('reactorVal').textContent = state.mission.rebootMin + ' min';
+  $('batteryVal').textContent = fmt(state.mission.batteryWh,0) + ' Wh';
+  $('lifeThresholdVal').textContent = fmt(state.mission.loads.life.minPower,0) + ' W';
+  $('busVoltageVal').textContent = state.mission.Vs + ' V';
+  $('pauseMissionText').textContent = state.mission.story + ' ' + state.mission.faults.join(' ');
+  queueToast(state.mission.story, state.mission.faults[0] || '', t('routeTapHint'));
+  renderRouteButtons();
+  renderProfileButtons();
+  renderStepGuide();
+  refreshTelemetryPreview();
+  setStatus(t('mainStatusReady'), 'accent');
+  $('log').innerHTML = '';
+  pushLog(t('logMissionPrefix') + ' ' + state.missionIndex + ' — ' + state.mission.story);
+  pushLog(state.mission.faults.join(' | '));
+  updateScoreDisplay();
+  updateCandidateTable();
+  draw();
+}
+
+function renderRouteButtons(){
+  const box = $('routeList');
+  box.innerHTML = '';
+  for(const route of state.mission.routes){
+    const btn = document.createElement('button');
+    btn.className = 'pick' + (route.id===state.selectedRouteId ? ' active':'');
+    btn.innerHTML = '<strong>' + route.id + ' — ' + t(route.nameKey) + '</strong><small>' + routeDescription(route) + '</small>';
+    btn.addEventListener('click', ()=>{
+      state.selectedRouteId = route.id;
+      renderRouteButtons();
+      renderStepGuide();
+      refreshTelemetryPreview();
+      draw();
+    });
+    box.appendChild(btn);
+  }
+}
+
+function renderProfileButtons(){
+  const box = $('profileList');
+  box.innerHTML = '';
+  for(const profile of PROFILES){
+    const btn = document.createElement('button');
+    btn.className = 'pick' + (profile.id===state.selectedProfileId ? ' active':'');
+    btn.innerHTML = '<strong>' + t(profile.key) + '</strong><small>' + profileDescription(profile) + '</small>';
+    btn.addEventListener('click', ()=>{
+      state.selectedProfileId = profile.id;
+      renderProfileButtons();
+      renderStepGuide();
+      refreshTelemetryPreview();
+      draw();
+    });
+    box.appendChild(btn);
+  }
+}
+
+
+function renderStepGuide(){
+  const box = $('stepGuide');
+  const noteMatches = state.notebook && state.notebook.routeId===state.selectedRouteId && state.notebook.profileId===state.selectedProfileId;
+  const steps = [
+    {num:1, text:t('step1'), done:!!state.selectedRouteId, now:!state.selectedRouteId},
+    {num:2, text:t('step2'), done:!!state.selectedProfileId, now:!!state.selectedRouteId && !state.selectedProfileId},
+    {num:3, text:t('step3'), done:!!noteMatches, now:!!state.selectedRouteId && !!state.selectedProfileId && !noteMatches},
+    {num:4, text:t('step4'), done:state.attempts>0, now:!!noteMatches && state.attempts===0}
+  ];
+  box.innerHTML = steps.map(s => (
+    '<div class="stepItem' + (s.done ? ' done' : '') + (s.now ? ' now' : '') + '">' +
+      '<div class="stepNum">' + s.num + '</div>' +
+      '<div class="stepText">' + s.text + '</div>' +
+    '</div>'
+  )).join('');
+  $('winBox').textContent = t('winRule');
+}
+
+function refreshTelemetryPreview(){
+  const evalNow = evaluate(state.selectedRouteId, state.selectedProfileId);
+  $('routeRVal').textContent = fmt(evalNow.route.lineR,1) + ' Ω';
+  $('fuseVal').textContent = fmt(evalNow.route.fuseA,1) + ' A';
+  $('eqRVal').textContent = fmt(evalNow.Rparallel,2) + ' Ω';
+  $('loadsOnVal').textContent = evalNow.activeIds.map(id=> t(state.mission.loads[id].nameKey)).join(', ');
+  $('reserveNowVal').textContent = fmt(evalNow.reserveWh,0) + ' Wh';
+  $('objectiveText').textContent = state.mission.story;
+  $('jokeLine').textContent = I18N.en.jokeLines[(state.attempts + state.hintsUsed) % I18N.en.jokeLines.length];
+
+  const noteMatches = state.notebook && state.notebook.routeId===state.selectedRouteId && state.notebook.profileId===state.selectedProfileId;
+  if(noteMatches){
+    setStatus('Step 4: read the Candidate Check numbers, then commit only if fuse, life support, and reserve all look safe.', 'accent');
+  }else{
+    setStatus('Step 3: open the notebook and calculate I total, V bus, and P life for this exact route + profile.', 'accent');
+  }
+}
+
+function openPause(force){
+  state.paused = force!==undefined ? force : !state.paused;
+  $('pauseOverlay').classList.toggle('hidden', !state.paused);
+  setStatus(state.paused ? t('mainStatusPaused') : t('mainStatusReady'), state.paused ? 'warn':'accent');
+}
+
+function maybeEasterEgg(){
+  const vals = [$('guessI').value, $('guessV').value, $('guessP').value].map(v=> String(v).trim());
+  if(vals.some(v=> v === '23.5' || v === '23,5')){
+    queueToast(t('easterEgg'), state.mission.story, t('routeTapHint'));
+  }
+}
+
+function updateCandidateTable(){
+  const note = state.notebook && state.notebook.routeId===state.selectedRouteId && state.notebook.profileId===state.selectedProfileId ? state.notebook : null;
+  $('predI').textContent = note ? fmt(note.predI,1) : '—';
+  $('predV').textContent = note ? fmt(note.predV,1) : '—';
+  $('predP').textContent = note ? fmt(note.predP,0) : '—';
+  $('actI').textContent = note ? fmt(note.actual.Itotal,1) : '—';
+  $('actV').textContent = note ? fmt(note.actual.Vbus,1) : '—';
+  $('actP').textContent = note ? fmt(note.actual.Plife,0) : '—';
+  $('meanErrVal').textContent = note ? fmt(note.errorMean,1) + '%' : '—';
+  if(note){
+    const safeMsg = note.actual.safe ? t('testStatus') : t('testStatusFail');
+    $('candidateStatus').innerHTML = '<span class="' + (note.actual.safe ? 'good':'warn') + '">' + safeMsg + '</span>';
+  }else{
+    $('candidateStatus').innerHTML = '<span class="warn">' + t('notebookMissing') + '</span>';
+  }
+}
+
+function checkMath(){
+  maybeEasterEgg();
+  const predI = parseFloat($('guessI').value);
+  const predV = parseFloat($('guessV').value);
+  const predP = parseFloat($('guessP').value);
+  if(!Number.isFinite(predI) || !Number.isFinite(predV) || !Number.isFinite(predP)){
+    $('notebookResult').innerHTML = '<span class="bad">Enter all three predicted values first.</span>';
+    return;
+  }
+  const actual = evaluate(state.selectedRouteId, state.selectedProfileId);
+  const errI = Math.abs(predI-actual.Itotal)/Math.max(Math.abs(actual.Itotal), 1e-9) * 100;
+  const errV = Math.abs(predV-actual.Vbus)/Math.max(Math.abs(actual.Vbus), 1e-9) * 100;
+  const errP = Math.abs(predP-actual.Plife)/Math.max(Math.abs(actual.Plife), 1e-9) * 100;
+  const mean = (errI + errV + errP)/3;
+  state.notebook = {
+    routeId: state.selectedRouteId,
+    profileId: state.selectedProfileId,
+    predI, predV, predP,
+    actual,
+    errorMean: mean,
+    submittedAtAttempt: state.attempts
+  };
+  updateCandidateTable();
+  renderStepGuide();
+  refreshTelemetryPreview();
+  const key = mean < 5 ? 'notebookGreat' : (mean < 15 ? 'notebookOk' : 'notebookOops');
+  $('notebookResult').innerHTML = '<span class="' + (mean < 10 ? 'good' : (mean < 20 ? 'warn':'bad')) + '">' + t(key).replace('{x}', fmt(mean,1)) + '</span>';
+  pushLog(t('logNotebookPrefix') + ': ' + state.selectedRouteId + ' + ' + t(PROFILES.find(p=>p.id===state.selectedProfileId).key) + ' → mean error ' + fmt(mean,1) + '%.');
+  draw();
+}
+
+function useHint(){
+  state.hintsUsed += 1;
+  state.score = clamp(state.score - 5, 0, 100);
+  updateScoreDisplay();
+  const hint = t('hintLines')[ (state.hintsUsed - 1) % t('hintLines').length ];
+  queueToast('Hint #' + state.hintsUsed + ': ' + hint, state.mission.story, '');
+  pushLog('Hint used: ' + hint);
+  draw();
+}
+
+function commitChoice(){
+  state.attempts += 1;
+  $('attemptVal').textContent = String(state.attempts);
+  const evalNow = evaluate(state.selectedRouteId, state.selectedProfileId);
+  state.lastEval = evalNow;
+
+  const noteMatches = state.notebook && state.notebook.routeId===state.selectedRouteId && state.notebook.profileId===state.selectedProfileId;
+  const errorMean = noteMatches ? state.notebook.errorMean : 100;
+  const accuracy = clamp(100 - errorMean, 0, 100);
+  const academy = 0.7 * attemptScore() + 0.3 * accuracy;
+  state.score = clamp(academy, 0, 100);
+  updateScoreDisplay();
+
+  let status = '', kind = 'accent';
+  if(!evalNow.fuseOk){
+    status = t('commitFailFuse');
+    kind = 'bad';
+  }else if(!evalNow.lifeOk){
+    status = t('commitFailLife');
+    kind = 'bad';
+  }else if(!evalNow.reserveOk){
+    status = t('commitFailReserve');
+    kind = 'bad';
+  }else{
+    const best = bestSafeChoice();
+    const nearBest = best ? (evalNow.route.id===best.route.id && evalNow.profile.id===best.profile.id) : false;
+    status = nearBest ? t('commitSuccess') : t('commitSafeButWeak');
+    kind = nearBest ? 'good' : 'warn';
+  }
+  setStatus(status, kind);
+
+  const cls = kind==='good' ? 'flash-good' : (kind==='bad' ? 'flash-bad' : '');
+  $('app').classList.remove('flash-good','flash-bad');
+  if(cls){ $('app').classList.add(cls); setTimeout(()=> $('app').classList.remove(cls), 800); }
+
+  pushLog(t('logAttemptPrefix') + ' ' + state.attempts + ': ' + state.selectedRouteId + ' + ' + t(evalNow.profile.key) + ' → ' + status.replace(/<[^>]+>/g,''));
+  if(!noteMatches){
+    pushLog(t('logNoNotebook'));
+  }
+
+  renderStepGuide();
+  refreshTelemetryPreview();
+  draw();
+
+  setTimeout(showEnd, state.reduceMotion ? 80 : 700);
+}
+
+function rubricForResult(result){
+  const noteMatches = state.notebook && state.notebook.routeId===result.route.id && state.notebook.profileId===result.profile.id;
+  const err = noteMatches ? state.notebook.errorMean : 100;
+  const calcScore = clamp(100 - err, 0, 100);
+  const reserveScore = clamp((result.reserveWh / state.mission.batteryWh) * 100, 0, 100);
+  const recoveryScore = clamp((130 - result.recoverySec) / 130 * 100, 0, 100);
+  const total = 0.35*result.lifeScore + 0.35*calcScore + 0.20*reserveScore + 0.10*recoveryScore;
+  return {err, calcScore, reserveScore, recoveryScore, total};
+}
+
+function showEnd(){
+  if(!state.lastEval || state.endShown) return;
+  state.endShown = true;
+  const r = state.lastEval;
+  const rubric = rubricForResult(r);
+  const best = bestSafeChoice();
+  const academyScore = Math.round(state.score);
+  $('finalScore').textContent = academyScore + ' / 100';
+  $('finalMedal').textContent = medalForError(rubric.err);
+  $('finalError').textContent = fmt(rubric.err,1) + '%';
+  $('finalAttempts').textContent = String(state.attempts);
+  $('finalReserve').textContent = fmt(r.reserveWh,0) + ' Wh';
+  $('finalRecovery').textContent = fmt(r.recoverySec,0) + ' s';
+  $('finalMissionGrade').textContent = fmt(rubric.total,1) + ' / 100';
+
+  let endStatus = '';
+  if(r.safe){
+    endStatus = '<span class="good">' + (best && best.route.id===r.route.id && best.profile.id===r.profile.id ? t('commitSuccess') : t('commitSafeButWeak')) + '</span>';
+  }else{
+    if(!r.fuseOk) endStatus = '<span class="bad">' + t('commitFailFuse') + '</span>';
+    else if(!r.lifeOk) endStatus = '<span class="bad">' + t('commitFailLife') + '</span>';
+    else endStatus = '<span class="bad">' + t('commitFailReserve') + '</span>';
+  }
+  $('endStatus').innerHTML = endStatus;
+
+  $('theoryVsSimValue').textContent = r.safe ? t('theoryGood') : t('theoryBad');
+  $('bestChoiceValue').textContent = best ? (t('bestSafePrefix') + ' ' + best.route.id + ' + ' + t(best.profile.key)) : t('noSafeChoice');
+  $('diagnosisValue').textContent = !r.fuseOk ? t('diagnosisFuse') : (!r.lifeOk ? t('diagnosisLife') : (!r.reserveOk ? t('diagnosisReserve') : t('diagnosisSafe')));
+
+  $('rubLifeVal').textContent = fmt(r.lifeScore,1);
+  $('rubCalcVal').textContent = fmt(rubric.calcScore,1);
+  $('rubReserveVal').textContent = fmt(rubric.reserveScore,1);
+  $('rubRecoveryVal').textContent = fmt(rubric.recoveryScore,1);
+
+  renderAttemptChart();
+  $('endOverlay').classList.remove('hidden');
+}
+
+function renderAttemptChart(){
+  const box = $('attemptChart');
+  box.innerHTML = '';
+  const entries = [];
+  if(state.lastEval){
+    const rb = rubricForResult(state.lastEval);
+    entries.push({label:'Attempt score', val:attemptScore()});
+    entries.push({label:'Accuracy', val:clamp(100-rb.err,0,100)});
+    entries.push({label:'Academy', val:Math.round(state.score)});
+  }
+  entries.forEach(row=>{
+    const el = document.createElement('div');
+    el.className = 'attemptBar';
+    el.innerHTML = '<div>' + row.label + '</div><div class="bar"><span style="width:' + clamp(row.val,0,100) + '%"></span></div><div style="text-align:right;font-family:var(--mono)">' + fmt(row.val,1) + '</div>';
+    box.appendChild(el);
+  });
+}
+
+function resetSameMission(){
+  $('endOverlay').classList.add('hidden');
+  $('pauseOverlay').classList.add('hidden');
+  startMission(state.missionIndex);
+}
+
+function newMission(){
+  $('endOverlay').classList.add('hidden');
+  $('pauseOverlay').classList.add('hidden');
+  startMission(state.missionIndex + 1);
+}
+
+function setMisconceptionAnswer(isTrue){
+  if(state.misAnswered) return;
+  state.misAnswered = true;
+  $('misFeedback').innerHTML = '<span class="' + (!isTrue ? 'good':'bad') + '">' + (!isTrue ? t('misFeedbackGood') : t('misFeedbackBad')) + '</span>';
+}
+
+function drawStars(w,h){
+  ctx.save();
+  for(let i=0;i<80;i++){
+    const x = (i*137 % 997) / 997 * w;
+    const y = (i*97 % 653) / 653 * h;
+    const r = 0.5 + (i%3)*0.5;
+    ctx.globalAlpha = 0.2 + (i%5)*0.1;
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBusSystem(){
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  drawStars(w,h);
+
+  state.hoverPulse += 0.02;
+  const pulse = 0.5 + 0.5*Math.sin(state.hoverPulse);
+
+  const left = 88, busX = w*0.55, topY = 120, busY = 200, loadBaseY = 360;
+  const batteryW = 150, batteryH = 90;
+  const busW = 180, busH = 24;
+  const routes = state.mission.routes;
+  state.routeRects = [];
+  const routeYs = [125, 200, 275];
+
+  // labels
+  ctx.fillStyle = 'rgba(240,244,255,.9)';
+  ctx.font = '700 18px ' + 'system-ui';
+  ctx.fillText(t('canvasBattery'), left, topY - 22);
+  ctx.font = '14px ' + 'system-ui';
+  ctx.fillStyle = 'rgba(225,235,255,.72)';
+  ctx.fillText(state.mission.Vs + ' V • ' + fmt(state.mission.batteryWh,0) + ' Wh', left, topY + batteryH + 22);
+
+  // battery
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,.18)';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = 'rgba(102,227,255,.10)';
+  roundRect(left, topY, batteryW, batteryH, 18, true, true);
+  ctx.fillStyle = 'rgba(102,227,255,.85)';
+  ctx.fillRect(left + batteryW, topY + batteryH*0.32, 12, batteryH*0.36);
+  const chargeFrac = clamp((state.lastEval ? Math.max(0, state.lastEval.reserveWh) : state.mission.batteryWh) / state.mission.batteryWh, 0, 1);
+  ctx.fillStyle = chargeFrac > .3 ? 'rgba(72,213,151,.85)' : 'rgba(255,107,107,.85)';
+  ctx.fillRect(left + 12, topY + 12, (batteryW - 24)*chargeFrac, batteryH - 24);
+  ctx.restore();
+
+  // bus
+  ctx.save();
+  ctx.fillStyle = 'rgba(72,213,151,.10)';
+  ctx.strokeStyle = 'rgba(72,213,151,.45)';
+  ctx.lineWidth = 2;
+  roundRect(busX, busY, busW, busH, 12, true, true);
+  ctx.fillStyle = 'rgba(240,244,255,.92)';
+  ctx.font = '700 16px system-ui';
+  ctx.fillText(t('canvasBus'), busX+18, busY-10);
+  ctx.font = '13px system-ui';
+  if(state.lastEval){
+    ctx.fillStyle = state.lastEval.lifeOk ? 'rgba(72,213,151,.9)' : 'rgba(255,107,107,.9)';
+    ctx.fillText('V_bus ≈ ' + fmt(state.lastEval.Vbus,1) + ' V', busX+24, busY+17);
+  }else{
+    ctx.fillStyle = 'rgba(225,235,255,.72)';
+    ctx.fillText(t('canvasSelectHint'), busX+24, busY+17);
+  }
+  ctx.restore();
+
+  // faulted primary line
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,107,107,.55)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(left + batteryW + 20, busY + 12);
+  ctx.lineTo(busX - 28, busY + 12);
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(busX - 65, busY - 16); ctx.lineTo(busX - 28, busY + 20);
+  ctx.moveTo(busX - 65, busY + 20); ctx.lineTo(busX - 28, busY - 16);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,107,107,.85)';
+  ctx.font = '12px system-ui';
+  ctx.fillText(t('canvasPrimaryFault'), busX - 146, busY - 22);
+  ctx.restore();
+
+  // reroute paths
+  routes.forEach((route, i)=>{
+    const y = routeYs[i];
+    const startX = left + batteryW + 12;
+    const endX = busX;
+    const active = route.id === state.selectedRouteId;
+    const glow = active ? (0.5 + pulse*0.5) : 0;
+    const routeColor = !route.available ? 'rgba(255,255,255,.15)' : (active ? 'rgba(102,227,255,.95)' : 'rgba(180,190,220,.40)');
+
+    // route clickable area
+    state.routeRects.push({id:route.id, x:startX-8, y:y-18, w:endX-startX+16, h:36});
+
+    ctx.save();
+    ctx.lineWidth = active ? 4 : 2;
+    ctx.strokeStyle = routeColor;
+    if(active && !state.reduceMotion){
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(102,227,255,.4)';
+    }
+    ctx.beginPath();
+    ctx.moveTo(startX, topY + batteryH/2);
+    ctx.lineTo(startX + 45, topY + batteryH/2);
+    ctx.lineTo(startX + 45, y);
+    ctx.lineTo(busX - 10, y);
+    ctx.lineTo(busX - 10, busY + 12);
+    ctx.lineTo(busX, busY + 12);
+    ctx.stroke();
+    ctx.restore();
+
+    // resistor box
+    const rx = lerp(startX+80, busX-120, .45);
+    drawResistor(rx, y-10, 74, 20, active);
+
+    // fuse box
+    ctx.save();
+    ctx.fillStyle = active ? 'rgba(255,209,102,.16)' : 'rgba(255,255,255,.05)';
+    ctx.strokeStyle = active ? 'rgba(255,209,102,.7)' : 'rgba(255,255,255,.22)';
+    ctx.lineWidth = 2;
+    roundRect(rx+90, y-15, 54, 30, 8, true, true);
+    ctx.fillStyle = 'rgba(240,244,255,.9)';
+    ctx.font = '11px ' + 'ui-monospace, monospace';
+    ctx.fillText('F ' + fmt(route.fuseA,1), rx+100, y+4);
+    ctx.restore();
+
+    // label
+    ctx.fillStyle = active ? 'rgba(102,227,255,.95)' : 'rgba(225,235,255,.75)';
+    ctx.font = '700 14px system-ui';
+    ctx.fillText(route.id + ' — ' + t(route.nameKey), startX + 10, y - 22);
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = route.damaged ? 'rgba(255,159,67,.95)' : 'rgba(225,235,255,.65)';
+    ctx.fillText('R=' + fmt(route.lineR,1) + ' Ω' + (route.damaged ? ' • damaged' : ''), startX + 10, y + 31);
+
+    // animated current dots
+    if(active && state.lastEval && state.lastEval.route.id===route.id && !state.reduceMotion){
+      const dotCount = 6;
+      for(let k=0;k<dotCount;k++){
+        const tt = ((state.animationT*0.7) + k/dotCount) % 1;
+        const p = pathPoint(startX, topY+batteryH/2, y, busX);
+        const pos = pointOnRoute(p, tt);
+        ctx.save();
+        ctx.fillStyle = state.lastEval.safe ? 'rgba(72,213,151,.9)' : 'rgba(255,107,107,.9)';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 4, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  });
+
+  // loads in parallel
+  const activeIds = activeProfileLoads(state.selectedProfileId);
+  const visibleLoadIds = Object.keys(state.mission.loads).filter(id=> !(state.mission.disableLoad && id===state.mission.disableLoad));
+  const xs = [busX + 20, busX + 130, busX + 240, busX + 350];
+  visibleLoadIds.forEach((id, idx)=>{
+    const load = state.mission.loads[id];
+    const x = xs[idx];
+    const active = activeIds.includes(id);
+    const isLife = id === 'life';
+    ctx.save();
+    ctx.strokeStyle = active ? load.color : 'rgba(255,255,255,.18)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(busX + 40 + idx*110, busY + busH);
+    ctx.lineTo(busX + 40 + idx*110, loadBaseY - 18);
+    ctx.stroke();
+    drawResistor(busX + 40 + idx*110 - 22, loadBaseY - 18, 44, 54, active, load.color);
+    ctx.strokeStyle = active ? load.color : 'rgba(255,255,255,.18)';
+    ctx.beginPath();
+    ctx.moveTo(busX + 40 + idx*110, loadBaseY + 36);
+    ctx.lineTo(busX + 40 + idx*110, loadBaseY + 96);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.beginPath();
+    ctx.moveTo(busX - 10, loadBaseY + 96);
+    ctx.lineTo(busX + 370, loadBaseY + 96);
+    ctx.stroke();
+
+    ctx.fillStyle = active ? 'rgba(240,244,255,.95)' : 'rgba(225,235,255,.45)';
+    ctx.font = '700 14px system-ui';
+    ctx.fillText(t(load.nameKey), busX + 40 + idx*110 - 44, loadBaseY + 128);
+    ctx.font = '12px system-ui';
+    ctx.fillStyle = isLife ? 'rgba(72,213,151,.95)' : 'rgba(225,235,255,.7)';
+    ctx.fillText('R=' + fmt(load.R,0) + ' Ω', busX + 40 + idx*110 - 22, loadBaseY + 146);
+
+    if(state.lastEval){
+      const p = state.lastEval.powers[id] || 0;
+      ctx.fillStyle = active ? (isLife ? (state.lastEval.lifeOk ? 'rgba(72,213,151,.95)' : 'rgba(255,107,107,.95)') : 'rgba(255,209,102,.95)') : 'rgba(225,235,255,.38)';
+      ctx.fillText(fmt(p,0) + ' W', busX + 40 + idx*110 - 18, loadBaseY + 162);
+    }
+    ctx.restore();
+  });
+
+  // side telemetry chart inside stage
+  if(state.lastEval){
+    const bx = 22, by = h - 164, bw = 260, bh = 124;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.26)';
+    roundRect(bx,by,bw,bh,16,true,false);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    roundRect(bx,by,bw,bh,16,false,true);
+    ctx.fillStyle = 'rgba(240,244,255,.9)';
+    ctx.font = '700 13px system-ui';
+    ctx.fillText(t('canvasLoadSnap'), bx+14, by+18);
+    const ids = state.lastEval.activeIds;
+    const maxP = Math.max(...ids.map(id=> state.lastEval.powers[id]), 1);
+    ids.forEach((id, idx)=>{
+      const p = state.lastEval.powers[id];
+      const yy = by + 38 + idx*23;
+      const ww = (bw - 116) * (p/maxP);
+      ctx.fillStyle = state.mission.loads[id].color;
+      ctx.fillRect(bx+90, yy-10, ww, 12);
+      ctx.fillStyle = 'rgba(225,235,255,.8)';
+      ctx.font = '12px system-ui';
+      ctx.fillText(t(state.mission.loads[id].nameKey), bx+14, yy);
+      ctx.fillText(fmt(p,0) + ' W', bx+96+ww, yy);
+    });
+    ctx.restore();
+  }
+}
+
+function drawResistor(x,y,w,h,active,color){
+  const c = color || 'rgba(102,227,255,.8)';
+  ctx.save();
+  ctx.strokeStyle = active ? c : 'rgba(255,255,255,.2)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x,y+h/2);
+  const seg = w/8;
+  for(let i=0;i<8;i++){
+    const xx = x + i*seg;
+    const yy = (i%2===0) ? y : y+h;
+    ctx.lineTo(xx + seg/2, yy);
+    ctx.lineTo(xx + seg, y+h/2);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function roundRect(x,y,w,h,r,fill,stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+
+function pathPoint(startX,startY,routeY,busX){
+  return {startX,startY,routeY,busX};
+}
+function pointOnRoute(p,t){
+  const pts = [
+    {x:p.startX, y:p.startY},
+    {x:p.startX+45, y:p.startY},
+    {x:p.startX+45, y:p.routeY},
+    {x:p.busX-10, y:p.routeY},
+    {x:p.busX-10, y:212},
+    {x:p.busX, y:212}
+  ];
+  const lens = [];
+  let total = 0;
+  for(let i=0;i<pts.length-1;i++){
+    const dx = pts[i+1].x-pts[i].x, dy = pts[i+1].y-pts[i].y;
+    const len = Math.hypot(dx,dy);
+    lens.push(len); total += len;
+  }
+  let d = t*total;
+  for(let i=0;i<lens.length;i++){
+    if(d <= lens[i]){
+      const a = d/lens[i];
+      return {x:lerp(pts[i].x, pts[i+1].x, a), y:lerp(pts[i].y, pts[i+1].y, a)};
+    }
+    d -= lens[i];
+  }
+  return pts[pts.length-1];
+}
+
+function draw(){
+  drawBusSystem();
+}
+
+function onCanvasPointer(e){
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const hit = state.routeRects.find(r=> x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h);
+  if(hit){
+    state.selectedRouteId = hit.id;
+    renderRouteButtons();
+    refreshTelemetryPreview();
+    queueToast(t('clickedRoute'), hit.id + ' selected.', '');
+    draw();
+  }
+}
+
+function setupEvents(){
+  $('startBtn').addEventListener('click', ()=>{
+    $('introOverlay').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    resizeCanvas();
+    startMission(1);
+  });
+  $('reduceMotionBtn').addEventListener('click', ()=>{
+    state.reduceMotion = !state.reduceMotion;
+    $('reduceMotionBtn').textContent = state.reduceMotion ? t('reduceMotionOff') : t('reduceMotionOn');
+  });
+  $('pauseBtn').addEventListener('click', ()=> queueToast('How to play: 1) choose route, 2) choose profile, 3) open notebook, 4) check math, 5) commit.', 'Win rule: fuse safe, life support safe, reserve safe.', 'Keyboard: Space notebook • Enter commit • H hint'));
+  $('resumeBtn').addEventListener('click', ()=> openPause(false));
+  $('checkMathBtn').addEventListener('click', checkMath);
+  $('testBtn').addEventListener('click', ()=>{
+    openPause(true);
+  });
+  $('commitBtn').addEventListener('click', commitChoice);
+  $('hintBtn').addEventListener('click', useHint);
+  $('resetBtn').addEventListener('click', resetSameMission);
+  $('retryBtn').addEventListener('click', resetSameMission);
+  $('newMissionBtn').addEventListener('click', newMission);
+  $('misTrueBtn').addEventListener('click', ()=> setMisconceptionAnswer(true));
+  $('misFalseBtn').addEventListener('click', ()=> setMisconceptionAnswer(false));
+
+  canvas.addEventListener('pointerdown', onCanvasPointer);
+
+  window.addEventListener('resize', ()=>{ resizeCanvas(); draw(); });
+
+  document.addEventListener('keydown', (e)=>{
+    if(!$('introOverlay').classList.contains('hidden')){
+      if(e.code === 'Enter' || e.code === 'Space'){
+        e.preventDefault();
+        $('startBtn').click();
+      }
+      return;
+    }
+    if(state.endShown){
+      if(e.code === 'KeyR'){ e.preventDefault(); resetSameMission(); }
+      return;
+    }
+    switch(e.code){
+      case 'Space':
+        e.preventDefault();
+        openPause(true);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if(state.paused) checkMath();
+        else commitChoice();
+        break;
+      case 'KeyP':
+        e.preventDefault();
+        openPause();
+        break;
+      case 'KeyR':
+        e.preventDefault();
+        resetSameMission();
+        break;
+      case 'KeyH':
+        e.preventDefault();
+        useHint();
+        break;
+      case 'Escape':
+        if(state.paused) openPause(false);
+        break;
+    }
+  });
+}
+
+function tick(ts){
+  if(!state.lastFrame) state.lastFrame = ts;
+  const dt = Math.min((ts - state.lastFrame)/1000, 0.04);
+  state.lastFrame = ts;
+  state.animationT += dt;
+  if(!$('app').classList.contains('hidden')) draw();
+  requestAnimationFrame(tick);
+}
+
+function init(){
+  applyLanguage();
+  resizeCanvas();
+  setupEvents();
+  draw();
+  requestAnimationFrame(tick);
+}
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission ATLAS — Physics Games Portfolio</title>
+<meta name="description" content="Mission ATLAS: astronomy-themed upper-secondary physics games for classroom use.">
+<style>
+:root{
+  --bg:#06101f; --panel:rgba(10,24,46,.78); --line:rgba(255,255,255,.12); --text:#eef5ff; --muted:#bfd0e7;
+  --cyan:#7be3ff; --gold:#ffd166; --green:#7ee39c; --shadow:0 20px 55px rgba(0,0,0,.34); --radius:22px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --ui: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--ui);color:var(--text);background:radial-gradient(1200px 700px at 20% 0%, rgba(123,227,255,.10), transparent 55%),radial-gradient(900px 650px at 80% 15%, rgba(255,209,102,.08), transparent 55%),linear-gradient(180deg, #040914 0%, #07101d 50%, #091627 100%)}
+a{color:inherit}.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg, rgba(8,18,34,.85), rgba(8,18,34,.62));box-shadow:var(--shadow);position:sticky;top:10px;z-index:10;backdrop-filter:blur(10px)}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--mono);letter-spacing:.05em}.brand strong{font-size:1.02rem}
+.badges{display:flex;gap:8px;flex-wrap:wrap}.badge{padding:7px 12px;border-radius:999px;font-size:.78rem;border:1px solid rgba(123,227,255,.26);background:rgba(123,227,255,.09);color:#cff6ff}.badge.gold{border-color:rgba(255,209,102,.28);background:rgba(255,209,102,.10);color:#ffe4a4}
+.hero{margin-top:20px;padding:28px;border:1px solid var(--line);border-radius:28px;background:radial-gradient(900px 420px at 75% 0%, rgba(123,227,255,.12), transparent 60%),linear-gradient(180deg, rgba(10,24,46,.92), rgba(6,16,30,.88));box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .85fr;gap:18px}
+@media (max-width:980px){.hero{grid-template-columns:1fr}}
+.hero h1{margin:0 0 10px;font-size:clamp(1.8rem, 4vw, 3.2rem);line-height:1.04;letter-spacing:-.03em}
+.hero p{margin:0;color:var(--muted);line-height:1.58;font-size:1.02rem;max-width:70ch}.hero .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;text-decoration:none;font-weight:700;border:1px solid var(--line);background:rgba(255,255,255,.05);transition:.16s transform,.16s filter,.16s border-color}.btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn.primary{background:linear-gradient(135deg,#ffd166,#ffb347);color:#161616;border-color:rgba(255,209,102,.52)}.btn.secondary{background:rgba(123,227,255,.10);border-color:rgba(123,227,255,.32)}
+.heroStats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-content:start}.stat{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:18px;padding:14px}.stat .v{font-family:var(--mono);font-size:1.5rem;font-weight:800}.stat .k{margin-top:5px;color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}
+.section{margin-top:22px}.section h2{margin:0 0 12px;font-size:1.45rem;letter-spacing:-.02em}.section p.lead{margin:0 0 14px;color:var(--muted);max-width:78ch;line-height:1.55}
+.filterBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.filterBtn{border:none;cursor:pointer;padding:9px 12px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);font-weight:600}.filterBtn.active{background:rgba(123,227,255,.12);border-color:rgba(123,227,255,.38);color:#d9fbff}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card{position:relative;overflow:hidden;padding:18px;border-radius:24px;border:1px solid var(--line);background:radial-gradient(600px 240px at 100% 0%, var(--glow, rgba(123,227,255,.10)), transparent 62%),linear-gradient(180deg, rgba(10,22,42,.96), rgba(6,15,28,.96));box-shadow:var(--shadow)}
+.card::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg, transparent, var(--accent,#7be3ff), transparent);opacity:.9}
+.cardTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.card h3{margin:0;font-size:1.32rem;letter-spacing:-.02em}.gameNo{font-family:var(--mono);color:var(--muted);font-size:.82rem;margin-bottom:6px}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);font-size:.76rem;color:#d8e8fb}
+.card p{margin:0;color:var(--muted);line-height:1.5}.meta{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px}.metaBox{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px}
+.metaBox strong{display:block;margin-bottom:6px;font-size:.76rem;text-transform:uppercase;letter-spacing:.10em;color:#dceaff;font-family:var(--mono)}.metaBox span{color:var(--muted);font-size:.93rem;line-height:1.45}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.play{min-width:150px;text-decoration:none;padding:11px 14px;border-radius:14px;font-weight:800;background:linear-gradient(135deg,#ffd166,#ffb347);color:#151515;border:1px solid rgba(255,209,102,.48)}.read{text-decoration:none;padding:11px 14px;border-radius:14px;font-weight:700;background:rgba(123,227,255,.10);border:1px solid rgba(123,227,255,.30)}
+.roadmap{margin-top:16px;padding:18px;border-radius:24px;border:1px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.03)}.roadmapGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}@media (max-width:900px){.roadmapGrid{grid-template-columns:1fr}}.ghost{padding:16px;border-radius:18px;border:1px dashed rgba(255,255,255,.16);background:rgba(255,255,255,.03)}
+.muted{color:var(--muted)}.footer{margin-top:24px;padding:16px 18px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg, rgba(8,18,34,.82), rgba(8,18,34,.65));display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted)}.small{font-size:.92rem;line-height:1.5}.kicker{color:var(--cyan);font-family:var(--mono);font-size:.82rem;letter-spacing:.10em;text-transform:uppercase;margin-bottom:8px}.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span>🛰️</span><strong>MISSION ATLAS — Physics Games Portfolio</strong></div>
+    <div class="badges"><span class="badge">Upper-secondary physics</span><span class="badge">Astronomy-themed</span><span class="badge gold">MIT License</span></div>
+  </div>
+
+  <section class="hero">
+    <div>
+      <div class="kicker">Interactive science portfolio</div>
+      <h1>Playable physics, framed by Big Ideas in Astronomy.</h1>
+      <p>Mission ATLAS is a growing collection of browser-based physics games designed for classroom use. Each mission turns a common misconception into a decision problem: students must calculate, predict, test, and revise. The current set covers the Moon, orbit, Mars surface and landing physics, and spacecraft electrical systems.</p>
+      <div class="cta"><a class="btn primary" href="#games">Browse games</a><a class="btn secondary" href="README.md">Open README</a></div>
+    </div>
+    <div class="heroStats">
+      <div class="stat"><div class="v">5</div><div class="k">Playable missions</div></div>
+      <div class="stat"><div class="v">3</div><div class="k">Curriculum contexts</div></div>
+      <div class="stat"><div class="v">100%</div><div class="k">Browser-based</div></div>
+      <div class="stat"><div class="v">More</div><div class="k">Missions coming</div></div>
+    </div>
+  </section>
+
+  <section class="section" id="games">
+    <h2>Current games</h2>
+    <p class="lead">Use the filters to scan by physics family. Each card links directly to the playable HTML file and highlights the physics focus, misconception target, and astronomy connection.</p>
+    <div class="filterBar">
+      <button class="filterBtn active" data-filter="all">All</button>
+      <button class="filterBtn" data-filter="mechanics">Mechanics</button>
+      <button class="filterBtn" data-filter="gravitation">Gravitation / Orbits</button>
+      <button class="filterBtn" data-filter="energy">Energy / Power</button>
+      <button class="filterBtn" data-filter="electricity">Electricity</button>
+      <button class="filterBtn" data-filter="mars">Mars</button>
+      <button class="filterBtn" data-filter="moon">Moon</button>
+    </div>
+
+    <div class="grid">
+      <article class="card" data-tags="mechanics gravitation energy moon" style="--accent:#7ee39c;--glow:rgba(126,227,156,.14)">
+        <div class="cardTop"><div><div class="gameNo">Game 01</div><h3>🚀 Lunar Rescue</h3></div><div class="tagrow"><span class="tag">Moon</span><span class="tag">Landing</span></div></div>
+        <p>Land an emergency cargo capsule near a lunar outpost using thrust, mass change, kinematics, and energy logic.</p>
+        <div class="meta">
+          <div class="metaBox"><strong>Physics focus</strong><span>Lunar gravity, thrust control, vertical and horizontal motion, work–energy, fuel use.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>“There is almost no gravity on the Moon” and “engine off means motion stops.”</span></div>
+          <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>7.7 Earth–Moon system · 4.2 Gravitation dominates on large scales.</span></div>
+        </div>
+        <div class="actions"><a class="play" href="Lunar_Rescue.html">Play game</a><a class="read" href="README.md#lunar-rescue">Read summary</a></div>
+      </article>
+
+      <article class="card" data-tags="mechanics gravitation energy" style="--accent:#7be3ff;--glow:rgba(123,227,255,.14)">
+        <div class="cardTop"><div><div class="gameNo">Game 02</div><h3>🛰️ Orbital Rendezvous</h3></div><div class="tagrow"><span class="tag">Orbit</span><span class="tag">Docking</span></div></div>
+        <p>Phase, approach, and dock safely with a damaged station module by matching relative motion instead of chasing directly.</p>
+        <div class="meta">
+          <div class="metaBox"><strong>Physics focus</strong><span>Circular/orbital motion, gravitation, relative velocity, burn timing, safe closure.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>“There is no gravity in orbit” and “just thrust straight at the station.”</span></div>
+          <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>4.2 Gravitation dominates · 11.1 Human-made debris orbits Earth.</span></div>
+        </div>
+        <div class="actions"><a class="play" href="Orbital_Rendezvous.html">Play game</a><a class="read" href="README.md#orbital-rendezvous">Read summary</a></div>
+      </article>
+
+      <article class="card" data-tags="mechanics energy mars" style="--accent:#ffd166;--glow:rgba(255,209,102,.14)">
+        <div class="cardTop"><div><div class="gameNo">Game 03</div><h3>🪂 Mars Landing Window</h3></div><div class="tagrow"><span class="tag">Mars</span><span class="tag">EDL</span></div></div>
+        <p>Choose parachute and retro-burn windows for a Mars cargo landing, balancing drag, gravity, thrust, drift, and stopping distance.</p>
+        <div class="meta">
+          <div class="metaBox"><strong>Physics focus</strong><span>Newton’s 2nd law, drag, gravity, dynamic pressure, thrust, mechanical energy.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>“Lower gravity makes Mars landing easy” and “a parachute is enough.”</span></div>
+          <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>7.5 Terrestrial planets · 5.8 Spacecraft study the Solar System.</span></div>
+        </div>
+        <div class="actions"><a class="play" href="Mars_Landing_Window.html">Play game</a><a class="read" href="README.md#mars-landing-window">Read summary</a></div>
+      </article>
+
+      <article class="card" data-tags="mechanics energy mars" style="--accent:#ffad7d;--glow:rgba(255,173,125,.14)">
+        <div class="cardTop"><div><div class="gameNo">Game 04</div><h3>🧑‍🚀 Mars EVA Traverse</h3></div><div class="tagrow"><span class="tag">Mars</span><span class="tag">Surface</span></div></div>
+        <p>Plan an EVA route and pace to reach shelter with enough science, while managing traction, time, battery, oxygen, and suit power.</p>
+        <div class="meta">
+          <div class="metaBox"><strong>Physics focus</strong><span>Slopes, friction, traction limits, work, power, energy, route trade-offs.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>“Lower gravity always makes movement easier.”</span></div>
+          <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>7.5 Terrestrial planets · 4.4 Astronomy uses observations and models.</span></div>
+        </div>
+        <div class="actions"><a class="play" href="Mars_EVA_Traverse.html">Play game</a><a class="read" href="README.md#mars-eva-traverse">Read summary</a></div>
+      </article>
+
+      <article class="card" data-tags="electricity energy" style="--accent:#c4a2ff;--glow:rgba(196,162,255,.14)">
+        <div class="cardTop"><div><div class="gameNo">Game 05</div><h3>⚡ Habitat Blackout</h3></div><div class="tagrow"><span class="tag">Circuit</span><span class="tag">Rescue</span></div></div>
+        <p>Reroute emergency habitat power after a cascading fault by comparing line resistance, fuse margin, load profiles, and battery reserve.</p>
+        <div class="meta">
+          <div class="metaBox"><strong>Physics focus</strong><span>Ohm’s law, power, current, series/parallel reasoning, voltage drop, reserve logic.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>“Current gets used up” and “the shortest reroute is always best.”</span></div>
+          <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>4.6 Astronomy benefits from and stimulates technology · 5.8 Spacecraft exploration.</span></div>
+        </div>
+        <div class="actions"><a class="play" href="Habitat_blackout.html">Play game</a><a class="read" href="README.md#habitat-blackout">Read summary</a></div>
+      </article>
+    </div>
+
+    <div class="roadmap">
+      <div class="kicker">Portfolio roadmap</div>
+      <h2 style="margin:0 0 8px">More missions can be added here later.</h2>
+      <p class="lead" style="margin-bottom:0">This landing page is intentionally expandable. New mission cards can be dropped into the same grid without redesigning the whole site.</p>
+      <div class="roadmapGrid">
+        <div class="ghost"><strong>☄️ Future slot</strong><div class="muted small">Asteroid defense, return corridor, debris avoidance, waves-and-scanning missions, or new curriculum-aligned ideas.</div></div>
+        <div class="ghost"><strong>🧪 Teacher-facing slot</strong><div class="muted small">Assessment notes, worksheets, exports, or classroom implementation guides can be linked from a later revision.</div></div>
+        <div class="ghost"><strong>🌍 Localization slot</strong><div class="muted small">The current page is English-first, but the structure is ready for later multilingual expansion.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div class="small">Designed for GitHub hosting. Keep <span style="font-family:var(--mono)">index.html</span> in the repository root together with the game HTML files.</div>
+    <div class="small">License: MIT • README includes curriculum alignment and misconceptions guide.</div>
+  </div>
+</div>
+
+<script>
+const buttons=[...document.querySelectorAll('.filterBtn')];
+const cards=[...document.querySelectorAll('.card[data-tags]')];
+buttons.forEach(btn=>btn.addEventListener('click',()=>{buttons.forEach(b=>b.classList.remove('active'));btn.classList.add('active');const tag=btn.dataset.filter;cards.forEach(card=>{const tags=card.dataset.tags.split(/\s+/);card.classList.toggle('hide',!(tag==='all'||tags.includes(tag)));});}));
+</script>
+</body>
+</html>

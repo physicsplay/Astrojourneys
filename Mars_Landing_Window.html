@@ -1,0 +1,2580 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>MISSION ATLAS — Mars Landing Window</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg0:#050712;
+  --bg1:#120916;
+  --panel:rgba(8,12,25,.86);
+  --panel2:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.12);
+  --text:#eef3ff;
+  --muted:rgba(220,230,255,.72);
+  --gold:#ffd166;
+  --cyan:#72ddf7;
+  --red:#ff6b6b;
+  --green:#7ce38b;
+  --orange:#ff9f1c;
+  --shadow:0 12px 30px rgba(0,0,0,.35);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --ui: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --r:18px;
+}
+html,body{height:100%;margin:0;background:
+ radial-gradient(1400px 800px at 50% 8%, rgba(255,90,60,.14), transparent 55%),
+ radial-gradient(1000px 650px at 70% 30%, rgba(255,190,90,.08), transparent 60%),
+ linear-gradient(180deg, #04050d, #100713 56%, #190b12 100%);
+color:var(--text);font-family:var(--ui);overflow:hidden}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-columns:1fr 390px;
+  grid-template-rows:auto 1fr auto;
+}
+@media (max-width:1020px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto auto}
+}
+header{
+  grid-column:1/-1;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,12,22,.94), rgba(10,12,22,.72));
+  backdrop-filter:blur(8px);
+  position:relative; z-index:5;
+}
+.title{display:flex;align-items:center;gap:10px;font-family:var(--mono);letter-spacing:.05em}
+.badge{
+  font-size:.72rem;padding:4px 9px;border-radius:999px;
+  background:rgba(255,159,28,.12);border:1px solid rgba(255,159,28,.35);color:#ffd7a1
+}
+.stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stat{
+  min-width:88px;padding:7px 10px;border-radius:14px;text-align:center;
+  background:rgba(255,255,255,.04);border:1px solid var(--line)
+}
+.stat .v{font-family:var(--mono);font-size:1.05rem}
+.stat .k{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.langs{display:flex;gap:8px}
+.lang-btn,.pick{
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:7px 10px;
+  transition:.15s transform,.15s background,.15s border-color;
+}
+.lang-btn:hover,.pick:hover,.btn:hover{transform:translateY(-1px)}
+.lang-btn.active,.pick.active{background:rgba(114,221,247,.12);border-color:rgba(114,221,247,.45)}
+.stage{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 520px at 50% 16%, rgba(255,170,90,.09), transparent 55%),
+    linear-gradient(180deg, rgba(20,18,38,.55), rgba(30,10,18,.18));
+}
+canvas{display:block;width:100%;height:100%}
+#fxCanvas{position:absolute;inset:0;pointer-events:none}
+.side{
+  border-left:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,12,24,.8), rgba(10,12,24,.58));
+  overflow:auto;padding:12px;
+}
+@media (max-width:1020px){
+  .side{border-left:none;border-top:1px solid var(--line)}
+}
+.card{
+  background:var(--panel2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:12px;
+  margin-bottom:10px;
+  box-shadow:var(--shadow);
+}
+.card h3{
+  margin:0 0 10px 0;
+  font-size:.85rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:rgba(240,244,255,.94);
+  font-family:var(--mono);
+}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;border-top:1px dashed rgba(255,255,255,.08)}
+.row:first-of-type{border-top:none}
+.row .k{font-size:.82rem;color:var(--muted)}
+.row .v{font-family:var(--mono)}
+.note,.mini,.statusline{font-size:.83rem;color:rgba(228,235,255,.82);line-height:1.34}
+.mini{color:var(--muted)}
+.statusline{margin-top:8px}
+.good{color:var(--green)!important}
+.warn{color:var(--gold)!important}
+.bad{color:var(--red)!important}
+.slider-wrap{margin-top:10px}
+label{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;color:rgba(230,237,255,.86)}
+input[type=range]{width:100%;accent-color:#ffb84d}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn{
+  border:none;border-radius:14px;padding:10px 12px;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text)
+}
+.btn.primary{background:linear-gradient(135deg, rgba(255,209,102,.98), rgba(255,159,28,.95)); color:#11131a; border-color:rgba(255,209,102,.55); font-weight:700}
+.btn.hint{background:rgba(114,221,247,.11);border-color:rgba(114,221,247,.35)}
+.btn.danger{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.34)}
+.btn.full{grid-column:1/-1}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  border-radius:999px;padding:4px 9px;border:1px solid var(--line);
+  background:rgba(255,255,255,.04);font-size:.72rem;color:rgba(240,244,255,.86);font-family:var(--mono)
+}
+.footer{
+  grid-column:1/-1;
+  border-top:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,12,22,.78), rgba(10,12,22,.92));
+  display:flex;justify-content:space-between;gap:10px;
+  padding:8px 12px;font-size:.78rem;color:var(--muted)
+}
+.overlay{
+  position:fixed;inset:0;z-index:20;
+  display:grid;place-items:center;
+  background:linear-gradient(180deg, rgba(3,4,10,.78), rgba(8,10,20,.92));
+  padding:18px;
+}
+.modal{
+  width:min(980px,94vw);
+  max-height:92vh;
+  overflow:auto;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(850px 500px at 50% 0%, rgba(255,120,60,.11), transparent 60%),
+    linear-gradient(180deg, rgba(10,12,24,.96), rgba(11,12,24,.92));
+  box-shadow:0 22px 60px rgba(0,0,0,.45);
+  padding:18px;
+}
+.modal h1,.modal h2{margin:0 0 10px 0}
+.intro-grid{display:grid;grid-template-columns:1.2fr .9fr;gap:14px}
+@media (max-width:860px){.intro-grid{grid-template-columns:1fr}}
+.block{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:14px;
+}
+.hero{
+  font-size:1.05rem;line-height:1.5;color:rgba(248,248,255,.96)
+}
+.dialogue{line-height:1.55;color:rgba(235,239,255,.94)}
+.dialogue .who{font-weight:800;color:#ffd7a1}
+.em{color:#ffd166}
+.par{font-family:var(--mono);color:#72ddf7}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+.formula{
+  font-family:var(--mono);
+  font-size:.85rem;
+  line-height:1.45;
+  white-space:pre-line;
+  color:rgba(233,240,255,.92)
+}
+.table{
+  width:100%;border-collapse:collapse;font-size:.86rem
+}
+.table th,.table td{
+  padding:9px 8px;border-top:1px dashed rgba(255,255,255,.1);text-align:left;vertical-align:top
+}
+.table th{color:var(--muted);font-weight:600}
+.table tr:first-child th,.table tr:first-child td{border-top:none}
+.medal{
+  font-size:1.1rem;
+  padding:6px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid var(--line)
+}
+textarea{
+  width:100%;min-height:82px;border-radius:14px;padding:10px 12px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);resize:vertical
+}
+.truth-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.truth-btn{
+  border:none;border-radius:12px;padding:9px 12px;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);color:var(--text)
+}
+.truth-btn.correct{background:rgba(124,227,139,.12);border-color:rgba(124,227,139,.35)}
+.truth-btn.wrong{background:rgba(255,107,107,.14);border-color:rgba(255,107,107,.38)}
+.legend{
+  display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px
+}
+.sw{display:inline-flex;align-items:center;gap:6px}
+.sw i{display:inline-block;width:14px;height:4px;border-radius:99px;background:#fff}
+.chart-wrap{
+  border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03);padding:10px
+}
+.smallcaps{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:var(--mono)}
+kbd{
+  font-family:var(--mono);font-size:.78rem;padding:2px 6px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08)
+}
+/* === PHYSICS QUIZ === */
+.quizBox{margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(255,209,102,.25);background:rgba(255,209,102,.06)}
+.quizBox h4{margin:0 0 8px;font-size:.85rem;color:#ffd166;font-family:var(--mono)}
+.quizBox .qText{color:#eef3ff;margin-bottom:8px;line-height:1.4;font-size:.86rem}
+.quizBox .qOpts{display:flex;flex-direction:column;gap:5px}
+.quizBox .qOpt{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;color:#d8e8ff;font-size:.82rem;transition:.12s}
+.quizBox .qOpt:hover{border-color:rgba(114,221,247,.35);background:rgba(114,221,247,.07)}
+.quizBox .qOpt.correct{border-color:rgba(124,227,139,.5);background:rgba(124,227,139,.1);color:#aaf8c4}
+.quizBox .qOpt.wrong{border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.08);color:#ffb3b3}
+.quizBox .qExplain{margin-top:8px;padding:8px;border-radius:10px;background:rgba(0,0,0,.2);color:#c4daef;font-size:.82rem;line-height:1.35;display:none}
+.quizBox .qExplain.show{display:block}
+/* === TOAST === */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120%);padding:10px 22px;border-radius:999px;background:rgba(10,14,24,.92);border:1px solid rgba(114,221,247,.3);color:#c8e8ff;font-weight:700;font-size:.88rem;z-index:30;transition:transform .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* === EXTRA BUTTONS === */
+.btn.demo{background:rgba(255,159,28,.11);border-color:rgba(255,159,28,.32);color:#ffd7a1}
+.btn.slow{background:rgba(124,227,139,.08);border-color:rgba(124,227,139,.25);color:#b8f5c8}
+</style>
+</head>
+<body>
+<div id="introOverlay" class="overlay">
+  <div class="modal">
+    <div class="intro-grid">
+      <div class="block">
+        <div class="smallcaps" id="introTag">MISSION ATLAS / GAME 03</div>
+        <h1 id="introTitle">MARS LANDING WINDOW</h1>
+        <div id="introDialogue" class="dialogue"></div>
+        <div class="hero" style="margin-top:12px" id="heroText"></div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="block">
+            <div class="smallcaps" id="learningLabel"></div>
+            <div class="hero" id="learningText"></div>
+          </div>
+          <div class="block">
+            <div class="smallcaps" id="bigIdeaLabel"></div>
+            <div class="hero" id="bigIdeaText"></div>
+          </div>
+          <div class="block">
+            <div class="smallcaps" id="modelLabel"></div>
+            <div class="mini" id="modelText"></div>
+          </div>
+          <div class="block">
+            <div class="smallcaps" id="misLabel"></div>
+            <div class="mini" id="misText"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2 id="missionBoxTitle">Mission setup</h2>
+        <div class="mini" id="missionBoxText"></div>
+
+        <div style="margin-top:14px" class="smallcaps" id="langLabel">Language</div>
+        <div class="pills" style="margin-top:8px">
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="el">EL</button>
+          <button class="lang-btn" data-lang="it">IT</button>
+        </div>
+
+        <div style="margin-top:14px" class="smallcaps" id="difficultyLabel">Difficulty</div>
+        <div class="pills" style="margin-top:8px">
+          <button class="pick diffPick active" data-diff="easy" id="easyBtn"></button>
+          <button class="pick diffPick" data-diff="medium" id="mediumBtn"></button>
+          <button class="pick diffPick" data-diff="hard" id="hardBtn"></button>
+        </div>
+
+        <div class="block" style="margin-top:14px">
+          <div class="smallcaps" id="keysLabel"></div>
+          <div class="mini" id="keysText"></div>
+        </div>
+
+        <div class="btns" style="margin-top:14px">
+          <button class="btn primary full" id="startBtn"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pauseOverlay" class="overlay hidden">
+  <div class="modal" style="width:min(760px,94vw)">
+    <h2 id="pauseTitle"></h2>
+    <div class="mini" id="pauseText"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="block">
+        <div class="smallcaps" id="computeTitle"></div>
+        <div class="formula" id="computePanel"></div>
+      </div>
+      <div class="block">
+        <div class="smallcaps" id="computeReadTitle"></div>
+        <div class="mini" id="computeReads"></div>
+      </div>
+    </div>
+    <div class="quizBox hidden" id="pauseQuizBox">
+      <h4 id="pauseQuizLabel">🧠 Physics Challenge (+3 pts)</h4>
+      <div class="qText" id="pauseQuizQ"></div>
+      <div class="qOpts" id="pauseQuizOpts"></div>
+      <div class="qExplain" id="pauseQuizExplain"></div>
+    </div>
+    <div class="btns" style="margin-top:12px">
+      <button class="btn" id="resumeBtn"></button>
+      <button class="btn hint" id="pauseHintBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay hidden">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div>
+        <div class="smallcaps" id="endTag"></div>
+        <h2 id="endTitle"></h2>
+      </div>
+      <div class="medal" id="medalBox"></div>
+    </div>
+
+    <div class="grid2" style="margin-top:12px">
+      <div class="block">
+        <div class="smallcaps" id="resultsLabel"></div>
+        <table class="table">
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+      <div class="block">
+        <div class="smallcaps" id="analysisLabel"></div>
+        <table class="table">
+          <tbody id="analysisBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block" style="margin-top:12px">
+      <div class="smallcaps" id="theoryLabel"></div>
+      <div class="mini" id="theoryText"></div>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:12px">
+      <div class="smallcaps" id="chartLabel"></div>
+      <canvas id="chartCanvas" width="840" height="220"></canvas>
+      <div class="legend">
+        <span class="sw"><i style="background:#72ddf7"></i><span id="chartLeg1"></span></span>
+        <span class="sw"><i style="background:#ffd166"></i><span id="chartLeg2"></span></span>
+        <span class="sw"><i style="background:#ff6b6b"></i><span id="chartLeg3"></span></span>
+      </div>
+    </div>
+
+    <div class="block" style="margin-top:12px">
+      <div class="smallcaps" id="truthLabel"></div>
+      <div class="mini" id="truthQuestion"></div>
+      <div class="truth-row">
+        <button class="truth-btn" id="truthTrue"></button>
+        <button class="truth-btn" id="truthFalse"></button>
+      </div>
+      <div class="mini" id="truthFeedback" style="margin-top:10px"></div>
+    </div>
+
+    <div class="block" style="margin-top:12px">
+      <div class="smallcaps" id="reflectionLabel"></div>
+      <div class="mini" id="reflectionText"></div>
+      <textarea id="reflectionBox"></textarea>
+    </div>
+
+    <div class="btns" style="margin-top:12px">
+      <button class="btn primary" id="retryBtn"></button>
+      <button class="btn" id="newMissionBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <header>
+    <div class="title">
+      <span>🪂 MARS LANDING WINDOW</span>
+      <span class="badge" id="badgeText">ATLAS / EDL</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="attemptsVal">0</div><div class="k" id="attemptsLabel"></div></div>
+      <div class="stat"><div class="v" id="hintsVal">0</div><div class="k" id="hintsLabel"></div></div>
+      <div class="stat"><div class="v" id="scoreVal">100</div><div class="k" id="scoreLabel"></div></div>
+      <div class="langs">
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="el">EL</button>
+        <button class="lang-btn" data-lang="it">IT</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stage">
+    <canvas id="simCanvas"></canvas>
+    <canvas id="fxCanvas"></canvas>
+  </div>
+
+  <aside class="side">
+    <div class="card">
+      <h3 id="missionDataTitle"></h3>
+      <div class="row"><div class="k" id="targetLabel"></div><div class="v" id="targetVal"></div></div>
+      <div class="row"><div class="k" id="startLabel"></div><div class="v" id="startVal"></div></div>
+      <div class="row"><div class="k" id="fuelLabel"></div><div class="v" id="fuelVal"></div></div>
+      <div class="row"><div class="k" id="windLabel"></div><div class="v" id="windVal"></div></div>
+      <div class="row"><div class="k" id="statusLabel"></div><div class="v" id="statusVal"></div></div>
+      <div class="statusline" id="statusLine"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="liveTitle"></h3>
+      <div class="row"><div class="k" id="altLabel"></div><div class="v" id="altVal"></div></div>
+      <div class="row"><div class="k" id="vyLabel"></div><div class="v" id="vyVal"></div></div>
+      <div class="row"><div class="k" id="vxLabel"></div><div class="v" id="vxVal"></div></div>
+      <div class="row"><div class="k" id="rhoLabel"></div><div class="v" id="rhoVal"></div></div>
+      <div class="row"><div class="k" id="qLabel"></div><div class="v" id="qVal"></div></div>
+      <div class="row"><div class="k" id="throttleLabel"></div><div class="v" id="throttleVal"></div></div>
+    </div>
+
+    <div class="card">
+      <h3 id="controlsTitle"></h3>
+      <div class="slider-wrap">
+        <label for="chuteSlider"><span id="chuteLabel"></span><span id="chuteVal"></span></label>
+        <input id="chuteSlider" type="range" min="2.5" max="9.0" step="0.1" value="5.7"/>
+        <div class="mini" id="chuteHint"></div>
+      </div>
+      <div class="slider-wrap">
+        <label for="burnSlider"><span id="burnLabel"></span><span id="burnVal"></span></label>
+        <input id="burnSlider" type="range" min="0.3" max="4.2" step="0.05" value="1.5"/>
+        <div class="mini" id="burnHint"></div>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="runBtn"></button>
+        <button class="btn" id="pauseBtn"></button>
+        <button class="btn danger" id="resetBtn"></button>
+        <button class="btn hint" id="hintBtn"></button>
+        <button class="btn demo full" id="chuteOnlyBtn">🪂 Parachute-only demo</button>
+        <button class="btn slow full" id="slowBtn">🐌 Slow motion</button>
+      </div>
+      <div class="note" id="easterEggLine" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="physicsTitle"></h3>
+      <div class="formula" id="formulaText"></div>
+      <div class="mini" id="physicsFoot"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="computeCardTitle"></h3>
+      <div class="mini" id="computeCardText"></div>
+      <div class="row"><div class="k" id="predDeployLabel"></div><div class="v" id="predDeployVal"></div></div>
+      <div class="row"><div class="k" id="predBurnLabel"></div><div class="v" id="predBurnVal"></div></div>
+      <div class="row"><div class="k" id="predStopLabel"></div><div class="v" id="predStopVal"></div></div>
+      <div class="row"><div class="k" id="predDriftLabel"></div><div class="v" id="predDriftVal"></div></div>
+      <div class="statusline" id="computeStatus"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="teacherTitle"></h3>
+      <div class="mini" id="teacherText"></div>
+      <div class="row"><div class="k" id="logCountLabel"></div><div class="v" id="logCountVal">0</div></div>
+      <div class="row"><div class="k" id="teacherQLabel"></div><div class="v" id="teacherQVal">—</div></div>
+      <div class="row"><div class="k" id="teacherStopLabel"></div><div class="v" id="teacherStopVal">—</div></div>
+      <div class="row"><div class="k" id="teacherEnergyLabel"></div><div class="v" id="teacherEnergyVal">—</div></div>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn" id="exportCsvBtn"></button>
+        <button class="btn" id="exportJsonBtn"></button>
+        <button class="btn danger full" id="clearLogBtn"></button>
+      </div>
+      <div class="mini" id="teacherStatus" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="logTitle"></h3>
+      <div class="mini" id="logText"></div>
+      <div class="pills" style="margin-top:10px">
+        <span class="pill" id="pill1"></span>
+        <span class="pill" id="pill2"></span>
+        <span class="pill" id="pill3"></span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="footer">
+    <div id="footerLeft"></div>
+    <div id="footerRight"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+
+const I18N = {
+  en: {
+    introTitle: "MARS LANDING WINDOW",
+    introDialogue: `<div class="dialogue">
+      <span class="who">FLIGHT DIRECTOR:</span> “The cargo pod <span class="em">ARES-7</span> must land near Habitat Selene before the oxygen farm misses its resupply window.”
+      <br><span class="who">GUIDANCE AI:</span> “Mars has lower gravity than Earth, yes. Mars also has a thin atmosphere, which is physics for ‘don’t get cocky’.”
+      <br><span class="who">YOU:</span> “So I choose the <span class="par">parachute window</span> and the <span class="par">retro-burn window</span>. No random slider nonsense.”
+    </div>`,
+    heroText: "A real Mars landing is an entry–descent–landing problem, not a cartoon parachute trick. Watch forces, drag, gravity, energy and drift.",
+    learningLabel: "Learning target",
+    learningText: "Use Newton’s 2nd law, drag, gravity and energy ideas to decide when a parachute helps and when engines must take over.",
+    bigIdeaLabel: "Big Idea hook",
+    bigIdeaText: "Big Idea #7.5 + #5.8: Mars is a rocky world with a thin atmosphere, and spacecraft explore the Solar System through engineering choices.",
+    modelLabel: "Model / assumptions",
+    modelText: "2D vertical slice, constant Mars g, exponential atmosphere, drag opposite the relative velocity, one parachute stage, capped retro-thrust autopilot after ignition. SI units.",
+    misLabel: "Misconception to break",
+    misText: "“Mars has lower gravity, so landing is easy” and “a parachute is enough.” Both fail in the mission, not in a boring lecture.",
+    missionBoxTitle: "Mission setup",
+    missionBoxText: "Pick a difficulty, then set only two variables: parachute deployment altitude and retro-ignition altitude. The right physical model is the only stable path to success.",
+    langLabel: "Language",
+    difficultyLabel: "Difficulty",
+    diffEasy: "Easy",
+    diffMedium: "Medium",
+    diffHard: "Hard",
+    keysLabel: "Controls",
+    keysText: "<kbd>Space</kbd>/<kbd>Enter</kbd> start • <kbd>P</kbd> pause • <kbd>R</kbd> reset • <kbd>H</kbd> hint",
+    startBtn: "Start mission",
+    pauseTitle: "PAUSE & COMPUTE",
+    pauseText: "Use the live values like a mission notebook. Thinking beats random sliders. Mars especially enjoys punishing vibes-based aerodynamics.",
+    computeTitle: "Formula notebook",
+    computeReadTitle: "Current readout",
+    resumeBtn: "Resume",
+    pauseHintBtn: "Hint (-5)",
+    endTag: "ATLAS / MISSION DEBRIEF",
+    endTitleSuccess: "✅ Landing achieved",
+    endTitleFail: "💥 Mission failed",
+    resultsLabel: "Results",
+    analysisLabel: "Analysis",
+    theoryLabel: "Theory vs simulation",
+    theoryText: "The simulation rewards the same logic as the theory: drag helps only when the atmosphere is thick enough; lower gravity helps, but not enough for parachute-only landing. Early burn wastes fuel and lets wind drift you away. Late burn leaves too little stopping distance.",
+    chartLabel: "Flight profile",
+    chartLeg1: "Altitude",
+    chartLeg2: "Vertical speed",
+    chartLeg3: "Event markers",
+    truthLabel: "Misconception check",
+    truthQuestion: "True or false: “Because Mars has lower gravity than Earth, a parachute alone is enough for a soft landing.”",
+    truthTrue: "TRUE",
+    truthFalse: "FALSE",
+    truthCorrect: "Correct. Mars gravity is weaker, but the atmosphere is thin, so drag is limited. Parachute helps, but engines still matter.",
+    truthWrong: "Not this time. Lower gravity helps, but Mars air is thin, so a parachute alone usually cannot finish the job safely.",
+    reflectionLabel: "Mini-reflection",
+    reflectionText: "What did you change between attempts, and what physical reason justified the change?",
+    retryBtn: "Retry same mission",
+    newMissionBtn: "New mission",
+    attemptsLabel: "Attempts",
+    hintsLabel: "Hints",
+    scoreLabel: "Score",
+    badgeText: "ATLAS / EDL",
+    missionDataTitle: "Mission data",
+    targetLabel: "Landing ellipse",
+    startLabel: "Initial state",
+    fuelLabel: "Fuel reserve",
+    windLabel: "Wind model",
+    statusLabel: "Status",
+    liveTitle: "Live telemetry",
+    altLabel: "Altitude",
+    vyLabel: "Vertical v",
+    vxLabel: "Horizontal v",
+    rhoLabel: "Density",
+    qLabel: "Dynamic q",
+    throttleLabel: "Throttle",
+    controlsTitle: "Decisions",
+    chuteLabel: "Parachute deploy",
+    burnLabel: "Retro ignite",
+    chuteHint: "Earlier chute = more drag time, but more drift. Later chute = less drift, but less slowing.",
+    burnHint: "Earlier burn = safer but fuel-hungry. Later burn = efficient until it becomes a crater subscription.",
+    runBtn: "Run",
+    pauseBtn: "Pause",
+    resetBtn: "Reset",
+    hintBtn: "Hint (-5)",
+    easterEgg: "🥚 3.71 km? Hello, Mars gravity. Nice nerd move.",
+    physicsTitle: "Physics strip",
+    formulaText: "ΣF_y = m a_y = D_y + T − m g\nD = 1/2 ρ C_d A v_rel²\nρ(h) = ρ₀ e^(−h/H)\nK = 1/2 m v²    U ≈ m g h\nE_remove = K + U ≈ 1/2 m v² + m g h\nPreview idea: if stopping distance > burn altitude, the burn is late.",
+    physicsFoot: "Drag opposes the velocity relative to the wind. The retro autopilot is capped by max thrust, so “engine on” is not magic.",
+    computeMini: "Use the signs: v_y < 0 on descent. If q is tiny, the chute cannot do much yet. If d_stop is bigger than your burn altitude, the burn is late. E_remove uses a plus sign because it is the positive amount of mechanical energy that still has to be removed after ignition, not ΔE itself.",
+    logDeploy: "🪂 Chute deployed.",
+    logBurn: "🔥 Retro ignition.",
+    computeCardTitle: "Preview before launch",
+    computeCardText: "These values update from a fast prediction using your current altitudes. They guide reasoning; they are not a cheat sheet with the answer. E_remove = 1/2 m v² + mgh is shown as a positive amount because it is the energy still left to remove after ignition.",
+    predDeployLabel: "At chute opening",
+    predBurnLabel: "At burn start",
+    predStopLabel: "Approx stop distance",
+    predDriftLabel: "Predicted x offset vs habitat",
+    logTitle: "Mission log",
+    footerLeft: "Space/Enter: START • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "2D • SI • Mars says: thin air, thick consequences",
+    stateReady: "Ready. Pick your windows and run the descent.",
+    stateRunning: "Descent in progress.",
+    statePaused: "Paused for compute.",
+    stateSuccess: "Touchdown inside mission limits.",
+    stateFail: "Landing outside mission limits.",
+    computeGood: "Preview: physically plausible plan. Now earn it.",
+    computeWarnChuteHigh: "Preview: chute may deploy too high in thin air → weak early drag, long drift.",
+    computeWarnChuteLow: "Preview: chute looks late → less time to bleed speed.",
+    computeWarnBurnLate: "Preview: stopping distance is larger than burn altitude → burn is late.",
+    computeWarnBurnEarly: "Preview: burn is very early → safe, but fuel and drift may punish you.",
+    hint1: "Hint: Ask two separate questions: when does drag become useful, and when do engines need enough stopping distance?",
+    hint2: "Hint: Look at the preview q and stopping distance. Physics is already whispering the answer.",
+    hint3: "Hint: If you miss the ellipse but land softly, the chute was probably too early. If you hit hard, the burn was probably too late.",
+    joke1: "Newton called. He says Mars still believes in F = ma.",
+    joke2: "A parachute is not a wizard cape. On Mars it negotiates; it does not dominate.",
+    joke3: "Teen drama is temporary. Impact velocity is forever.",
+    diagChuteHigh: "Diagnosis: chute too high → you drifted too much before the final descent.",
+    diagChuteLow: "Diagnosis: chute too low → not enough drag time.",
+    diagBurnLate: "Diagnosis: burn too late → max thrust ran out of stopping room.",
+    diagBurnEarly: "Diagnosis: burn too early → fuel wasted and drift grew.",
+    diagLeft: "Diagnosis: landed left of the habitat ellipse.",
+    diagRight: "Diagnosis: landed right of the habitat ellipse.",
+    resultsScore: "Total score",
+    resultsFuel: "Fuel left",
+    resultsTouch: "Touchdown v_y",
+    resultsMiss: "Ellipse miss",
+    resultsTime: "Time",
+    analysisStage: "EDL staging",
+    analysisSpeed: "Speed logic",
+    analysisEllipse: "Ellipse logic",
+    analysisMyth: "Misconception",
+    mythLine: "Lower gravity helps, but thin air limits drag. That is why the parachute-only idea fails.",
+    medalGold: "🥇 GOLD",
+    medalSilver: "🥈 SILVER",
+    medalBronze: "🥉 BRONZE",
+    teacherTitle: "Teacher toolkit",
+    teacherText: "Preview q, stopping distance and E_remove = 1/2 m v² + mgh, then export every attempt as classroom evidence. The plus sign means we are tracking the positive mechanical energy still present at ignition and still needing removal before touchdown.",
+    logCountLabel: "Logged attempts",
+    teacherQLabel: "Preview q at chute",
+    teacherStopLabel: "Preview stopping distance",
+    teacherEnergyLabel: "Preview E_remove",
+    exportCsvBtn: "Export CSV",
+    exportJsonBtn: "Export JSON",
+    clearLogBtn: "Clear logs",
+    teacherStatusEmpty: "No attempts logged yet.",
+    teacherStatusLast: "Last attempt",
+    teacherStatusSafe: "safe landing",
+    teacherStatusFail: "not safe",
+    teacherExportEmpty: "Run at least one attempt before export.",
+    teacherExportReady: "Attempt log ready.",
+    teacherLogCleared: "Attempt log cleared.",
+    analysisQ: "Dynamic pressure q",
+    analysisStop: "Stopping distance",
+    analysisEnergy: "Energy to remove",
+    medalHeart: "💔 TRY AGAIN" 
+  },
+  el: {
+    introTitle: "MARS LANDING WINDOW",
+    introDialogue: `<div class="dialogue">
+      <span class="who">ΔΙΕΥΘΥΝΤΗΣ ΠΤΗΣΗΣ:</span> “Το φορτίο <span class="em">ARES-7</span> πρέπει να προσγειωθεί κοντά στο Habitat Selene πριν χαθεί το παράθυρο ανεφοδιασμού.”
+      <br><span class="who">AI ΚΑΘΟΔΗΓΗΣΗΣ:</span> “Ο Άρης έχει μικρότερη βαρύτητα από τη Γη, ναι. Έχει και αραιή ατμόσφαιρα, δηλαδή η Φυσική λέει ‘μην το παίξεις ήρωας’.”
+      <br><span class="who">ΕΣΥ:</span> “Άρα διαλέγω <span class="par">παράθυρο αλεξιπτώτου</span> και <span class="par">παράθυρο ανάφλεξης</span>. Όχι τυχαία sliders.”
+    </div>`,
+    heroText: "Μια πραγματική προσεδάφιση στον Άρη είναι πρόβλημα εισόδου–καθόδου–προσγείωσης, όχι καρτούν με αλεξίπτωτο. Παρατήρησε δυνάμεις, αντίσταση, βαρύτητα, ενέργεια και οριζόντια μετατόπιση.",
+    learningLabel: "Μαθησιακός στόχος",
+    learningText: "Να χρησιμοποιώ τον 2ο νόμο του Νεύτωνα, την αντίσταση, τη βαρύτητα και ιδέες ενέργειας για να αποφασίζω πότε βοηθά το αλεξίπτωτο και πότε πρέπει να αναλάβουν οι κινητήρες.",
+    bigIdeaLabel: "Big Idea hook",
+    bigIdeaText: "Big Idea #7.5 + #5.8: Ο Άρης είναι βραχώδης πλανήτης με αραιή ατμόσφαιρα και τα σκάφη εξερευνούν το Ηλιακό Σύστημα μέσα από μηχανικές επιλογές.",
+    modelLabel: "Μοντέλο / υποθέσεις",
+    modelText: "Κατακόρυφη τομή 2D, σταθερό g του Άρη, εκθετική ατμόσφαιρα, αντίσταση αντίθετη στη σχετική ταχύτητα, ένα στάδιο αλεξιπτώτου, autopilot ώσης με ανώτατο όριο μετά την ανάφλεξη. SI μονάδες.",
+    misLabel: "Παρανόηση που σπάει",
+    misText: "«Στον Άρη η βαρύτητα είναι μικρότερη, άρα η προσγείωση είναι εύκολη» και «το αλεξίπτωτο αρκεί». Και οι δύο ιδέες καταρρέουν μέσα στην αποστολή.",
+    missionBoxTitle: "Ρύθμιση αποστολής",
+    missionBoxText: "Διάλεξε δυσκολία και μετά μόνο δύο μεταβλητές: ύψος ανοίγματος αλεξιπτώτου και ύψος ανάφλεξης retro. Μόνο το σωστό φυσικό μοντέλο οδηγεί σταθερά σε επιτυχία.",
+    langLabel: "Γλώσσα",
+    difficultyLabel: "Δυσκολία",
+    diffEasy: "Easy",
+    diffMedium: "Medium",
+    diffHard: "Hard",
+    keysLabel: "Χειρισμός",
+    keysText: "<kbd>Space</kbd>/<kbd>Enter</kbd> έναρξη • <kbd>P</kbd> pause • <kbd>R</kbd> reset • <kbd>H</kbd> hint",
+    startBtn: "Έναρξη αποστολής",
+    pauseTitle: "PAUSE & COMPUTE",
+    pauseText: "Χρησιμοποίησε τις ζωντανές τιμές σαν mission notebook. Η σκέψη νικά τα τυχαία sliders. Ο Άρης ειδικά λατρεύει να τιμωρεί την αεροδυναμική «στο περίπου».",
+    computeTitle: "Τετράδιο τύπων",
+    computeReadTitle: "Τρέχουσα ανάγνωση",
+    resumeBtn: "Συνέχεια",
+    pauseHintBtn: "Hint (-5)",
+    endTag: "ATLAS / ΑΝΑΛΥΣΗ ΑΠΟΣΤΟΛΗΣ",
+    endTitleSuccess: "✅ Επιτυχής προσεδάφιση",
+    endTitleFail: "💥 Αποτυχία αποστολής",
+    resultsLabel: "Αποτελέσματα",
+    analysisLabel: "Ανάλυση",
+    theoryLabel: "Θεωρία vs προσομοίωση",
+    theoryText: "Η προσομοίωση επιβραβεύει την ίδια λογική με τη θεωρία: η αντίσταση βοηθά μόνο όταν η ατμόσφαιρα είναι αρκετά πυκνή· η μικρότερη βαρύτητα βοηθά, αλλά όχι τόσο ώστε να αρκεί το αλεξίπτωτο. Νωρίς burn = σπατάλη καυσίμου και drift. Αργά burn = δεν φτάνει η απόσταση πέδησης. Το E_remove μένει θετικό, γιατί εκφράζει τη μηχανική ενέργεια που υπάρχει ακόμη τη στιγμή της ανάφλεξης και πρέπει να αφαιρεθεί πριν το touchdown.",
+    chartLabel: "Προφίλ πτήσης",
+    chartLeg1: "Ύψος",
+    chartLeg2: "Κατακόρυφη ταχύτητα",
+    chartLeg3: "Συμβάντα",
+    truthLabel: "Έλεγχος παρανόησης",
+    truthQuestion: "Σωστό ή λάθος: «Επειδή στον Άρη η βαρύτητα είναι μικρότερη από της Γης, αρκεί μόνο ένα αλεξίπτωτο για μαλακή προσεδάφιση.»",
+    truthTrue: "ΣΩΣΤΟ",
+    truthFalse: "ΛΑΘΟΣ",
+    truthCorrect: "Σωστά. Η βαρύτητα του Άρη είναι μικρότερη, αλλά η ατμόσφαιρα είναι αραιή, άρα η αντίσταση είναι περιορισμένη. Το αλεξίπτωτο βοηθά, αλλά οι κινητήρες παραμένουν κρίσιμοι.",
+    truthWrong: "Όχι αυτή τη φορά. Η μικρότερη βαρύτητα βοηθά, αλλά ο αέρας στον Άρη είναι αραιός, άρα το αλεξίπτωτο μόνο του συνήθως δεν ολοκληρώνει με ασφάλεια την κάθοδο.",
+    reflectionLabel: "Mini-reflection",
+    reflectionText: "Τι άλλαξες ανάμεσα στις προσπάθειες και ποιος φυσικός λόγος δικαιολογούσε την αλλαγή;",
+    retryBtn: "Ξανά η ίδια αποστολή",
+    newMissionBtn: "Νέα αποστολή",
+    attemptsLabel: "Προσπάθειες",
+    hintsLabel: "Hints",
+    scoreLabel: "Score",
+    badgeText: "ATLAS / EDL",
+    missionDataTitle: "Δεδομένα αποστολής",
+    targetLabel: "Έλλειψη προσγείωσης",
+    startLabel: "Αρχική κατάσταση",
+    fuelLabel: "Καύσιμο",
+    windLabel: "Μοντέλο ανέμου",
+    statusLabel: "Κατάσταση",
+    liveTitle: "Ζωντανή τηλεμετρία",
+    altLabel: "Ύψος",
+    vyLabel: "Κατακόρ. v",
+    vxLabel: "Οριζόντια v",
+    rhoLabel: "Πυκνότητα",
+    qLabel: "Δυναμική q",
+    throttleLabel: "Throttle",
+    controlsTitle: "Αποφάσεις",
+    chuteLabel: "Άνοιγμα αλεξιπτώτου",
+    burnLabel: "Ανάφλεξη retro",
+    chuteHint: "Πιο νωρίς αλεξίπτωτο = περισσότερος χρόνος αντίστασης, αλλά και περισσότερο drift. Πιο αργά = λιγότερο drift, αλλά μικρότερη επιβράδυνση.",
+    burnHint: "Πιο νωρίς burn = πιο ασφαλές αλλά κοστίζει καύσιμο. Πιο αργά = αποδοτικό… μέχρι να γίνει συνδρομή σε κρατήρα.",
+    runBtn: "Run",
+    pauseBtn: "Pause",
+    resetBtn: "Reset",
+    hintBtn: "Hint (-5)",
+    easterEgg: "🥚 3.71 km; γεια σου επιτάχυνση βαρύτητας του Άρη. Ωραία κίνηση, nerd.",
+    physicsTitle: "Physics strip",
+    formulaText: "ΣF_y = m a_y = D_y + T − m g\nD = 1/2 ρ C_d A v_rel²\nρ(h) = ρ₀ e^(−h/H)\nK = 1/2 m v²    U ≈ m g h\nE_remove = K + U ≈ 1/2 m v² + m g h\nΙδέα preview: αν η απόσταση πέδησης > ύψος ανάφλεξης, τότε το burn είναι αργά.",
+    physicsFoot: "Η αντίσταση είναι αντίθετη στη σχετική ταχύτητα ως προς τον άνεμο. Το retro autopilot έχει όριο μέγιστης ώσης, άρα το «engine on» δεν είναι μαγεία.",
+    computeMini: "Πρόσεξε τα πρόσημα: στην κάθοδο v_y < 0. Αν το q είναι πολύ μικρό, το αλεξίπτωτο δεν κάνει πολλά ακόμη. Αν d_stop > ύψος ανάφλεξης, τότε το burn είναι αργά. Το E_remove έχει + γιατί μετρά τη θετική ποσότητα μηχανικής ενέργειας που απομένει να αφαιρεθεί μετά την ανάφλεξη, όχι το ίδιο το ΔE.",
+    logDeploy: "🪂 Άνοιγμα αλεξιπτώτου.",
+    logBurn: "🔥 Ανάφλεξη retro.",
+    computeCardTitle: "Preview πριν την εκτόξευση",
+    computeCardText: "Οι τιμές ενημερώνονται από γρήγορη πρόβλεψη με τα τρέχοντα ύψη σου. Καθοδηγούν τη σκέψη· δεν είναι έτοιμη λύση. Το E_remove = 1/2 m v² + mgh δίνεται θετικό, γιατί είναι η ενέργεια που μένει να αφαιρεθεί μετά την ανάφλεξη.",
+    predDeployLabel: "Στο άνοιγμα αλεξιπτώτου",
+    predBurnLabel: "Στην ανάφλεξη",
+    predStopLabel: "Προσ. απόσταση πέδησης",
+    predDriftLabel: "Προβλ. x απόκλιση από habitat",
+    logTitle: "Mission log",
+    footerLeft: "Space/Enter: START • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "2D • SI • Ο Άρης λέει: αραιός αέρας, πυκνές συνέπειες",
+    stateReady: "Έτοιμος. Διάλεξε παράθυρα και τρέξε την κάθοδο.",
+    stateRunning: "Η κάθοδος εξελίσσεται.",
+    statePaused: "Παύση για υπολογισμό.",
+    stateSuccess: "Προσεδάφιση μέσα στα όρια αποστολής.",
+    stateFail: "Προσγείωση εκτός ορίων αποστολής.",
+    computeGood: "Preview: φυσικά λογικό σχέδιο. Τώρα απέδειξέ το.",
+    computeWarnChuteHigh: "Preview: το αλεξίπτωτο ίσως ανοίγει πολύ ψηλά σε αραιό αέρα → αδύναμη αρχική αντίσταση, μεγάλο drift.",
+    computeWarnChuteLow: "Preview: το αλεξίπτωτο φαίνεται αργό → λίγο χρονικό περιθώριο για επιβράδυνση.",
+    computeWarnBurnLate: "Preview: η απόσταση πέδησης είναι μεγαλύτερη από το ύψος ανάφλεξης → το burn είναι αργά.",
+    computeWarnBurnEarly: "Preview: το burn είναι πολύ νωρίς → ασφαλές, αλλά θα πληρώσεις σε καύσιμο και drift.",
+    hint1: "Hint: Κάνε δύο ξεχωριστές ερωτήσεις: πότε γίνεται χρήσιμη η αντίσταση και πότε οι κινητήρες χρειάζονται αρκετή απόσταση πέδησης;",
+    hint2: "Hint: Κοίτα το preview q και την απόσταση πέδησης. Η Φυσική ήδη ψιθυρίζει την απάντηση.",
+    hint3: "Hint: Αν πέτυχες μαλακή προσγείωση αλλά όχι την έλλειψη, μάλλον το αλεξίπτωτο άνοιξε πολύ νωρίς. Αν έπεσες δυνατά, μάλλον άναψες αργά.",
+    joke1: "Ο Νεύτωνας τηλεφώνησε. Λέει ότι και ο Άρης συνεχίζει να πιστεύει στο F = ma.",
+    joke2: "Το αλεξίπτωτο δεν είναι μαγικός μανδύας. Στον Άρη διαπραγματεύεται· δεν κυριαρχεί.",
+    joke3: "Το teenage drama περνάει. Η ταχύτητα πρόσκρουσης μένει.",
+    diagChuteHigh: "Διάγνωση: αλεξίπτωτο πολύ ψηλά → υπερβολικό drift πριν την τελική κάθοδο.",
+    diagChuteLow: "Διάγνωση: αλεξίπτωτο πολύ χαμηλά → ανεπαρκής χρόνος επιβράδυνσης.",
+    diagBurnLate: "Διάγνωση: burn πολύ αργά → ούτε η μέγιστη ώση δεν πρόλαβε να μηδενίσει την κάθοδο.",
+    diagBurnEarly: "Διάγνωση: burn πολύ νωρίς → σπατάλη καυσίμου και μεγαλύτερο drift.",
+    diagLeft: "Διάγνωση: προσγειώθηκες αριστερά από την έλλειψη.",
+    diagRight: "Διάγνωση: προσγειώθηκες δεξιά από την έλλειψη.",
+    resultsScore: "Συνολικό score",
+    resultsFuel: "Καύσιμο που έμεινε",
+    resultsTouch: "v_y στην επαφή",
+    resultsMiss: "Απόκλιση έλλειψης",
+    resultsTime: "Χρόνος",
+    analysisStage: "EDL staging",
+    analysisSpeed: "Λογική ταχύτητας",
+    analysisEllipse: "Λογική έλλειψης",
+    analysisMyth: "Παρανόηση",
+    mythLine: "Η μικρότερη βαρύτητα βοηθά, αλλά ο αραιός αέρας περιορίζει την αντίσταση. Γι’ αυτό αποτυγχάνει η ιδέα «μόνο αλεξίπτωτο».",
+    medalGold: "🥇 ΧΡΥΣΟ",
+    medalSilver: "🥈 ΑΣΗΜΙ",
+    medalBronze: "🥉 ΧΑΛΚΙΝΟ",
+    teacherTitle: "Teacher toolkit",
+    teacherText: "Δείξε στους μαθητές το q, την απόσταση ακινητοποίησης και το E_remove = 1/2 m v² + mgh και μετά κάνε export κάθε προσπάθεια. Το + σημαίνει ότι παρακολουθούμε τη θετική μηχανική ενέργεια που υπάρχει ακόμη στην ανάφλεξη και πρέπει να αφαιρεθεί μέχρι το touchdown.",
+    logCountLabel: "Καταγεγραμμένες προσπάθειες",
+    teacherQLabel: "Preview q στο chute",
+    teacherStopLabel: "Preview απόσταση ακινητοποίησης",
+    teacherEnergyLabel: "Προεπισκόπηση E_remove",
+    exportCsvBtn: "Export CSV",
+    exportJsonBtn: "Export JSON",
+    clearLogBtn: "Καθαρισμός log",
+    teacherStatusEmpty: "Δεν υπάρχει ακόμη καταγεγραμμένη προσπάθεια.",
+    teacherStatusLast: "Τελευταία προσπάθεια",
+    teacherStatusSafe: "ασφαλής προσεδάφιση",
+    teacherStatusFail: "μη ασφαλής",
+    teacherExportEmpty: "Κάνε πρώτα τουλάχιστον μία προσπάθεια για export.",
+    teacherExportReady: "Το attempt log είναι έτοιμο.",
+    teacherLogCleared: "Το attempt log καθαρίστηκε.",
+    analysisQ: "Δυναμική πίεση q",
+    analysisStop: "Απόσταση ακινητοποίησης",
+    analysisEnergy: "Ενέργεια που πρέπει να αφαιρεθεί",
+    medalHeart: "💔 ΞΑΝΑ" 
+  },
+  it: {
+    introTitle: "MARS LANDING WINDOW",
+    introDialogue: `<div class="dialogue">
+      <span class="who">DIRETTORE DI VOLO:</span> “Il cargo <span class="em">ARES-7</span> deve atterrare vicino all’Habitat Selene prima che finisca la finestra di rifornimento.”
+      <br><span class="who">AI DI GUIDA:</span> “Marte ha una gravità minore della Terra, sì. Ha anche un’atmosfera sottile, cioè la fisica ti dice ‘non fare il gradasso’.”
+      <br><span class="who">TU:</span> “Quindi scelgo la <span class="par">finestra del paracadute</span> e la <span class="par">finestra di accensione retro</span>. Niente slider casuali.”
+    </div>`,
+    heroText: "Non è un mini-gioco carino col paracadute. È una discesa EDL su Marte in cui una scelta intelligente salva il carico e una scelta pigra compra un cratere.",
+    learningLabel: "Obiettivo di apprendimento",
+    learningText: "Usare il 2° principio di Newton, il drag, la gravità e le idee di energia per decidere quando il paracadute aiuta e quando i motori devono intervenire.",
+    bigIdeaLabel: "Big Idea hook",
+    bigIdeaText: "Big Idea #7.5 + #5.8: Marte è un pianeta roccioso con atmosfera sottile e i veicoli spaziali esplorano il Sistema Solare tramite scelte ingegneristiche.",
+    modelLabel: "Modello / ipotesi",
+    modelText: "Sezione verticale 2D, g marziana costante, atmosfera esponenziale, drag opposto alla velocità relativa, uno stadio di paracadute, autopilota retro limitato dalla spinta massima dopo l’accensione. Unità SI.",
+    misLabel: "Misconcetto da rompere",
+    misText: "“Su Marte la gravità è minore, quindi atterrare è facile” e “basta il paracadute”. Entrambe le idee crollano dentro la missione.",
+    missionBoxTitle: "Setup missione",
+    missionBoxText: "Scegli una difficoltà, poi imposta solo due variabili: quota di apertura del paracadute e quota di accensione retro. Solo il modello fisico corretto porta al successo in modo affidabile.",
+    langLabel: "Lingua",
+    difficultyLabel: "Difficoltà",
+    diffEasy: "Easy",
+    diffMedium: "Medium",
+    diffHard: "Hard",
+    keysLabel: "Controlli",
+    keysText: "<kbd>Space</kbd>/<kbd>Enter</kbd> avvio • <kbd>P</kbd> pausa • <kbd>R</kbd> reset • <kbd>H</kbd> hint",
+    startBtn: "Avvia missione",
+    pauseTitle: "PAUSA & CALCOLA",
+    pauseText: "Usa i valori attuali come un notebook di missione. Pensare batte gli slider casuali. Marte ama punire l’aerodinamica fatta “a sensazione”.",
+    computeTitle: "Quaderno formule",
+    computeReadTitle: "Lettura attuale",
+    resumeBtn: "Riprendi",
+    pauseHintBtn: "Hint (-5)",
+    endTag: "ATLAS / DEBRIEF MISSIONE",
+    endTitleSuccess: "✅ Atterraggio riuscito",
+    endTitleFail: "💥 Missione fallita",
+    resultsLabel: "Risultati",
+    analysisLabel: "Analisi",
+    theoryLabel: "Teoria vs simulazione",
+    theoryText: "La simulazione premia la stessa logica della teoria: il drag aiuta solo quando l’atmosfera è abbastanza densa; la gravità minore aiuta, ma non abbastanza da permettere un atterraggio solo col paracadute. Bruciare troppo presto spreca carburante e aumenta la deriva. Troppo tardi lascia troppo poca distanza di frenata.",
+    chartLabel: "Profilo di volo",
+    chartLeg1: "Quota",
+    chartLeg2: "Velocità verticale",
+    chartLeg3: "Eventi",
+    truthLabel: "Controllo del misconcetto",
+    truthQuestion: "Vero o falso: “Poiché Marte ha una gravità più bassa della Terra, basta il paracadute per un atterraggio morbido.”",
+    truthTrue: "VERO",
+    truthFalse: "FALSO",
+    truthCorrect: "Corretto. La gravità marziana è minore, ma l’atmosfera è sottile, quindi il drag è limitato. Il paracadute aiuta, ma i motori restano importanti.",
+    truthWrong: "Non stavolta. La gravità minore aiuta, ma l’aria marziana è sottile, quindi il solo paracadute di solito non basta per concludere la discesa in sicurezza.",
+    reflectionLabel: "Mini-riflessione",
+    reflectionText: "Che cosa hai cambiato tra i tentativi, e quale ragione fisica giustificava la modifica?",
+    retryBtn: "Riprova stessa missione",
+    newMissionBtn: "Nuova missione",
+    attemptsLabel: "Tentativi",
+    hintsLabel: "Hint",
+    scoreLabel: "Score",
+    badgeText: "ATLAS / EDL",
+    missionDataTitle: "Dati missione",
+    targetLabel: "Ellisse di atterraggio",
+    startLabel: "Stato iniziale",
+    fuelLabel: "Carburante",
+    windLabel: "Modello del vento",
+    statusLabel: "Stato",
+    liveTitle: "Telemetria live",
+    altLabel: "Quota",
+    vyLabel: "v verticale",
+    vxLabel: "v orizzontale",
+    rhoLabel: "Densità",
+    qLabel: "q dinamica",
+    throttleLabel: "Throttle",
+    controlsTitle: "Decisioni",
+    chuteLabel: "Apertura paracadute",
+    burnLabel: "Accensione retro",
+    chuteHint: "Paracadute prima = più tempo di drag, ma più deriva. Più tardi = meno deriva, ma meno rallentamento.",
+    burnHint: "Burn prima = più sicuro ma costoso. Burn tardi = efficiente… finché non diventa un abbonamento al cratere.",
+    runBtn: "Run",
+    pauseBtn: "Pausa",
+    resetBtn: "Reset",
+    hintBtn: "Hint (-5)",
+    easterEgg: "🥚 3.71 km? Ciao gravità marziana. Mossa da vero nerd.",
+    physicsTitle: "Striscia fisica",
+    formulaText: "ΣF_y = m a_y = D_y + T − m g\nD = 1/2 ρ C_d A v_rel²\nρ(h) = ρ₀ e^(−h/H)\nK = 1/2 m v²    U ≈ m g h\nE_remove = K + U ≈ 1/2 m v² + m g h\nIdea preview: se la distanza di arresto > quota di burn, il burn è tardo.",
+    physicsFoot: "Il drag è opposto alla velocità relativa rispetto al vento. L’autopilota retro è limitato dalla spinta massima, quindi “motori on” non è magia.",
+    computeMini: "Attento ai segni: in discesa v_y < 0. Se q è molto piccola, il paracadute può fare poco. Se d_stop > quota di burn, il burn è tardo. E_remove usa il segno + perché misura la quantità positiva di energia meccanica ancora da rimuovere dopo l’ignizione, non ΔE stesso.",
+    logDeploy: "🪂 Paracadute aperto.",
+    logBurn: "🔥 Accensione retro.",
+    computeCardTitle: "Preview prima del lancio",
+    computeCardText: "Questi valori si aggiornano con una previsione rapida usando le tue quote correnti. Servono a ragionare; non sono la soluzione pronta. E_remove = 1/2 m v² + mgh è positivo perché rappresenta l’energia ancora da rimuovere dopo l’ignizione.",
+    predDeployLabel: "All’apertura del paracadute",
+    predBurnLabel: "All’inizio del burn",
+    predStopLabel: "Distanza di arresto",
+    predDriftLabel: "Scarto x previsto dal habitat",
+    logTitle: "Mission log",
+    footerLeft: "Space/Enter: START • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "2D • SI • Marte dice: aria sottile, conseguenze spesse",
+    stateReady: "Pronto. Scegli le finestre e avvia la discesa.",
+    stateRunning: "Discesa in corso.",
+    statePaused: "In pausa per calcolare.",
+    stateSuccess: "Atterraggio entro i limiti della missione.",
+    stateFail: "Atterraggio fuori dai limiti della missione.",
+    computeGood: "Preview: piano fisicamente plausibile. Adesso dimostralo.",
+    computeWarnChuteHigh: "Preview: paracadute forse troppo alto nell’aria sottile → drag iniziale debole, lunga deriva.",
+    computeWarnChuteLow: "Preview: paracadute tardivo → poco tempo per ridurre la velocità.",
+    computeWarnBurnLate: "Preview: la distanza di arresto supera la quota di burn → burn tardo.",
+    computeWarnBurnEarly: "Preview: burn molto anticipato → sicuro, ma carburante e deriva possono punire.",
+    hint1: "Hint: Fai due domande separate: quando il drag diventa utile e quando i motori hanno abbastanza distanza di frenata?",
+    hint2: "Hint: Guarda q nel preview e la distanza di arresto. La fisica sta già sussurrando la risposta.",
+    hint3: "Hint: Se manchi l’ellisse ma atterri dolcemente, il paracadute era probabilmente troppo presto. Se tocchi duro, il burn era probabilmente troppo tardi.",
+    joke1: "Newton ha chiamato. Dice che anche Marte crede ancora in F = ma.",
+    joke2: "Il paracadute non è un mantello magico. Su Marte negozia; non domina.",
+    joke3: "Il drama adolescenziale passa. La velocità d’impatto resta.",
+    diagChuteHigh: "Diagnosi: paracadute troppo alto → troppa deriva prima della discesa finale.",
+    diagChuteLow: "Diagnosi: paracadute troppo basso → tempo di drag insufficiente.",
+    diagBurnLate: "Diagnosi: burn troppo tardo → la spinta massima non aveva abbastanza spazio di frenata.",
+    diagBurnEarly: "Diagnosi: burn troppo presto → carburante sprecato e deriva maggiore.",
+    diagLeft: "Diagnosi: atterrato a sinistra dell’ellisse.",
+    diagRight: "Diagnosi: atterrato a destra dell’ellisse.",
+    resultsScore: "Score totale",
+    resultsFuel: "Carburante rimasto",
+    resultsTouch: "v_y al contatto",
+    resultsMiss: "Errore ellisse",
+    resultsTime: "Tempo",
+    analysisStage: "EDL staging",
+    analysisSpeed: "Logica della velocità",
+    analysisEllipse: "Logica dell’ellisse",
+    analysisMyth: "Misconcetto",
+    mythLine: "La gravità minore aiuta, ma l’aria sottile limita il drag. Per questo l’idea “solo paracadute” fallisce.",
+    medalGold: "🥇 ORO",
+    medalSilver: "🥈 ARGENTO",
+    medalBronze: "🥉 BRONZO",
+    teacherTitle: "Teacher toolkit",
+    teacherText: "Mostra q, spazio di arresto ed E_remove = 1/2 m v² + mgh, poi esporta ogni tentativo come evidenza di classe. Il segno + indica che stiamo seguendo l’energia meccanica positiva ancora presente all’ignizione e ancora da rimuovere prima del touchdown.",
+    logCountLabel: "Tentativi registrati",
+    teacherQLabel: "Preview q al paracadute",
+    teacherStopLabel: "Preview spazio di arresto",
+    teacherEnergyLabel: "Anteprima E_remove",
+    exportCsvBtn: "Export CSV",
+    exportJsonBtn: "Export JSON",
+    clearLogBtn: "Cancella log",
+    teacherStatusEmpty: "Nessun tentativo registrato.",
+    teacherStatusLast: "Ultimo tentativo",
+    teacherStatusSafe: "atterraggio sicuro",
+    teacherStatusFail: "non sicuro",
+    teacherExportEmpty: "Esegui almeno un tentativo prima dell’export.",
+    teacherExportReady: "Il log dei tentativi è pronto.",
+    teacherLogCleared: "Il log dei tentativi è stato cancellato.",
+    analysisQ: "Pressione dinamica q",
+    analysisStop: "Spazio di arresto",
+    analysisEnergy: "Energia da rimuovere",
+    medalHeart: "💔 RIPROVA" 
+  }
+};
+
+const CONST = {
+  g: 3.71,
+  g0: 9.81,
+  dryMass: 620,
+  maxThrust: 16500,
+  Isp: 225,
+  bodyCd: 1.48,
+  bodyArea: 15,
+  chuteCd: 1.72,
+  chuteArea: 125,
+  safeVy: 3.2,
+  simDt: 0.05,
+  fastDt: 0.08,
+  maxT: 220
+};
+
+const DIFFS = {
+  easy:   {fuel:230, wind:11, ellipse:380, rho0:0.0200, gust:4,  dustBoost:0.02, dustCtr:3400, dustWid:1800, startVy:-430, startVx:85,  startY:11500, startX:-1320},
+  medium: {fuel:185, wind:18, ellipse:250, rho0:0.0180, gust:8,  dustBoost:0.08, dustCtr:3050, dustWid:1500, startVy:-452, startVx:95,  startY:12000, startX:-1450},
+  hard:   {fuel:150, wind:25, ellipse:170, rho0:0.0160, gust:14, dustBoost:0.15, dustCtr:2700, dustWid:1200, startVy:-472, startVx:104, startY:12500, startX:-1620}
+};
+
+const $ = (id)=>document.getElementById(id);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+const clamp = (v,a,b)=>Math.max(a, Math.min(b, v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+
+const state = {
+  lang: 'en',
+  diff: 'easy',
+  attempts: 0,
+  hints: 0,
+  score: 100,
+  running: false,
+  paused: false,
+  ended: false,
+  mission: null,
+  vehicle: null,
+  preview: null,
+  lastResult: null,
+  history: [],
+  raf: 0,
+  stars: [],
+  truthDone: false,
+  attemptLog: [],
+  hintsAtAttemptStart: 0
+};
+
+function t(key){
+  return I18N[state.lang][key] ?? key;
+}
+
+function energyExplain(mj){
+  if(state.lang==='el') return `${mj} MJ θετικής μηχανικής ενέργειας που πρέπει να αφαιρεθεί μετά την ανάφλεξη`;
+  if(state.lang==='it') return `${mj} MJ di energia meccanica positiva da rimuovere dopo l’ignizione`;
+  return `${mj} MJ of positive mechanical energy to remove after ignition`;
+}
+
+function setLanguage(lang){
+  if(!I18N[lang]) return;
+  state.lang = lang;
+  try{ localStorage.setItem('mars_landing_lang', lang); }catch(e){}
+  $$('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
+  applyLanguage();
+  updateMissionUI();
+  updatePreview();
+  draw();
+  if(state.ended) populateEnd();
+}
+
+function setDifficulty(diff){
+  if(!DIFFS[diff]) return;
+  state.diff = diff;
+  try{ localStorage.setItem('mars_landing_diff', diff); }catch(e){}
+  $$('.diffPick').forEach(b=>b.classList.toggle('active', b.dataset.diff===diff));
+}
+
+function applyLanguage(){
+  $('introTitle').textContent = t('introTitle');
+  $('introDialogue').innerHTML = t('introDialogue');
+  $('heroText').textContent = t('heroText');
+  $('learningLabel').textContent = t('learningLabel');
+  $('learningText').textContent = t('learningText');
+  $('bigIdeaLabel').textContent = t('bigIdeaLabel');
+  $('bigIdeaText').textContent = t('bigIdeaText');
+  $('modelLabel').textContent = t('modelLabel');
+  $('modelText').textContent = t('modelText');
+  $('misLabel').textContent = t('misLabel');
+  $('misText').textContent = t('misText');
+  $('missionBoxTitle').textContent = t('missionBoxTitle');
+  $('missionBoxText').textContent = t('missionBoxText');
+  $('langLabel').textContent = t('langLabel');
+  $('difficultyLabel').textContent = t('difficultyLabel');
+  $('easyBtn').textContent = t('diffEasy');
+  $('mediumBtn').textContent = t('diffMedium');
+  $('hardBtn').textContent = t('diffHard');
+  $('keysLabel').textContent = t('keysLabel');
+  $('keysText').innerHTML = t('keysText');
+  $('startBtn').textContent = t('startBtn');
+
+  $('pauseTitle').textContent = t('pauseTitle');
+  $('pauseText').textContent = t('pauseText');
+  $('computeTitle').textContent = t('computeTitle');
+  $('computeReadTitle').textContent = t('computeReadTitle');
+  $('resumeBtn').textContent = t('resumeBtn');
+  $('pauseHintBtn').textContent = t('pauseHintBtn');
+
+  $('endTag').textContent = t('endTag');
+  $('resultsLabel').textContent = t('resultsLabel');
+  $('analysisLabel').textContent = t('analysisLabel');
+  $('theoryLabel').textContent = t('theoryLabel');
+  $('theoryText').textContent = t('theoryText');
+  $('chartLabel').textContent = t('chartLabel');
+  $('chartLeg1').textContent = t('chartLeg1');
+  $('chartLeg2').textContent = t('chartLeg2');
+  $('chartLeg3').textContent = t('chartLeg3');
+  $('truthLabel').textContent = t('truthLabel');
+  $('truthQuestion').textContent = t('truthQuestion');
+  $('truthTrue').textContent = t('truthTrue');
+  $('truthFalse').textContent = t('truthFalse');
+  $('reflectionLabel').textContent = t('reflectionLabel');
+  $('reflectionText').textContent = t('reflectionText');
+  $('retryBtn').textContent = t('retryBtn');
+  $('newMissionBtn').textContent = t('newMissionBtn');
+
+  $('attemptsLabel').textContent = t('attemptsLabel');
+  $('hintsLabel').textContent = t('hintsLabel');
+  $('scoreLabel').textContent = t('scoreLabel');
+  $('badgeText').textContent = t('badgeText');
+
+  $('missionDataTitle').textContent = t('missionDataTitle');
+  $('targetLabel').textContent = t('targetLabel');
+  $('startLabel').textContent = t('startLabel');
+  $('fuelLabel').textContent = t('fuelLabel');
+  $('windLabel').textContent = t('windLabel');
+  $('statusLabel').textContent = t('statusLabel');
+
+  $('liveTitle').textContent = t('liveTitle');
+  $('altLabel').textContent = t('altLabel');
+  $('vyLabel').textContent = t('vyLabel');
+  $('vxLabel').textContent = t('vxLabel');
+  $('rhoLabel').textContent = t('rhoLabel');
+  $('qLabel').textContent = t('qLabel');
+  $('throttleLabel').textContent = t('throttleLabel');
+
+  $('controlsTitle').textContent = t('controlsTitle');
+  $('chuteLabel').textContent = t('chuteLabel');
+  $('burnLabel').textContent = t('burnLabel');
+  $('chuteHint').textContent = t('chuteHint');
+  $('burnHint').textContent = t('burnHint');
+  $('runBtn').textContent = t('runBtn');
+  $('pauseBtn').textContent = t('pauseBtn');
+  $('resetBtn').textContent = t('resetBtn');
+  $('hintBtn').textContent = t('hintBtn');
+
+  $('physicsTitle').textContent = t('physicsTitle');
+  $('formulaText').textContent = t('formulaText');
+  $('physicsFoot').textContent = t('physicsFoot');
+
+  $('teacherTitle').textContent = t('teacherTitle');
+  $('teacherText').textContent = t('teacherText');
+  $('logCountLabel').textContent = t('logCountLabel');
+  $('teacherQLabel').textContent = t('teacherQLabel');
+  $('teacherStopLabel').textContent = t('teacherStopLabel');
+  $('teacherEnergyLabel').textContent = t('teacherEnergyLabel');
+  $('exportCsvBtn').textContent = t('exportCsvBtn');
+  $('exportJsonBtn').textContent = t('exportJsonBtn');
+  $('clearLogBtn').textContent = t('clearLogBtn');
+
+  $('computeCardTitle').textContent = t('computeCardTitle');
+  $('computeCardText').textContent = t('computeCardText');
+  $('predDeployLabel').textContent = t('predDeployLabel');
+  $('predBurnLabel').textContent = t('predBurnLabel');
+  $('predStopLabel').textContent = t('predStopLabel');
+  $('predDriftLabel').textContent = t('predDriftLabel');
+  $('logTitle').textContent = t('logTitle');
+  $('footerLeft').textContent = t('footerLeft');
+  $('footerRight').textContent = t('footerRight');
+  $('pill1').textContent = t('joke1');
+  $('pill2').textContent = t('joke2');
+  $('pill3').textContent = t('joke3');
+
+  $('attemptsVal').textContent = state.attempts;
+  $('hintsVal').textContent = state.hints;
+  $('scoreVal').textContent = Math.round(state.score);
+}
+
+function seededRand(seed){
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function makeMission(){
+  const d = DIFFS[state.diff];
+  const s = 10 + Math.random()*1000;
+  const mission = {
+    seed: s,
+    diff: state.diff,
+    fuel0: d.fuel,
+    rho0: d.rho0 * lerp(0.94, 1.08, seededRand(s+1)),
+    H: 10200 + 900*seededRand(s+2),
+    windBase: d.wind * lerp(0.9, 1.1, seededRand(s+3)),
+    windShear: 0.0015 + 0.0006*seededRand(s+4),
+    gust: d.gust,
+    dustBoost: d.dustBoost,
+    dustCtr: d.dustCtr + (-220 + 440*seededRand(s+5)),
+    dustWid: d.dustWid,
+    startY: d.startY,
+    startX: d.startX,
+    startVy: d.startVy * lerp(0.97, 1.03, seededRand(s+6)),
+    startVx: d.startVx * lerp(0.95, 1.05, seededRand(s+7)),
+    ellipse: d.ellipse,
+    targetX: 0
+  };
+  const corridor = findLandingCorridor(mission);
+  mission.targetX = corridor.center;
+  mission.corridorMin = corridor.min;
+  mission.corridorMax = corridor.max;
+  mission.ideal = findIdealPlan(mission);
+  return mission;
+}
+
+function windAt(mission, y, time){
+  const base = mission.windBase + mission.windShear * y;
+  const w1 = mission.gust * Math.sin(0.065*time + mission.seed*0.7);
+  const w2 = mission.gust*0.45 * Math.sin(0.18*time + 1.2 + 0.00085*y + mission.seed*0.31);
+  const dust = mission.dustBoost * Math.exp(-Math.pow((y - mission.dustCtr)/mission.dustWid, 2));
+  return base + w1 + w2 + base*dust*0.45;
+}
+
+function densityAt(mission, y){
+  const dust = mission.dustBoost * Math.exp(-Math.pow((y - mission.dustCtr)/mission.dustWid, 2));
+  return mission.rho0 * Math.exp(-y/mission.H) * (1 + dust);
+}
+
+function initVehicle(){
+  const chuteKm = parseFloat($('chuteSlider').value);
+  const burnKm = parseFloat($('burnSlider').value);
+  state.vehicle = {
+    x: state.mission.startX,
+    y: state.mission.startY,
+    vx: state.mission.startVx,
+    vy: state.mission.startVy,
+    fuel: state.mission.fuel0,
+    dryMass: CONST.dryMass,
+    chuteArmedKm: chuteKm,
+    burnArmedKm: burnKm,
+    chute: false,
+    engine: false,
+    throttle: 0,
+    q: 0,
+    rho: densityAt(state.mission, state.mission.startY),
+    t: 0,
+    xTrail: [],
+    eventDeploy: null,
+    eventBurn: null,
+    deployQ: null,
+    speedAtBurn: null,
+    landed: false,
+    result: null
+  };
+  state.history = [];
+}
+
+function getMass(v){ return v.dryMass + Math.max(0, v.fuel); }
+
+function simulate(mission, chuteKm, burnKm, fast=false, record=false){
+  const v = {
+    x: mission.startX,
+    y: mission.startY,
+    vx: mission.startVx,
+    vy: mission.startVy,
+    fuel: mission.fuel0,
+    dryMass: CONST.dryMass,
+    chute: false,
+    engine: false,
+    t: 0,
+    q: 0,
+    rho: densityAt(mission, mission.startY),
+    deployQ: null,
+    qDeploy: null,
+    qMax: 0,
+    eventDeploy: null,
+    eventBurn: null,
+    speedAtBurn: null,
+    burnMass: null,
+    burnY: null,
+    driftAtBurn: null,
+    hist: []
+  };
+  const dt = fast ? CONST.fastDt : CONST.simDt;
+  let touchdown = false;
+
+  while(v.t < CONST.maxT && v.y > 0){
+    if(!v.chute && v.y <= chuteKm*1000){
+      v.chute = true;
+      v.eventDeploy = v.t;
+    }
+    if(!v.engine && v.y <= burnKm*1000){
+      v.engine = true;
+      v.chute = false; // jettison for powered descent
+      v.eventBurn = v.t;
+      v.speedAtBurn = Math.abs(v.vy);
+      v.burnMass = getMass(v);
+      v.burnY = v.y;
+      v.driftAtBurn = v.x;
+    }
+
+    const rho = densityAt(mission, Math.max(v.y,0));
+    const wind = windAt(mission, Math.max(v.y,0), v.t);
+    const vrx = v.vx - wind;
+    const vry = v.vy;
+    const vrel = Math.hypot(vrx, vry);
+    let area = CONST.bodyArea;
+    let cd = CONST.bodyCd;
+
+    if(v.chute){
+      const qNow = 0.5 * rho * vrel * vrel;
+      if(v.deployQ===null){ v.deployQ = qNow; }
+      const inflate = clamp(qNow/220, 0.45, 1);
+      area += CONST.chuteArea * inflate;
+      cd += CONST.chuteCd;
+    }
+
+    const D = 0.5 * rho * cd * area * vrel * vrel;
+    const Dx = vrel>1e-6 ? -D * vrx/vrel : 0;
+    const Dy = vrel>1e-6 ? -D * vry/vrel : 0;
+
+    let T = 0;
+    const m = getMass(v);
+    if(v.engine && v.fuel>0){
+      const targetVy = (v.y>1800) ? -58 : (v.y>500 ? -20 : (v.y>120 ? -8 : -2.2));
+      const desiredAy = (targetVy - v.vy)/1.2;
+      const need = m*(desiredAy + CONST.g) - Dy;
+      T = clamp(need, 0, CONST.maxThrust);
+      const mdot = T / (CONST.Isp * CONST.g0);
+      v.fuel = Math.max(0, v.fuel - mdot*dt);
+    }
+
+    const ax = Dx / m;
+    const ay = -CONST.g + Dy / m + T / m;
+
+    v.vx += ax*dt;
+    v.vy += ay*dt;
+    v.x += v.vx*dt;
+    v.y += v.vy*dt;
+    v.t += dt;
+    v.q = 0.5 * rho * vrel * vrel;
+    v.qMax = Math.max(v.qMax, v.q);
+    v.rho = rho;
+
+    if(record && (v.hist.length===0 || v.t - v.hist[v.hist.length-1].t > 0.16)){
+      v.hist.push({t:v.t, y:Math.max(0,v.y), vy:v.vy, x:v.x});
+    }
+  }
+
+  if(v.y <= 0){
+    touchdown = true;
+    v.y = 0;
+  }
+
+  const miss = Math.abs(v.x - mission.targetX);
+  const softLanding = touchdown && Math.abs(v.vy) <= CONST.safeVy && v.fuel >= 0;
+  return {
+    touchdown,
+    softLanding,
+    x: v.x,
+    xMiss: miss,
+    vyTouch: v.vy,
+    fuelLeft: v.fuel,
+    time: v.t,
+    qDeploy: v.deployQ ?? 0,
+    qMax: v.qMax ?? v.q ?? 0,
+    burnSpeed: v.speedAtBurn ?? Math.abs(v.vy),
+    burnMass: v.burnMass ?? getMass(v),
+    burnY: v.burnY ?? Math.max(v.y, 0),
+    burnX: v.driftAtBurn ?? v.x,
+    deployT: v.eventDeploy,
+    burnT: v.eventBurn,
+    hist: v.hist
+  };
+}
+
+function objective(res, mission){
+  let val = 0;
+  if(res.touchdown) val += 220;
+  val -= Math.max(0, Math.abs(res.vyTouch) - CONST.safeVy) * 34;
+  val -= res.xMiss * 0.08;
+  val += res.fuelLeft * 0.65;
+  val -= Math.abs(res.qDeploy - 170) * 0.05;
+  val -= res.time * 0.18;
+  if(res.softLanding) val += 180;
+  return val;
+}
+
+
+function teacherMetrics(res, mission){
+  const mBurn = Math.max(CONST.dryMass, res.burnMass || (CONST.dryMass + res.fuelLeft));
+  const aNet = Math.max(0.5, CONST.maxThrust/mBurn - CONST.g);
+  const stopDist = (res.burnSpeed*res.burnSpeed) / (2*aNet);
+  const energyBudgetJ = 0.5*mBurn*res.burnSpeed*res.burnSpeed + mBurn*CONST.g*Math.max(0, res.burnY || 0);
+  return {
+    stopDist,
+    energyBudgetJ,
+    energyBudgetMJ: energyBudgetJ / 1e6,
+    aNet,
+    qDeploy: res.qDeploy || 0,
+    qMax: res.qMax || 0,
+    burnY: Math.max(0, res.burnY || 0),
+    burnMass: mBurn
+  };
+}
+
+function saveAttemptLog(){
+  try{
+    localStorage.setItem('mars_landing_attempt_log', JSON.stringify(state.attemptLog));
+  }catch(e){}
+}
+
+function loadAttemptLog(){
+  try{
+    const raw = localStorage.getItem('mars_landing_attempt_log');
+    if(!raw) return;
+    const parsed = JSON.parse(raw);
+    if(Array.isArray(parsed)) state.attemptLog = parsed;
+  }catch(e){}
+}
+
+function updateTeacherPanel(statusMsg){
+  const count = state.attemptLog.length;
+  $('logCountVal').textContent = String(count);
+
+  if(state.preview){
+    const metrics = teacherMetrics(state.preview.res, state.mission);
+    $('teacherQVal').textContent = `${metrics.qDeploy.toFixed(0)} Pa`;
+    $('teacherStopVal').textContent = `${Math.round(metrics.stopDist)} m`;
+    $('teacherEnergyVal').textContent = `${metrics.energyBudgetMJ.toFixed(2)} MJ`;
+  }else{
+    $('teacherQVal').textContent = '—';
+    $('teacherStopVal').textContent = '—';
+    $('teacherEnergyVal').textContent = '—';
+  }
+
+  const last = count ? state.attemptLog[count-1] : null;
+  if(statusMsg){
+    $('teacherStatus').textContent = statusMsg;
+    return;
+  }
+  if(!last){
+    $('teacherStatus').textContent = t('teacherStatusEmpty');
+    return;
+  }
+  $('teacherStatus').textContent = `${t('teacherStatusLast')} #${last.attempt}: ${last.success ? t('teacherStatusSafe') : t('teacherStatusFail')} • score ${last.totalScore}/100 • q=${Math.round(last.qDeployPa)} Pa • d≈${Math.round(last.stopDistanceM)} m • E≈${last.energyBudgetMJ.toFixed(2)} MJ`;
+}
+
+function logAttempt(final){
+  if(!final || !final.res) return;
+  const metrics = teacherMetrics(final.res, state.mission);
+  const hintsUsed = Math.max(0, state.hints - state.hintsAtAttemptStart);
+  const rec = {
+    stamp: new Date().toISOString(),
+    attempt: state.attempts,
+    difficulty: state.diff,
+    missionSeed: Number(state.mission.seed.toFixed(3)),
+    targetEllipseM: Math.round(state.mission.ellipse),
+    startAltitudeM: Math.round(state.mission.startY),
+    startVyMps: Number(state.mission.startVy.toFixed(2)),
+    startVxMps: Number(state.mission.startVx.toFixed(2)),
+    fuel0Kg: Number(state.mission.fuel0.toFixed(1)),
+    hintsUsed,
+    chuteKm: Number(final.chuteKm.toFixed(2)),
+    burnKm: Number(final.burnKm.toFixed(2)),
+    qDeployPa: Number(metrics.qDeploy.toFixed(2)),
+    qMaxPa: Number(metrics.qMax.toFixed(2)),
+    burnSpeedMps: Number(final.res.burnSpeed.toFixed(2)),
+    burnAltitudeM: Number(metrics.burnY.toFixed(1)),
+    stopDistanceM: Number(metrics.stopDist.toFixed(1)),
+    stopMarginM: Number((metrics.burnY - metrics.stopDist).toFixed(1)),
+    energyBudgetMJ: Number(metrics.energyBudgetMJ.toFixed(3)),
+    touchdownVyMps: Number(final.res.vyTouch.toFixed(2)),
+    xTouchM: Number(final.res.x.toFixed(1)),
+    xMissM: Number(final.res.xMiss.toFixed(1)),
+    fuelLeftKg: Number(final.res.fuelLeft.toFixed(2)),
+    landingTimeS: Number(final.res.time.toFixed(2)),
+    success: !!final.success,
+    totalScore: Number(final.total.toFixed(0)),
+    stageScore: Number(final.stageScore.toFixed(1)),
+    safeScore: Number(final.safeScore.toFixed(1)),
+    fuelScore: Number(final.fuelScore.toFixed(1)),
+    ellipseScore: Number(final.ellipseScore.toFixed(1))
+  };
+  state.attemptLog.push(rec);
+  saveAttemptLog();
+  updateTeacherPanel(t('teacherExportReady'));
+}
+
+function downloadBlob(filename, mime, content){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 50);
+}
+
+function exportAttemptCsv(){
+  if(!state.attemptLog.length){
+    updateTeacherPanel(t('teacherExportEmpty'));
+    return;
+  }
+  const headers = Object.keys(state.attemptLog[0]);
+  const esc = (v)=> {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [
+    headers.join(','),
+    ...state.attemptLog.map(row=>headers.map(h=>esc(row[h])).join(','))
+  ];
+  downloadBlob('mars_landing_attempt_log.csv', 'text/csv;charset=utf-8', lines.join('\n'));
+  updateTeacherPanel(t('teacherExportReady'));
+}
+
+function exportAttemptJson(){
+  if(!state.attemptLog.length){
+    updateTeacherPanel(t('teacherExportEmpty'));
+    return;
+  }
+  downloadBlob('mars_landing_attempt_log.json', 'application/json;charset=utf-8', JSON.stringify(state.attemptLog, null, 2));
+  updateTeacherPanel(t('teacherExportReady'));
+}
+
+function clearAttemptLog(){
+  state.attemptLog = [];
+  saveAttemptLog();
+  updateTeacherPanel(t('teacherLogCleared'));
+}
+
+function findIdealPlan(mission){
+  let best = {score:-1e9, chuteKm:5.8, burnKm:1.5, result:null};
+  for(let ck=2.8; ck<=8.8; ck+=0.35){
+    for(let bk=0.45; bk<=3.8; bk+=0.17){
+      const res = simulate(mission, ck, bk, true, false);
+      const sc = objective(res, mission);
+      if(sc > best.score){
+        best = {score:sc, chuteKm:ck, burnKm:bk, result:res};
+      }
+    }
+  }
+  return best;
+}
+
+function findLandingCorridor(mission){
+  const xsSoft = [];
+  const xsTouch = [];
+  for(let ck=2.8; ck<=8.8; ck+=0.35){
+    for(let bk=0.45; bk<=3.8; bk+=0.17){
+      const res = simulate(mission, ck, bk, true, false);
+      if(res.softLanding) xsSoft.push(res.x);
+      if(res.touchdown) xsTouch.push(res.x);
+    }
+  }
+  const pool = xsSoft.length ? xsSoft : (xsTouch.length ? xsTouch : [mission.startX]);
+  pool.sort((a,b)=>a-b);
+  const center = pool[Math.floor(pool.length/2)];
+  return {
+    center,
+    min: pool[0],
+    max: pool[pool.length-1]
+  };
+}
+
+
+function updateMissionUI(){
+  if(!state.mission) return;
+  $('targetVal').textContent = `±${Math.round(state.mission.ellipse)} m @ x≈${Math.round(state.mission.targetX)} m`;
+  $('startVal').textContent = `${Math.round(state.mission.startY/1000*10)/10} km, v_y=${Math.round(state.mission.startVy)} m/s`;
+  $('fuelVal').textContent = `${Math.round(state.mission.fuel0)} kg`;
+  $('windVal').textContent = `${Math.round(state.mission.windBase)} ± ${Math.round(state.mission.gust)} m/s`;
+  $('statusVal').textContent = state.ended ? (state.lastResult && state.lastResult.success ? t('stateSuccess') : t('stateFail')) : (state.paused ? t('statePaused') : (state.running ? t('stateRunning') : t('stateReady')));
+  $('statusLine').textContent = state.ended ? buildNarrative(state.lastResult) : currentStatusText();
+  $('chuteVal').textContent = `${parseFloat($('chuteSlider').value).toFixed(2)} km`;
+  $('burnVal').textContent = `${parseFloat($('burnSlider').value).toFixed(2)} km`;
+  const egg = Math.abs(parseFloat($('burnSlider').value) - 3.71) < 0.03 ? t('easterEgg') : '';
+  $('easterEggLine').textContent = egg;
+}
+
+function currentStatusText(){
+  const v = state.vehicle;
+  if(!v) return t('stateReady');
+  if(!state.running) return t('stateReady');
+  return t('stateRunning');
+}
+
+function updateLiveTelemetry(){
+  const v = state.vehicle;
+  if(!v){
+    $('altVal').textContent = '—';
+    $('vyVal').textContent = '—';
+    $('vxVal').textContent = '—';
+    $('rhoVal').textContent = '—';
+    $('qVal').textContent = '—';
+    $('throttleVal').textContent = '—';
+    return;
+  }
+  $('altVal').textContent = `${(v.y/1000).toFixed(2)} km`;
+  $('vyVal').textContent = `${v.vy.toFixed(1)} m/s`;
+  $('vxVal').textContent = `${v.vx.toFixed(1)} m/s`;
+  $('rhoVal').textContent = `${v.rho.toFixed(4)} kg/m³`;
+  $('qVal').textContent = `${v.q.toFixed(0)} Pa`;
+  $('throttleVal').textContent = `${(100*v.throttle).toFixed(0)} %`;
+}
+
+let previewTimer = 0;
+function schedulePreview(){
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(updatePreview, 70);
+}
+
+function updatePreview(){
+  if(!state.mission) return;
+  const chuteKm = parseFloat($('chuteSlider').value);
+  const burnKm = parseFloat($('burnSlider').value);
+  const res = simulate(state.mission, chuteKm, burnKm, true, false);
+  const metrics = teacherMetrics(res, state.mission);
+  const stopDist = metrics.stopDist;
+  state.preview = {res, stopDist, metrics};
+  $('predDeployVal').textContent = `q≈${res.qDeploy.toFixed(0)} Pa`;
+  $('predBurnVal').textContent = `|v_y|≈${res.burnSpeed.toFixed(1)} m/s`;
+  $('predStopVal').textContent = `${Math.round(stopDist)} m`;
+  const dxPred = res.x - state.mission.targetX;
+  $('predDriftVal').textContent = `${dxPred>=0?'+':''}${Math.round(dxPred)} m`;
+
+  let msg = t('computeGood');
+  if(chuteKm > state.mission.ideal.chuteKm + 0.5) msg = t('computeWarnChuteHigh');
+  if(chuteKm < state.mission.ideal.chuteKm - 0.5) msg = t('computeWarnChuteLow');
+  if(stopDist > burnKm*1000) msg = t('computeWarnBurnLate');
+  if(burnKm > state.mission.ideal.burnKm + 0.7) msg = t('computeWarnBurnEarly');
+  $('computeStatus').textContent = msg;
+
+  $('computePanel').textContent = `${t('formulaText')}
+
+${t('computeMini')}`;
+
+  $('computeReads').innerHTML =
+`${t('predDeployLabel')}: q ≈ <strong>${res.qDeploy.toFixed(0)} Pa</strong><br>
+${t('predBurnLabel')}: |v<sub>y</sub>| ≈ <strong>${res.burnSpeed.toFixed(1)} m/s</strong><br>
+${t('predStopLabel')}: <strong>${Math.round(stopDist)} m</strong><br>
+${t('predDriftLabel')}: <strong>${Math.round(res.x)} m</strong>`;
+  updateMissionUI();
+  updateTeacherPanel();
+}
+
+function startMission(){
+  $('introOverlay').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('pauseOverlay').classList.add('hidden');
+  $('endOverlay').classList.add('hidden');
+  state.ended = false;
+  state.paused = false;
+  state.running = false;
+  state.truthDone = false;
+  state.lastResult = null;
+  state.hintsAtAttemptStart = 0;
+  state.mission = makeMission();
+  state.score = 100;
+  state.attempts = 0;
+  state.hints = 0;
+  $('attemptsVal').textContent = '0';
+  $('hintsVal').textContent = '0';
+  $('scoreVal').textContent = '100';
+  $('truthFeedback').textContent = '';
+  $('truthTrue').className = 'truth-btn';
+  $('truthFalse').className = 'truth-btn';
+  setDefaultControls();
+  initVehicle();
+  updateMissionUI();
+  updateLiveTelemetry();
+  updatePreview();
+  updateTeacherPanel();
+  resizeCanvases();
+  draw();
+  loop();
+}
+
+function setDefaultControls(){
+  const ideal = state.mission.ideal;
+  const chuteGuess = clamp(ideal.chuteKm + (Math.random()*1.2 - 0.6), 2.5, 9.0);
+  const burnGuess = clamp(ideal.burnKm + (Math.random()*0.8 - 0.4), 0.3, 4.2);
+  $('chuteSlider').value = chuteGuess.toFixed(2);
+  $('burnSlider').value = burnGuess.toFixed(2);
+}
+
+function beginAttempt(){
+  initVehicle();
+  state.running = true;
+  state.paused = false;
+  state.ended = false;
+  state.hintsAtAttemptStart = state.hints;
+  state.attempts += 1;
+  $('attemptsVal').textContent = state.attempts;
+  updateMissionUI();
+  $('endOverlay').classList.add('hidden');
+}
+
+function resetAttempt(){
+  state.running = false;
+  state.paused = false;
+  state.ended = false;
+  initVehicle();
+  updateMissionUI();
+  updateLiveTelemetry();
+  updateTeacherPanel();
+  draw();
+}
+
+function togglePause(force){
+  if(state.ended) return;
+  if(!state.running && force!==false) return;
+  state.paused = (typeof force==='boolean') ? force : !state.paused;
+  $('pauseOverlay').classList.toggle('hidden', !state.paused);
+  updateMissionUI();
+}
+
+function useHint(){
+  state.hints += 1;
+  state.score = Math.max(0, state.score - 5);
+  $('hintsVal').textContent = state.hints;
+  $('scoreVal').textContent = Math.round(state.score);
+  const idx = (state.hints-1)%3;
+  const msg = [t('hint1'), t('hint2'), t('hint3')][idx];
+  $('logText').textContent = msg;
+}
+
+function updateVehicle(dt){
+  const v = state.vehicle;
+  const mission = state.mission;
+  if(!v || !state.running || state.paused || state.ended) return;
+
+  for(let i=0;i<3;i++){
+    if(!v.chute && !v.engine && v.y <= v.chuteArmedKm*1000){
+      v.chute = true;
+      v.eventDeploy = {x:v.x, y:v.y, t:v.t};
+      v.deployQ = v.q;
+      $('logText').textContent = t('logDeploy');
+    }
+    if(!v.engine && v.y <= v.burnArmedKm*1000){
+      v.engine = true;
+      v.chute = false;
+      v.eventBurn = {x:v.x, y:v.y, t:v.t};
+      $('logText').textContent = t('logBurn');
+    }
+
+    const rho = densityAt(mission, Math.max(v.y,0));
+    const wind = windAt(mission, Math.max(v.y,0), v.t);
+    const vrx = v.vx - wind;
+    const vry = v.vy;
+    const vrel = Math.hypot(vrx, vry);
+    let area = CONST.bodyArea;
+    let cd = CONST.bodyCd;
+
+    if(v.chute){
+      const qNow = 0.5*rho*vrel*vrel;
+      const inflate = clamp(qNow/220, 0.45, 1);
+      area += CONST.chuteArea * inflate;
+      cd += CONST.chuteCd;
+      v.deployQ = qNow;
+    }
+
+    const D = 0.5 * rho * cd * area * vrel * vrel;
+    const Dx = vrel>1e-6 ? -D * vrx/vrel : 0;
+    const Dy = vrel>1e-6 ? -D * vry/vrel : 0;
+
+    let T = 0;
+    const m = getMass(v);
+    if(v.engine && v.fuel>0){
+      const targetVy = (v.y>1800) ? -58 : (v.y>500 ? -20 : (v.y>120 ? -8 : -2.2));
+      const desiredAy = (targetVy - v.vy)/1.2;
+      const need = m*(desiredAy + CONST.g) - Dy;
+      T = clamp(need, 0, CONST.maxThrust);
+      v.throttle = T / CONST.maxThrust;
+      const mdot = T / (CONST.Isp * CONST.g0);
+      v.fuel = Math.max(0, v.fuel - mdot*dt/3);
+    } else {
+      v.throttle = 0;
+    }
+
+    const ax = Dx / m;
+    const ay = -CONST.g + Dy / m + T / m;
+
+    v.vx += ax*(dt/3);
+    v.vy += ay*(dt/3);
+    v.x += v.vx*(dt/3);
+    v.y += v.vy*(dt/3);
+    v.t += (dt/3);
+    v.rho = rho;
+    v.q = 0.5*rho*vrel*vrel;
+
+    if(v.xTrail.length===0 || Math.hypot(v.x - v.xTrail[v.xTrail.length-1].x, v.y - v.xTrail[v.xTrail.length-1].y) > 120){
+      v.xTrail.push({x:v.x,y:v.y});
+      if(v.xTrail.length>220) v.xTrail.shift();
+    }
+    if(state.history.length===0 || v.t - state.history[state.history.length-1].t > 0.15){
+      state.history.push({t:v.t, y:Math.max(0,v.y), vy:v.vy, x:v.x});
+    }
+
+    if(v.y <= 0){
+      v.y = 0;
+      finishAttempt();
+      break;
+    }
+    if(v.t > CONST.maxT){
+      finishAttempt();
+      break;
+    }
+  }
+}
+
+function finishAttempt(){
+  const chuteKm = parseFloat($('chuteSlider').value);
+  const burnKm = parseFloat($('burnSlider').value);
+  const res = simulate(state.mission, chuteKm, burnKm, false, true);
+  const ideal = state.mission.ideal;
+  const success = res.softLanding && res.xMiss <= state.mission.ellipse;
+  const stageErr = 0.5*(Math.abs(chuteKm - ideal.chuteKm)/ideal.chuteKm + Math.abs(burnKm - ideal.burnKm)/Math.max(ideal.burnKm,0.5));
+  const stageScore = clamp(25*(1 - stageErr), 0, 25);
+  const safeScore = success ? 40 : clamp(40*(1 - Math.max(0, Math.abs(res.vyTouch)-CONST.safeVy)/20), 0, 40);
+  const fuelScore = clamp(20*(res.fuelLeft/state.mission.fuel0), 0, 20);
+  const ellipseScore = clamp(15*(1 - res.xMiss/state.mission.ellipse), 0, 15);
+  const metrics = teacherMetrics(res, state.mission);
+  const total = Math.round(safeScore + stageScore + fuelScore + ellipseScore);
+
+  state.score = total;
+  $('scoreVal').textContent = String(total);
+
+  state.running = false;
+  state.paused = false;
+  state.ended = true;
+  state.lastResult = {
+    success, total, res, stageScore, safeScore, fuelScore, ellipseScore,
+    chuteKm, burnKm, ideal, stopDist: metrics.stopDist, energyBudgetMJ: metrics.energyBudgetMJ
+  };
+  logAttempt(state.lastResult);
+  updateMissionUI();
+  populateEnd();
+  $('endOverlay').classList.remove('hidden');
+}
+
+function buildNarrative(final){
+  if(!final) return t('stateReady');
+  const parts = [];
+  const dx = final.res.x - state.mission.targetX;
+  if(final.chuteKm > final.ideal.chuteKm + 0.45) parts.push(t('diagChuteHigh'));
+  if(final.chuteKm < final.ideal.chuteKm - 0.45) parts.push(t('diagChuteLow'));
+  if(final.burnKm < final.ideal.burnKm - 0.3) parts.push(t('diagBurnLate'));
+  if(final.burnKm > final.ideal.burnKm + 0.55) parts.push(t('diagBurnEarly'));
+  if(dx < -state.mission.ellipse) parts.push(t('diagLeft'));
+  if(dx > state.mission.ellipse) parts.push(t('diagRight'));
+  if(parts.length===0){
+    return final.success ? t('stateSuccess') : t('stateFail');
+  }
+  return parts[0];
+}
+
+function populateEnd(){
+  const f = state.lastResult;
+  if(!f) return;
+  $('endTitle').textContent = f.success ? t('endTitleSuccess') : t('endTitleFail');
+
+  let medal = t('medalHeart');
+  if(f.total >= 90) medal = t('medalGold');
+  else if(f.total >= 75) medal = t('medalSilver');
+  else if(f.total >= 60) medal = t('medalBronze');
+  $('medalBox').textContent = medal;
+
+  const rbody = $('resultsBody');
+  const abody = $('analysisBody');
+  rbody.innerHTML = '';
+  abody.innerHTML = '';
+
+  const add = (tbody, k, v, cls='')=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th>${k}</th><td class="${cls}">${v}</td>`;
+    tbody.appendChild(tr);
+  };
+
+  add(rbody, t('resultsScore'), `${f.total}/100`, f.total>=75?'good':f.total>=60?'warn':'bad');
+  add(rbody, t('resultsFuel'), `${f.res.fuelLeft.toFixed(1)} kg`, f.res.fuelLeft>0?'good':'bad');
+  add(rbody, t('resultsTouch'), `${Math.abs(f.res.vyTouch).toFixed(2)} m/s`, Math.abs(f.res.vyTouch)<=CONST.safeVy?'good':'bad');
+  add(rbody, t('resultsMiss'), `${f.res.xMiss.toFixed(0)} m`, f.res.xMiss<=state.mission.ellipse?'good':'bad');
+  add(rbody, t('resultsTime'), `${f.res.time.toFixed(1)} s`);
+
+  add(abody, t('analysisStage'), `${f.chuteKm.toFixed(2)} km / ${f.burnKm.toFixed(2)} km → ${f.stageScore.toFixed(1)}/25`, f.stageScore>18?'good':f.stageScore>10?'warn':'bad');
+  add(abody, t('analysisSpeed'), buildNarrative(f), (Math.abs(f.res.vyTouch)<=CONST.safeVy)?'good':'bad');
+  const dxTouch = f.res.x - state.mission.targetX;
+  add(abody, t('analysisEllipse'), `${dxTouch>=0?'+':''}${dxTouch.toFixed(0)} m`, f.res.xMiss<=state.mission.ellipse?'good':'bad');
+  add(abody, t('analysisQ'), `${f.res.qDeploy.toFixed(0)} Pa (max ${f.res.qMax.toFixed(0)} Pa)`, (f.res.qDeploy>=90 && f.res.qDeploy<=260)?'good':'warn');
+  add(abody, t('analysisStop'), `${Math.round(f.stopDist)} m needed vs ${Math.round(f.res.burnY)} m available`, f.stopDist<=f.res.burnY?'good':'bad');
+  add(abody, t('analysisEnergy'), energyExplain(f.energyBudgetMJ.toFixed(2)), f.energyBudgetMJ<22?'good':'warn');
+  add(abody, t('analysisMyth'), t('mythLine'));
+
+  drawChart(f.res.hist);
+}
+
+function drawChart(hist){
+  const c = $('chartCanvas');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  ctx.fillRect(0,0,W,H);
+
+  if(!hist || hist.length<2) return;
+
+  const pad = 32;
+  const maxT = hist[hist.length-1].t;
+  const maxY = Math.max(...hist.map(d=>d.y), 100);
+  const maxV = Math.max(...hist.map(d=>Math.abs(d.vy)), 10);
+
+  const xOf = t=> pad + (W-2*pad)*(t/maxT);
+  const yOfAlt = y=> H-pad - (H-2*pad)*(y/maxY);
+  const yOfV = v=> H-pad - (H-2*pad)*(Math.abs(v)/maxV);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad,pad); ctx.lineTo(pad,H-pad); ctx.lineTo(W-pad,H-pad);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(220,230,255,.7)';
+  ctx.font = '12px ui-monospace, monospace';
+  ctx.fillText('t', W-pad+6, H-pad+4);
+  ctx.fillText('y', pad-14, pad-6);
+
+  ctx.strokeStyle = '#72ddf7';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  hist.forEach((d,i)=>{
+    const x = xOf(d.t), y = yOfAlt(d.y);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  ctx.strokeStyle = '#ffd166';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  hist.forEach((d,i)=>{
+    const x = xOf(d.t), y = yOfV(d.vy);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  const f = state.lastResult;
+  if(f){
+    const marks = [f.res.deployT, f.res.burnT].filter(v=>v!=null);
+    ctx.strokeStyle = '#ff6b6b';
+    ctx.setLineDash([5,5]);
+    marks.forEach(m=>{
+      const x = xOf(m);
+      ctx.beginPath();
+      ctx.moveTo(x,pad); ctx.lineTo(x,H-pad);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+}
+
+function resizeCanvases(){
+  const sim = $('simCanvas');
+  const fx = $('fxCanvas');
+  const stage = sim.parentElement.getBoundingClientRect();
+  sim.width = Math.max(400, Math.floor(stage.width*devicePixelRatio));
+  sim.height = Math.max(300, Math.floor(stage.height*devicePixelRatio));
+  fx.width = sim.width;
+  fx.height = sim.height;
+  initStars();
+  draw();
+}
+
+function initStars(){
+  const c = $('simCanvas');
+  state.stars = [];
+  for(let i=0;i<120;i++){
+    state.stars.push({
+      x: Math.random()*c.width,
+      y: Math.random()*c.height*0.62,
+      r: Math.random()*1.8+0.3,
+      a: Math.random()*0.55+0.15
+    });
+  }
+}
+
+function worldToScreen(x,y,view){
+  const c = $('simCanvas');
+  const left = view.left;
+  const right = view.right;
+  const sx = (x-left)/(right-left) * c.width;
+  const sy = c.height - (y/view.top)*c.height;
+  return {x:sx, y:sy};
+}
+
+function drawBackground(ctx, W, H){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#08111f');
+  g.addColorStop(0.4,'#40203a');
+  g.addColorStop(0.72,'#6b2c23');
+  g.addColorStop(1,'#2c0d0a');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  state.stars.forEach(s=>{
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  const sun = ctx.createRadialGradient(W*0.72,H*0.18,10, W*0.72,H*0.18,140);
+  sun.addColorStop(0,'rgba(255,245,210,.9)');
+  sun.addColorStop(.2,'rgba(255,190,120,.35)');
+  sun.addColorStop(1,'rgba(255,120,60,0)');
+  ctx.fillStyle = sun;
+  ctx.beginPath(); ctx.arc(W*0.72,H*0.18,140,0,Math.PI*2); ctx.fill();
+}
+
+function draw(){
+  const c = $('simCanvas');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  ctx.clearRect(0,0,W,H);
+  drawBackground(ctx, W, H);
+
+  const v = state.vehicle;
+  const top = Math.max(1700, (v ? v.y + 2300 : state.mission ? state.mission.startY+1500 : 13000));
+  const xRefs = [];
+  if(state.mission){
+    xRefs.push(state.mission.startX, state.mission.targetX ?? 0);
+    if(Number.isFinite(state.mission.corridorMin)) xRefs.push(state.mission.corridorMin);
+    if(Number.isFinite(state.mission.corridorMax)) xRefs.push(state.mission.corridorMax);
+  }
+  if(v) xRefs.push(v.x);
+  const left = (xRefs.length ? Math.min(...xRefs) : -1800) - 900;
+  const right = (xRefs.length ? Math.max(...xRefs) : 1800) + 900;
+  const view = {top, left, right};
+
+  // atmosphere haze
+  const haze = ctx.createLinearGradient(0,H*0.4,0,H);
+  haze.addColorStop(0,'rgba(255,150,80,.02)');
+  haze.addColorStop(1,'rgba(255,140,80,.24)');
+  ctx.fillStyle = haze;
+  ctx.fillRect(0,0,W,H);
+
+  // ground
+  const groundY = worldToScreen(0,0,view).y;
+  ctx.fillStyle = '#3c1a14';
+  ctx.fillRect(0, groundY, W, H-groundY);
+  ctx.strokeStyle = 'rgba(255,195,130,.28)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, groundY+0.5);
+  ctx.lineTo(W, groundY+0.5);
+  ctx.stroke();
+
+  // dunes
+  ctx.fillStyle = 'rgba(255,160,100,.09)';
+  for(let i=0;i<7;i++){
+    ctx.beginPath();
+    ctx.ellipse((i/6)*W, groundY+10, 110+20*i, 26+5*(i%3), 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // target ellipse + habitat
+  if(state.mission){
+    const left = worldToScreen(state.mission.targetX - state.mission.ellipse, 0, view);
+    const right = worldToScreen(state.mission.targetX + state.mission.ellipse, 0, view);
+    ctx.fillStyle = 'rgba(114,221,247,.12)';
+    ctx.strokeStyle = 'rgba(114,221,247,.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse((left.x+right.x)/2, groundY-10, Math.abs(right.x-left.x)/2, 10, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    const h = worldToScreen(state.mission.targetX, 0, view);
+    ctx.fillStyle = '#b9d8ff';
+    ctx.fillRect(h.x-18, groundY-26, 36, 12);
+    ctx.fillStyle = '#90b2dd';
+    ctx.fillRect(h.x-11, groundY-36, 22, 10);
+    ctx.strokeStyle = 'rgba(255,255,255,.65)';
+    ctx.beginPath(); ctx.moveTo(h.x+20, groundY-26); ctx.lineTo(h.x+34, groundY-50); ctx.stroke();
+    ctx.beginPath(); ctx.arc(h.x+36, groundY-54, 7, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // flight trail
+  if(v && v.xTrail.length>1){
+    ctx.strokeStyle = 'rgba(255,255,255,.32)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    v.xTrail.forEach((p,i)=>{
+      const s = worldToScreen(p.x,p.y,view);
+      if(i===0) ctx.moveTo(s.x,s.y); else ctx.lineTo(s.x,s.y);
+    });
+    ctx.stroke();
+  }
+
+  if(v){
+    // wind arrows near craft
+    const wind = windAt(state.mission, v.y, v.t);
+    const craft = worldToScreen(v.x, v.y, view);
+    ctx.strokeStyle = 'rgba(114,221,247,.55)';
+    ctx.lineWidth = 2;
+    for(let i=0;i<3;i++){
+      const y = craft.y - 48 + i*16;
+      ctx.beginPath();
+      ctx.moveTo(craft.x - 44, y);
+      ctx.lineTo(craft.x - 44 + Math.sign(wind)*18, y);
+      ctx.lineTo(craft.x - 44 + Math.sign(wind)*12, y-4);
+      ctx.moveTo(craft.x - 44 + Math.sign(wind)*18, y);
+      ctx.lineTo(craft.x - 44 + Math.sign(wind)*12, y+4);
+      ctx.stroke();
+    }
+
+    // craft body
+    ctx.save();
+    ctx.translate(craft.x, craft.y);
+    ctx.fillStyle = '#f2f5ff';
+    ctx.strokeStyle = '#3e4860';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0,-12); ctx.lineTo(10,10); ctx.lineTo(-10,10); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    if(v.chute){
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-8,-10); ctx.lineTo(-18,-32);
+      ctx.moveTo(0,-10); ctx.lineTo(0,-36);
+      ctx.moveTo(8,-10); ctx.lineTo(18,-32);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,209,102,.9)';
+      ctx.beginPath();
+      ctx.moveTo(-24,-32); ctx.quadraticCurveTo(0,-56,24,-32); ctx.closePath();
+      ctx.fill();
+    }
+
+    if(v.engine && v.fuel>0 && v.throttle>0.02){
+      ctx.fillStyle = 'rgba(255,170,60,.9)';
+      ctx.beginPath();
+      ctx.moveTo(-6,10);
+      ctx.lineTo(0, 10 + 12 + 20*v.throttle);
+      ctx.lineTo(6,10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,245,190,.9)';
+      ctx.beginPath();
+      ctx.moveTo(-3,10);
+      ctx.lineTo(0, 10 + 8 + 10*v.throttle);
+      ctx.lineTo(3,10);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    if(v.eventDeploy){
+      const p = worldToScreen(v.eventDeploy.x, v.eventDeploy.y, view);
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+    }
+    if(v.eventBurn){
+      const p = worldToScreen(v.eventBurn.x, v.eventBurn.y, view);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // overlay mini labels
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  ctx.font = `${14*devicePixelRatio}px ui-monospace, monospace`;
+  ctx.fillText(`Mars g = 3.71 m/s²`, 16*devicePixelRatio, 24*devicePixelRatio);
+
+  updateLiveTelemetry();
+}
+
+function loop(){
+  cancelAnimationFrame(state.raf);
+  const tick = ()=>{
+    updateVehicle(CONST.simDt);
+    updateMissionUI();
+    draw();
+    state.raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function handleTruth(choice){
+  if(state.truthDone) return;
+  state.truthDone = true;
+  const correct = (choice===false);
+  $('truthFeedback').textContent = correct ? t('truthCorrect') : t('truthWrong');
+  $('truthTrue').classList.add(choice===true ? (correct?'correct':'wrong') : '');
+  $('truthFalse').classList.add(choice===false ? 'correct' : '');
+}
+
+function setupEvents(){
+  $$('.lang-btn').forEach(btn=>btn.addEventListener('click', ()=>setLanguage(btn.dataset.lang)));
+  $$('.diffPick').forEach(btn=>btn.addEventListener('click', ()=>setDifficulty(btn.dataset.diff)));
+
+  $('startBtn').addEventListener('click', startMission);
+  $('runBtn').addEventListener('click', ()=>{ if(!state.running && !state.ended){ beginAttempt(); } });
+  $('pauseBtn').addEventListener('click', ()=>togglePause());
+  $('resetBtn').addEventListener('click', resetAttempt);
+  $('hintBtn').addEventListener('click', useHint);
+  $('pauseHintBtn').addEventListener('click', useHint);
+  $('exportCsvBtn').addEventListener('click', exportAttemptCsv);
+  $('exportJsonBtn').addEventListener('click', exportAttemptJson);
+  $('clearLogBtn').addEventListener('click', clearAttemptLog);
+  $('resumeBtn').addEventListener('click', ()=>togglePause(false));
+  $('retryBtn').addEventListener('click', ()=>{ $('endOverlay').classList.add('hidden'); resetAttempt(); });
+  $('newMissionBtn').addEventListener('click', ()=>{ startMission(); });
+
+  $('chuteSlider').addEventListener('input', ()=>{ updateMissionUI(); schedulePreview(); });
+  $('burnSlider').addEventListener('input', ()=>{ updateMissionUI(); schedulePreview(); });
+
+  $('truthTrue').addEventListener('click', ()=>handleTruth(true));
+  $('truthFalse').addEventListener('click', ()=>handleTruth(false));
+
+  window.addEventListener('resize', resizeCanvases);
+
+  document.addEventListener('keydown', (e)=>{
+    if(!$('introOverlay').classList.contains('hidden')){
+      if(e.code==='Enter' || e.code==='Space'){ e.preventDefault(); startMission(); }
+      return;
+    }
+    switch(e.code){
+      case 'Space':
+      case 'Enter':
+        if(!state.running && !state.ended){ e.preventDefault(); beginAttempt(); }
+        break;
+      case 'KeyP':
+        togglePause();
+        break;
+      case 'KeyR':
+        resetAttempt();
+        break;
+      case 'KeyH':
+        useHint();
+        break;
+      case 'Escape':
+        if(state.paused) togglePause(false);
+        break;
+    }
+  });
+}
+
+function init(){
+  try{
+    const lang = localStorage.getItem('mars_landing_lang');
+    if(lang && I18N[lang]) state.lang = lang;
+    const diff = localStorage.getItem('mars_landing_diff');
+    if(diff && DIFFS[diff]) state.diff = diff;
+  }catch(e){}
+
+  loadAttemptLog();
+  $$('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===state.lang));
+  $$('.diffPick').forEach(b=>b.classList.toggle('active', b.dataset.diff===state.diff));
+  setupEvents();
+  applyLanguage();
+  resizeCanvases();
+  $('logText').textContent = t('stateReady');
+  // Pre-build a mission so preview exists if user starts immediately.
+  state.mission = makeMission();
+  setDefaultControls();
+  initVehicle();
+  updateMissionUI();
+  updatePreview();
+  updateTeacherPanel();
+  draw();
+}
+/* ===== TOAST SYSTEM ===== */
+let toastTimer = 0;
+function showToast(text){
+  const el = $('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
+}
+
+/* ===== PHYSICS QUIZ SYSTEM ===== */
+const EDL_QUIZ = [
+  {q:'Mars surface atmospheric pressure is about 600 Pa — roughly what fraction of Earth\'s?',
+   opts:['~1/170','~1/10','~1/2','~1/50'], correct:0,
+   explain:'Earth surface pressure ≈ 101,325 Pa. Mars ≈ 600 Pa. Ratio: 600/101325 ≈ 1/169. This thin atmosphere is exactly why parachute-only landing fails.'},
+  {q:'The drag formula is D = ½ρCdAv². If you double the speed, drag force becomes:',
+   opts:['2× larger','4× larger','8× larger','Same'], correct:1,
+   explain:'D ∝ v². Doubling v quadruples D. This is why high-speed entry generates enormous drag, but once the craft slows down, drag drops rapidly — the "drag wall" problem.'},
+  {q:'Why does a parachute alone fail on Mars even though gravity is lower?',
+   opts:['The parachute burns up','ρ is too low so D = ½ρCdAv² gives weak force','Wind is too strong','Mars has no atmosphere'],
+   correct:1,
+   explain:'Mars DOES have an atmosphere, but ρ ≈ 0.02 kg/m³ vs Earth\'s ~1.2 kg/m³. Drag D = ½ρCdAv² is proportional to ρ, so with ~1/60 the density, drag force is much weaker. Lower g helps, but not enough.'},
+  {q:'What does "stopping distance" mean in this mission?',
+   opts:['Distance from launch','d_stop = v²/(2a_net) — the altitude needed to brake from current speed to safe touchdown','The ellipse radius','Distance to the habitat'],
+   correct:1,
+   explain:'d_stop = v²/(2a_net) where a_net = T/m − g. If d_stop > burn altitude, the engines don\'t have enough room to slow down. This is THE key inequality for burn timing.'},
+  {q:'E_remove = ½mv² + mgh at ignition. Why is this shown as POSITIVE?',
+   opts:['It\'s always positive by convention','It represents the total mechanical energy still present that must be removed before touchdown','It\'s kinetic energy only','It\'s the fuel energy'],
+   correct:1,
+   explain:'At ignition, the craft has kinetic energy ½mv² AND potential energy mgh (it\'s still above ground). Both must reach ~0 at touchdown. E_remove = K + U is the positive budget of energy to dissipate through thrust + drag.'},
+  {q:'If you deploy the parachute very high (8+ km), what happens?',
+   opts:['Maximum braking — always best','Weak drag because ρ is very low at high altitude, plus long drift from wind','The chute breaks','Nothing — altitude doesn\'t matter'],
+   correct:1,
+   explain:'At 8 km, ρ(h) = ρ₀e^(-h/H) is very small. Dynamic pressure q = ½ρv² is low, so the chute barely inflates. Meanwhile, wind acts on the craft for longer, pushing it far from the target. Optimal deploy is where q is "just right".'},
+];
+let quizState = {active:false, answered:false, current:null, bonus:0};
+
+function showPauseQuiz(){
+  const idx = Math.floor(Math.random() * EDL_QUIZ.length);
+  quizState.current = EDL_QUIZ[idx];
+  quizState.active = true;
+  quizState.answered = false;
+  $('pauseQuizBox').classList.remove('hidden');
+  $('pauseQuizQ').textContent = quizState.current.q;
+  const opts = $('pauseQuizOpts');
+  opts.innerHTML = '';
+  $('pauseQuizExplain').classList.remove('show');
+  quizState.current.opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'qOpt';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => answerPauseQuiz(i, btn));
+    opts.appendChild(btn);
+  });
+}
+
+function answerPauseQuiz(idx, btn){
+  if(quizState.answered) return;
+  quizState.answered = true;
+  const correct = idx === quizState.current.correct;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if(!correct) $('pauseQuizOpts').children[quizState.current.correct].classList.add('correct');
+  const ex = $('pauseQuizExplain');
+  ex.textContent = (correct ? '✅ ' : '❌ ') + quizState.current.explain;
+  ex.classList.add('show');
+  if(correct){
+    quizState.bonus += 3;
+    state.score = Math.min(100, state.score + 3);
+    $('scoreVal').textContent = Math.round(state.score);
+    showToast('🧠 +3 bonus points!');
+  }
+}
+
+function hidePauseQuiz(){
+  $('pauseQuizBox').classList.add('hidden');
+  quizState.active = false;
+}
+
+/* ===== PARACHUTE-ONLY DEMO ===== */
+let chuteOnlyResult = null;
+
+function runChuteOnlyDemo(){
+  if(!state.mission) return;
+  const chuteKm = parseFloat($('chuteSlider').value);
+  // Simulate with NO engine burn (burnKm = 0 means burn at ground level = too late = no real burn)
+  const res = simulate(state.mission, chuteKm, 0.05, true, true);
+  chuteOnlyResult = res;
+
+  const vyTouch = Math.abs(res.vyTouch).toFixed(1);
+  const safe = Math.abs(res.vyTouch) <= CONST.safeVy;
+  const msg = safe
+    ? `🪂 Parachute-only: touchdown at ${vyTouch} m/s — barely safe! But drift = ${Math.round(res.xMiss)} m, probably outside ellipse.`
+    : `💥 Parachute-only: touchdown at ${vyTouch} m/s — CRASH! Safe limit is ${CONST.safeVy} m/s. Mars thin atmosphere (ρ ≈ 0.02 kg/m³) cannot generate enough drag. This is why engines matter.`;
+
+  $('logText').textContent = msg;
+  showToast(safe ? '🪂 Survived... barely. But missed the target!' : '💥 Parachute alone = crater. QED.');
+
+  // Draw the chute-only trajectory as ghost on next frame
+  draw();
+}
+
+/* ===== SLOW MOTION ===== */
+let slowMode = false;
+
+function toggleSlow(){
+  slowMode = !slowMode;
+  $('slowBtn').textContent = slowMode ? '🐇 Normal speed' : '🐌 Slow motion';
+  $('slowBtn').classList.toggle('active', slowMode);
+  showToast(slowMode ? '🐌 Slow motion — watch the forces!' : '🐇 Normal speed');
+}
+
+/* ===== CANVAS: FBD FORCE ARROWS ===== */
+function drawForceArrows(ctx, v, view, W, H){
+  if(!v || !state.running || state.paused || state.ended) return;
+
+  const craft = worldToScreen(v.x, v.y, view);
+  const m = getMass(v);
+  const rho = v.rho;
+  const wind = windAt(state.mission, Math.max(v.y,0), v.t);
+  const vrx = v.vx - wind;
+  const vry = v.vy;
+  const vrel = Math.hypot(vrx, vry);
+  let area = CONST.bodyArea, cd = CONST.bodyCd;
+  if(v.chute){ area += CONST.chuteArea * 0.8; cd += CONST.chuteCd; }
+  const D = 0.5 * rho * cd * area * vrel * vrel;
+  const T = v.engine && v.fuel > 0 ? v.throttle * CONST.maxThrust : 0;
+  const mg = m * CONST.g;
+
+  // Scale factor for arrows (pixels per Newton)
+  const scale = Math.min(0.008, 60 / Math.max(mg, 1));
+  const cx = craft.x, cy = craft.y;
+
+  // Weight arrow (down) — red
+  const mgLen = mg * scale;
+  ctx.strokeStyle = '#ff6b6b';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx, cy+14); ctx.lineTo(cx, cy+14+mgLen); ctx.stroke();
+  ctx.fillStyle = '#ff6b6b';
+  ctx.beginPath(); ctx.moveTo(cx-4, cy+14+mgLen); ctx.lineTo(cx+4, cy+14+mgLen); ctx.lineTo(cx, cy+18+mgLen); ctx.fill();
+  ctx.font = `${11*devicePixelRatio}px ui-monospace`;
+  ctx.fillText(`mg=${Math.round(mg)}N`, cx+8, cy+20+mgLen/2);
+
+  // Drag arrow (up if descending) — cyan
+  if(D > 10){
+    const dLen = D * scale;
+    ctx.strokeStyle = '#72ddf7';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx-6, cy-14); ctx.lineTo(cx-6, cy-14-dLen); ctx.stroke();
+    ctx.fillStyle = '#72ddf7';
+    ctx.beginPath(); ctx.moveTo(cx-10, cy-14-dLen); ctx.lineTo(cx-2, cy-14-dLen); ctx.lineTo(cx-6, cy-18-dLen); ctx.fill();
+    ctx.fillText(`D=${Math.round(D)}N`, cx-50, cy-14-dLen/2);
+  }
+
+  // Thrust arrow (up) — orange
+  if(T > 100){
+    const tLen = T * scale;
+    ctx.strokeStyle = '#ff9f1c';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(cx+6, cy-14); ctx.lineTo(cx+6, cy-14-tLen); ctx.stroke();
+    ctx.fillStyle = '#ff9f1c';
+    ctx.beginPath(); ctx.moveTo(cx+2, cy-14-tLen); ctx.lineTo(cx+10, cy-14-tLen); ctx.lineTo(cx+6, cy-18-tLen); ctx.fill();
+    ctx.fillText(`T=${Math.round(T)}N`, cx+14, cy-14-tLen/2);
+  }
+}
+
+/* ===== CANVAS: ALTITUDE ANNOTATIONS + ZONES ===== */
+function drawAnnotations(ctx, view, W, H){
+  if(!state.mission) return;
+  const chuteKm = parseFloat($('chuteSlider').value);
+  const burnKm = parseFloat($('burnSlider').value);
+
+  // Altitude markers
+  const altitudes = [1000, 2000, 3000, 5000, 8000, 10000];
+  ctx.font = `${10*devicePixelRatio}px ui-monospace`;
+  altitudes.forEach(h => {
+    const p = worldToScreen(view.left + 50, h, view);
+    if(p.y > 20 && p.y < H - 30){
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4,8]);
+      ctx.beginPath(); ctx.moveTo(0, p.y); ctx.lineTo(W, p.y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(255,255,255,.3)';
+      ctx.fillText(`${(h/1000).toFixed(0)} km`, 6*devicePixelRatio, p.y - 3);
+    }
+  });
+
+  // Chute deploy zone band
+  const chuteY = worldToScreen(0, chuteKm * 1000, view).y;
+  ctx.fillStyle = 'rgba(255,209,102,.06)';
+  ctx.fillRect(0, chuteY - 20, W, 40);
+  ctx.strokeStyle = 'rgba(255,209,102,.4)';
+  ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(0, chuteY); ctx.lineTo(W, chuteY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,209,102,.65)';
+  ctx.fillText(`🪂 ${chuteKm.toFixed(1)} km`, W - 120*devicePixelRatio, chuteY - 5);
+
+  // Burn ignition zone band
+  const burnY = worldToScreen(0, burnKm * 1000, view).y;
+  ctx.fillStyle = 'rgba(255,107,107,.06)';
+  ctx.fillRect(0, burnY - 20, W, 40);
+  ctx.strokeStyle = 'rgba(255,107,107,.4)';
+  ctx.setLineDash([6,6]);
+  ctx.beginPath(); ctx.moveTo(0, burnY); ctx.lineTo(W, burnY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,107,107,.65)';
+  ctx.fillText(`🔥 ${burnKm.toFixed(1)} km`, W - 120*devicePixelRatio, burnY - 5);
+
+  // Chute-only ghost trail
+  if(chuteOnlyResult && chuteOnlyResult.hist && chuteOnlyResult.hist.length > 1){
+    ctx.strokeStyle = 'rgba(255,107,107,.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4,6]);
+    ctx.beginPath();
+    chuteOnlyResult.hist.forEach((d,i) => {
+      const p = worldToScreen(d.x, d.y, view);
+      if(i===0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Label
+    const last = chuteOnlyResult.hist[chuteOnlyResult.hist.length-1];
+    const lp = worldToScreen(last.x, Math.max(last.y, 50), view);
+    ctx.fillStyle = 'rgba(255,107,107,.6)';
+    ctx.fillText('💥 chute-only', lp.x+8, lp.y-4);
+  }
+}
+
+/* ===== CANVAS: ENERGY GAUGE ===== */
+function drawEnergyGauge(ctx, v, W, H){
+  if(!v) return;
+  const m = getMass(v);
+  const Ek = 0.5 * m * (v.vx*v.vx + v.vy*v.vy);
+  const Ep = m * CONST.g * Math.max(0, v.y);
+  const Etotal = Ek + Ep;
+  const maxE = 0.5 * m * (500*500) + m * CONST.g * 13000; // approximate initial
+
+  const bx = 14*devicePixelRatio, by = H - 70*devicePixelRatio;
+  const bw = 180*devicePixelRatio, bh = 52*devicePixelRatio;
+
+  ctx.fillStyle = 'rgba(0,0,0,.45)';
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.beginPath();ctx.moveTo(bx+8,by);ctx.lineTo(bx+bw-8,by);ctx.arcTo(bx+bw,by,bx+bw,by+8,8);ctx.lineTo(bx+bw,by+bh-8);ctx.arcTo(bx+bw,by+bh,bx+bw-8,by+bh,8);ctx.lineTo(bx+8,by+bh);ctx.arcTo(bx,by+bh,bx,by+bh-8,8);ctx.lineTo(bx,by+8);ctx.arcTo(bx,by,bx+8,by,8);ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  ctx.font = `${9*devicePixelRatio}px ui-monospace`;
+  ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.fillText('Energy to remove', bx+6, by+12*devicePixelRatio);
+
+  // Ek bar
+  const barY = by + 18*devicePixelRatio;
+  const barH = 8*devicePixelRatio;
+  const barW = bw - 12;
+  const ekFrac = clamp(Ek / Math.max(maxE, 1), 0, 1);
+  const epFrac = clamp(Ep / Math.max(maxE, 1), 0, 1);
+
+  ctx.fillStyle = 'rgba(255,255,255,.08)';
+  ctx.fillRect(bx+6, barY, barW, barH);
+  ctx.fillStyle = 'rgba(255,159,28,.7)';
+  ctx.fillRect(bx+6, barY, barW * ekFrac, barH);
+  ctx.fillStyle = 'rgba(114,221,247,.5)';
+  ctx.fillRect(bx+6 + barW*ekFrac, barY, barW * epFrac, barH);
+
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.font = `${8*devicePixelRatio}px ui-monospace`;
+  ctx.fillText(`K=${(Ek/1e6).toFixed(1)}MJ  U=${(Ep/1e6).toFixed(1)}MJ  Σ=${(Etotal/1e6).toFixed(1)}MJ`, bx+6, barY + barH + 10*devicePixelRatio);
+}
+
+/* ===== HOOK INTO EXISTING FUNCTIONS ===== */
+
+// Override togglePause to show quiz
+const _origTogglePause = togglePause;
+togglePause = function(force){
+  _origTogglePause(force);
+  if(state.paused) showPauseQuiz();
+  else hidePauseQuiz();
+};
+
+// Override updateVehicle for slow motion
+const _origSimDt = CONST.simDt;
+
+// Override draw to add new canvas elements
+const _origDraw = draw;
+draw = function(){
+  _origDraw();
+  const c = $('simCanvas');
+  const ctx2 = c.getContext('2d');
+  const W = c.width, H = c.height;
+  const v = state.vehicle;
+  const top = Math.max(1700, (v ? v.y + 2300 : state.mission ? state.mission.startY+1500 : 13000));
+  const xRefs = [];
+  if(state.mission){
+    xRefs.push(state.mission.startX, state.mission.targetX ?? 0);
+    if(Number.isFinite(state.mission.corridorMin)) xRefs.push(state.mission.corridorMin);
+    if(Number.isFinite(state.mission.corridorMax)) xRefs.push(state.mission.corridorMax);
+  }
+  if(v) xRefs.push(v.x);
+  const left = (xRefs.length ? Math.min(...xRefs) : -1800) - 900;
+  const right = (xRefs.length ? Math.max(...xRefs) : 1800) + 900;
+  const view = {top, left, right};
+
+  drawAnnotations(ctx2, view, W, H);
+  drawForceArrows(ctx2, v, view, W, H);
+  drawEnergyGauge(ctx2, v, W, H);
+};
+
+// Wire new buttons
+$('chuteOnlyBtn').addEventListener('click', runChuteOnlyDemo);
+$('slowBtn').addEventListener('click', toggleSlow);
+
+// Modify the loop to respect slow motion
+const _origLoop = loop;
+loop = function(){
+  cancelAnimationFrame(state.raf);
+  const tick = ()=>{
+    const dt = slowMode ? CONST.simDt * 0.25 : CONST.simDt;
+    updateVehicle(dt);
+    updateMissionUI();
+    draw();
+    state.raf = requestAnimationFrame(tick);
+  };
+  tick();
+};
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

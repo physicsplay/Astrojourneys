@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+<title>Mission ATLAS — Lunar Rescue v4</title>
+<style>
+:root{
+  --bg:#03101f;--panel:#07182c;--panel2:#0a203a;--line:#14365c;
+  --cyan:#67d7ff;--cyan2:#8ce9ff;--text:#eef6ff;--muted:#bdd0e7;
+  --gold:#ffd166;--green:#7be495;--amber:#ffd36a;--red:#ff8888;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:radial-gradient(circle at 25% 10%,#0c2446 0%,#051223 35%,#020913 100%);
+  color:var(--text);font-family:'Segoe UI',system-ui,Arial,sans-serif;overflow-x:hidden}
+.shell{max-width:1320px;margin:0 auto;padding:10px 14px 24px}
+
+/* ── Top bar ── */
+.topBar{
+  display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;
+  padding:14px 18px;border:1px solid rgba(104,180,255,.18);border-radius:16px;
+  background:linear-gradient(180deg,rgba(11,28,52,.88),rgba(6,18,35,.96));
+  box-shadow:0 16px 48px rgba(0,0,0,.3),inset 0 0 60px rgba(103,215,255,.05);
+  margin-bottom:12px
+}
+.topBar h1{font-size:24px;margin-bottom:4px;letter-spacing:-.02em}
+.topSub{font-size:13px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:7px 13px;border-radius:999px;border:1px solid rgba(103,215,255,.28);
+  color:#c7efff;background:rgba(10,34,63,.7);font-size:13px}
+.topControls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,button{
+  border-radius:12px;border:1px solid rgba(139,195,255,.18);
+  background:linear-gradient(180deg,#0f2340,#08172c);
+  color:var(--text);font-size:14px;padding:10px 14px;cursor:pointer;
+  font-family:inherit;transition:.12s filter
+}
+select{min-width:240px}
+button:hover{filter:brightness(1.1)}
+.btnLaunch{border-color:rgba(103,215,255,.45);box-shadow:0 0 0 1px rgba(103,215,255,.08) inset}
+.btnWarn{border-color:rgba(255,209,102,.42)}
+.btnHint{border-color:rgba(167,139,250,.5);background:linear-gradient(180deg,#1a1040,#0d0828)}
+
+/* ── Level deck ── */
+.levelDeck{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.levelCard{
+  padding:14px;border-radius:16px;border:1px solid rgba(120,185,255,.14);
+  background:linear-gradient(180deg,rgba(10,26,47,.9),rgba(5,16,30,.97));
+  cursor:pointer;transition:.15s all
+}
+.levelCard:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.22)}
+.levelCard.active{border-color:rgba(103,215,255,.5);box-shadow:0 0 0 1px rgba(103,215,255,.15) inset}
+.lcRow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.levelCard h3{font-size:16px;margin-bottom:6px}
+.levelCard p{color:#d5e5f6;font-size:13px;line-height:1.4}
+.badge{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.easy{background:rgba(123,228,149,.14);color:#b6ffcb;border:1px solid rgba(123,228,149,.28)}
+.medium{background:rgba(255,209,102,.14);color:#ffe09a;border:1px solid rgba(255,209,102,.30)}
+.hard{background:rgba(255,136,136,.14);color:#ffb1b1;border:1px solid rgba(255,136,136,.30)}
+
+/* ── Main 3-col ── */
+.main{display:grid;grid-template-columns:280px minmax(560px,1fr) 280px;gap:12px}
+.panel{
+  background:linear-gradient(180deg,rgba(8,24,45,.96),rgba(4,15,28,.98));
+  border:1px solid rgba(124,188,255,.13);border-radius:18px;overflow:hidden;
+  box-shadow:0 14px 36px rgba(0,0,0,.22)
+}
+.panel h2{padding:14px 16px 8px;font-size:18px}
+.section{padding:0 16px 14px}
+.section p{line-height:1.45;color:#d9e8f7;font-size:14px;margin-bottom:10px}
+.smallTag{display:inline-block;padding:5px 9px;border-radius:10px;background:rgba(10,34,63,.6);
+  border:1px solid rgba(103,215,255,.18);color:#9ee9ff;font-size:12px;font-weight:600}
+
+/* ── Formulas ── */
+.formulaBox{
+  font-family:'Courier New',Consolas,monospace;font-size:12px;color:var(--cyan2);
+  background:rgba(5,18,35,.9);border:1px solid rgba(103,215,255,.15);
+  border-radius:10px;padding:10px 12px;line-height:1.7;margin-top:10px;white-space:pre-line
+}
+
+/* ── HUD ── */
+.dataStrip{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px 12px 0}
+.metric{
+  background:linear-gradient(180deg,rgba(12,30,56,.96),rgba(8,20,38,.98));
+  border:1px solid rgba(124,188,255,.11);border-radius:14px;padding:10px 8px 8px;min-height:72px
+}
+.metric .label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#b5cae2}
+.metric .value{font-size:17px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+
+/* ── Canvas ── */
+.canvasWrap{padding:10px 12px 0;position:relative}
+canvas{
+  display:block;width:100%;height:auto;aspect-ratio:16/9;
+  border-radius:16px;border:1px solid rgba(130,191,255,.13);
+  background:#020814;box-shadow:inset 0 0 50px rgba(0,0,0,.3)
+}
+
+/* ── Touch controls ── */
+.touchControls{
+  display:none;position:absolute;bottom:14px;left:14px;right:14px;
+  pointer-events:none;z-index:20
+}
+.touchRow{display:flex;justify-content:space-between;align-items:flex-end}
+.touchBtn{
+  width:58px;height:58px;border-radius:50%;
+  border:2px solid rgba(103,215,255,.4);background:rgba(10,34,63,.6);
+  color:var(--cyan);font-size:20px;display:flex;align-items:center;justify-content:center;
+  pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none
+}
+.touchBtn:active,.touchBtn.held{background:rgba(103,215,255,.28);border-color:var(--cyan)}
+.touchBtn.big{width:68px;height:68px;font-size:24px}
+.touchGroup{display:flex;flex-direction:column;gap:6px;align-items:center}
+.touchGroupH{display:flex;gap:6px}
+
+/* ── Bottom grid ── */
+.bottomGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px 12px}
+.mini{min-height:110px;border-radius:16px;padding:14px;border:1px solid rgba(124,188,255,.11);
+  background:linear-gradient(180deg,rgba(9,23,42,.98),rgba(5,15,27,.98))}
+.mini h3{font-size:16px;margin-bottom:8px}
+.mini p,.mini .dynLens{color:#d7e5f4;line-height:1.4;font-size:13px}
+.rubric{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.rubric .box{padding:10px;border-radius:12px;background:rgba(14,35,62,.82);border:1px solid rgba(123,188,255,.11)}
+.rubric .box div:first-child{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#b4c9e0}
+.rubric .box div:last-child{font-size:22px;font-weight:800;margin-top:4px}
+
+/* ── Right panel ── */
+.stack{display:grid;gap:10px;padding:14px;max-height:calc(100vh - 40px);overflow-y:auto}
+.card{padding:14px;border-radius:16px;border:1px solid rgba(124,188,255,.11);
+  background:linear-gradient(180deg,rgba(10,24,45,.98),rgba(5,16,30,.98))}
+.card h3{font-size:16px;margin-bottom:8px}
+.muted{color:#d6e2f0;line-height:1.45;font-size:13px}
+
+/* ── ATLAS ── */
+.atlasRow{display:flex;gap:10px;align-items:flex-start}
+.atlasAvatar{
+  min-width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,#67d7ff,#a78bfa);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  box-shadow:0 4px 12px rgba(103,215,255,.25)
+}
+.atlasBubble{
+  flex:1;background:rgba(103,215,255,.07);border:1px solid rgba(103,215,255,.16);
+  border-radius:4px 14px 14px 14px;padding:10px 12px;font-size:13px;color:#ddeeff;line-height:1.45;
+  transition:.3s opacity
+}
+
+/* ── Status ── */
+.statusTag{display:inline-block;padding:6px 11px;border-radius:999px;
+  background:rgba(123,228,149,.16);color:#b8ffcb;border:1px solid rgba(123,228,149,.28);
+  font-weight:700;font-size:12px;margin-bottom:8px}
+.danger{background:rgba(255,136,136,.15);color:#ffb2b2;border-color:rgba(255,136,136,.28)}
+.warning{background:rgba(255,209,102,.15);color:#ffe09a;border-color:rgba(255,209,102,.28)}
+
+/* ── Rewards ── */
+.rewardHero{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:14px;
+  background:linear-gradient(180deg,rgba(14,33,58,.92),rgba(9,20,36,.98));border:1px solid rgba(134,193,255,.13)}
+.rewardMedal{min-width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:18px;color:#07111e;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.14),0 6px 14px rgba(0,0,0,.24)}
+.rewardMedal.none{background:linear-gradient(180deg,#506884,#2d3d52);color:#ebf4ff}
+.rewardMedal.bronze{background:linear-gradient(180deg,#e7b17d,#a76235)}
+.rewardMedal.silver{background:linear-gradient(180deg,#eef7ff,#9fb6cf)}
+.rewardMedal.gold{background:linear-gradient(180deg,#fff5b8,#e9b83f)}
+.rewardHero .meta{display:grid;gap:3px}
+.rewardHero .meta .kicker{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#9ddfff}
+.rewardHero .meta .ml{font-size:17px;font-weight:800;color:#f3f8ff}
+.rewardHero .meta .subline{font-size:13px;color:#d3e5f7}
+.progressList{display:grid;gap:8px;margin-top:10px}
+.progressLine{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;
+  border-radius:12px;background:rgba(11,29,51,.82);border:1px solid rgba(124,188,255,.11)}
+.progressLine .label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#aec8e3}
+.progressLine .value{font-size:14px;font-weight:700;color:#eff7ff;text-align:right}
+.chipRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rewardChip{padding:6px 10px;border-radius:999px;background:rgba(19,47,84,.92);
+  border:1px solid rgba(124,188,255,.15);color:#d8eeff;font-size:11px;font-weight:700}
+
+/* ── Hint toast ── */
+.hintToast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:rgba(26,16,64,.95);border:1px solid rgba(167,139,250,.5);
+  color:#e2d8ff;padding:14px 22px;border-radius:14px;font-size:14px;
+  max-width:600px;text-align:center;z-index:100;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+  animation:toastIn .3s ease;pointer-events:none
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── Responsive ── */
+@media(max-width:1200px){.main{grid-template-columns:1fr}.topBar{flex-direction:column}.dataStrip{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:768px){
+  .levelDeck{grid-template-columns:1fr}.dataStrip{grid-template-columns:repeat(3,1fr)}
+  .bottomGrid{grid-template-columns:1fr}.rubric{grid-template-columns:repeat(2,1fr)}
+  .touchControls{display:flex!important;flex-direction:column;gap:8px}
+  .topBar h1{font-size:20px}
+}
+@media(max-width:480px){.dataStrip{grid-template-columns:repeat(2,1fr)}.shell{padding:6px 8px 18px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topBar">
+    <div>
+      <h1>🚀 Mission ATLAS — Lunar Rescue</h1>
+      <div class="topSub">Authentic Moon landing simulator · Classroom-ready · v4</div>
+      <div class="chips">
+        <div class="chip">Moon gravity: 1.62 m/s²</div>
+        <div class="chip">No atmosphere · No drag</div>
+        <div class="chip">Mass decreases as fuel burns</div>
+      </div>
+    </div>
+    <div class="topControls">
+      <select id="scenarioSelect">
+        <option value="0">1. Academy Descent — Easy</option>
+        <option value="1">2. Pad Theta Rescue — Medium</option>
+        <option value="2">3. Eclipse Shift — Hard</option>
+      </select>
+      <button class="btnLaunch" id="launchBtn">Launch mission</button>
+      <button id="pauseBtn">Pause</button>
+      <button class="btnHint" id="hintBtn">💡 Hint (−3 pts)</button>
+      <button class="btnWarn" id="restartBtn">Restart</button>
+    </div>
+  </div>
+
+  <div class="levelDeck">
+    <div class="levelCard active" data-index="0">
+      <div class="lcRow"><h3>Academy Descent</h3><span class="badge easy">Easy</span></div>
+      <p>Wide pad, generous fuel, steady approach. Best first run for reading lunar gravity correctly.</p>
+    </div>
+    <div class="levelCard" data-index="1">
+      <div class="lcRow"><h3>Pad Theta Rescue</h3><span class="badge medium">Medium</span></div>
+      <p>Narrower landing zone, stronger sideways drift, tighter fuel. Rewards earlier horizontal control.</p>
+    </div>
+    <div class="levelCard" data-index="2">
+      <div class="lcRow"><h3>Eclipse Shift</h3><span class="badge hard">Hard</span></div>
+      <p>Emergency profile with thin margins. Late braking fails fast, so build the descent corridor early.</p>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT -->
+    <div class="panel">
+      <h2>Mission briefing</h2>
+      <div class="section">
+        <span class="smallTag">Prediction challenge</span>
+        <p id="briefText" style="margin-top:10px"></p>
+        <p id="safeText"></p>
+        <div style="font-size:13px;color:#b9cfe7;margin-top:6px">
+          <strong>Controls:</strong> W/↑ throttle up · S/↓ down · A/← tilt left · D/→ right · P pause · R restart · H hint
+        </div>
+        <div class="formulaBox">Thrust dynamics:
+  F_thrust = throttle × F_max
+  a_y = F·cos(θ)/m − g_moon
+  a_x = F·sin(θ)/m
+
+Fuel consumption:
+  ṁ = F/(I_sp · g₀)
+
+Tsiolkovsky equation:
+  Δv = I_sp·g₀·ln(m₀/m₁)
+
+Constants:
+  g_moon = 1.62 m/s²
+  I_sp = 300 s · F_max = 22 000 N</div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="panel">
+      <div class="dataStrip">
+        <div class="metric"><div class="label">ALTITUDE</div><div class="value" id="altitude">0 m</div></div>
+        <div class="metric"><div class="label">V SPEED</div><div class="value" id="vSpeed">0 m/s</div></div>
+        <div class="metric"><div class="label">H SPEED</div><div class="value" id="hSpeed">0 m/s</div></div>
+        <div class="metric"><div class="label">THROTTLE</div><div class="value" id="throttle">0%</div></div>
+        <div class="metric"><div class="label">ANGLE</div><div class="value" id="angle">0°</div></div>
+        <div class="metric"><div class="label">FUEL</div><div class="value" id="fuel">0 kg</div></div>
+        <div class="metric"><div class="label">MASS</div><div class="value" id="mass">0 kg</div></div>
+      </div>
+
+      <div class="canvasWrap">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div class="touchControls" id="touchControls">
+          <div class="touchRow">
+            <div class="touchGroup">
+              <div class="touchBtn big" data-touch="up">▲</div>
+              <div class="touchGroupH">
+                <div class="touchBtn" data-touch="left">◄</div>
+                <div class="touchBtn" data-touch="down">▼</div>
+                <div class="touchBtn" data-touch="right">►</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;pointer-events:auto">
+              <div class="touchBtn" data-touch="pause" style="font-size:13px;width:50px;height:50px">⏸</div>
+              <div class="touchBtn" data-touch="hint" style="font-size:13px;width:50px;height:50px">💡</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottomGrid">
+        <div class="mini">
+          <h3>🔬 Live physics</h3>
+          <div id="physicsLens" class="dynLens"></div>
+        </div>
+        <div class="mini">
+          <h3>Scoring rubric</h3>
+          <div class="rubric">
+            <div class="box"><div>Mission</div><div>40%</div></div>
+            <div class="box"><div>Science</div><div>30%</div></div>
+            <div class="box"><div>Efficiency</div><div>20%</div></div>
+            <div class="box"><div>Safety</div><div>10%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel">
+      <div class="stack">
+        <div class="card">
+          <div id="statusTag" class="statusTag">Stand by</div>
+          <h3>ATLAS</h3>
+          <div class="atlasRow">
+            <div class="atlasAvatar">🤖</div>
+            <div id="atlasText" class="atlasBubble">Systems nominal. I've triple-checked the corridor. Ready when you are, Pilot.</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Mission phase</h3>
+          <div id="phaseTag" class="smallTag">PRE-LAUNCH</div>
+          <div id="phaseText" class="muted" style="margin-top:10px">The capsule is on the rail. Study the formulas before you commit to thrust.</div>
+          <div id="objectiveText" class="muted" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <h3>Live comms</h3>
+          <div id="commsText" class="muted">ISA Flight: Guidance green. Awaiting launch.</div>
+        </div>
+        <div class="card">
+          <h3>Mission rewards</h3>
+          <div class="rewardHero">
+            <div id="rewardMedal" class="rewardMedal none">—</div>
+            <div class="meta">
+              <div class="kicker">Current run</div>
+              <div id="rewardHeadline" class="ml">Awaiting launch</div>
+              <div id="rewardSubline" class="subline">Land inside the safe envelope to earn a mission medal.</div>
+            </div>
+          </div>
+          <div class="progressList">
+            <div class="progressLine"><div class="label">Current score</div><div id="currentScoreLine" class="value">No run yet</div></div>
+            <div class="progressLine"><div class="label">Scenario best</div><div id="bestScoreLine" class="value">No record yet</div></div>
+            <div class="progressLine"><div class="label">Hints used</div><div id="hintsLine" class="value">0 (−0 pts)</div></div>
+          </div>
+          <div id="rewardChips" class="chipRow"></div>
+        </div>
+        <div class="card">
+          <h3>After-action debrief</h3>
+          <div id="debriefText" class="muted">Run the mission. The debrief will compare your result to the theoretical optimum.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  /* ═══════════════════════════════
+     CONSTANTS & SETUP
+  ═══════════════════════════════ */
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const $ = id => document.getElementById(id);
+
+  const G = 1.62;           // Moon gravity m/s²
+  const g0 = 9.81;          // Standard gravity for Isp
+  const Isp = 300;          // s
+  const maxThrust = 22000;  // N
+  const dt = 1/60;
+  const scaleX = 1;
+  const scaleY = 0.22;
+
+  /* ═══════════════════════════════
+     AUDIO ENGINE (Web Audio API)
+  ═══════════════════════════════ */
+  let audioCtx = null;
+  function ensureAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+  function playTone(freq, dur, type='sine', vol=0.08){
+    try{
+      ensureAudio();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + dur);
+    }catch(e){}
+  }
+  function playNoise(dur, vol=0.06){
+    try{
+      ensureAudio();
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i] = (Math.random()*2-1);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(vol, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      src.connect(g); g.connect(audioCtx.destination);
+      src.start();
+    }catch(e){}
+  }
+  function sndLaunch(){ playTone(180, 0.4, 'sawtooth', 0.06); }
+  function sndThrust(){ playTone(80 + Math.random()*40, 0.08, 'sawtooth', 0.02); }
+  function sndTouchdown(){ playTone(523, 0.15); playTone(659, 0.15); setTimeout(()=>playTone(784,0.3),120); }
+  function sndCrash(){ playNoise(0.5, 0.12); playTone(60, 0.4, 'sawtooth', 0.1); }
+  function sndRough(){ playTone(330, 0.2); playTone(220, 0.3); }
+  function sndHint(){ playTone(440, 0.1, 'triangle', 0.05); playTone(554, 0.1, 'triangle', 0.05); }
+
+  /* ═══════════════════════════════
+     SCENARIOS
+  ═══════════════════════════════ */
+  const scenarios = [
+    {
+      name:'Academy Descent', difficulty:'Easy',
+      brief:'You are clearing your final ISA simulator check. Land a fuel capsule beside Pad Theta before the outpost loses reserve power.',
+      safe:'Safe touchdown: |Vy| ≤ 3.0 m/s, |Vx| ≤ 1.6 m/s, |angle| ≤ 10°.',
+      objective:'Clear your final ISA simulator check and place the cargo capsule safely on Pad Theta.',
+      world:{x:250, altitude:1700, vx:16, vy:-22, fuel:720, dryMass:860, padX:730, padW:140, terrainSeed:1.2},
+      thresholds:{vy:3.0, vx:1.6, angle:10, dx:60}
+    },
+    {
+      name:'Pad Theta Rescue', difficulty:'Medium',
+      brief:'Oxygen cartridges must reach Pad Theta intact before reserve tanks fall below critical level. The pad is narrower and the sideways drift is faster.',
+      safe:'Safe touchdown: |Vy| ≤ 2.7 m/s, |Vx| ≤ 1.4 m/s, |angle| ≤ 8°.',
+      objective:'Deliver oxygen cartridges to Pad Theta before reserve tanks fall below the critical mark.',
+      world:{x:210, altitude:1800, vx:22, vy:-24, fuel:640, dryMass:860, padX:744, padW:108, terrainSeed:2.7},
+      thresholds:{vy:2.7, vx:1.4, angle:8, dx:48}
+    },
+    {
+      name:'Eclipse Shift', difficulty:'Hard',
+      brief:'Emergency profile. Power relay loss forces a narrow descent window with lower fuel and little room for late braking.',
+      safe:'Safe touchdown: |Vy| ≤ 2.3 m/s, |Vx| ≤ 1.2 m/s, |angle| ≤ 7°.',
+      objective:'Hold a thin emergency corridor and land intact before the eclipse-shift power window closes.',
+      world:{x:180, altitude:1900, vx:26, vy:-26, fuel:560, dryMass:860, padX:756, padW:94, terrainSeed:4.2},
+      thresholds:{vy:2.3, vx:1.2, angle:7, dx:42}
+    }
+  ];
+
+  /* ═══════════════════════════════
+     STATE
+  ═══════════════════════════════ */
+  const keys = {};
+  const touchKeys = {};
+  let stars = [], dust = [], terrain = [];
+  let state = null, launched = false, paused = false;
+  let commTimer = 0, lastTime = performance.now();
+  let hintsUsed = 0, hintPenalty = 0;
+  let thrustSndTimer = 0;
+  let shakeAmount = 0;
+
+  const levelCards = Array.from(document.querySelectorAll('.levelCard'));
+
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function idx(){ return parseInt($('scenarioSelect').value, 10); }
+  function current(){ return scenarios[idx()]; }
+  function isKeyDown(code){ return keys[code] || touchKeys[code]; }
+
+  /* ═══════════════════════════════
+     PROGRESS (localStorage)
+  ═══════════════════════════════ */
+  const PK = 'atlas_lunar_v4_progress';
+  let progress = {};
+  try{ const r = localStorage.getItem(PK); if(r) progress = JSON.parse(r); }catch(e){}
+  function saveProgress(){ try{ localStorage.setItem(PK, JSON.stringify(progress)); }catch(e){} }
+  function scenarioKey(){ return current().name; }
+  function medalClass(m){ return m==='Gold'?'gold':m==='Silver'?'silver':m==='Bronze'?'bronze':'none'; }
+  function medalIcon(m){ return m==='Gold'?'G':m==='Silver'?'S':m==='Bronze'?'B':'—'; }
+
+  /* ═══════════════════════════════
+     ATLAS PERSONALITY
+  ═══════════════════════════════ */
+  const ATLAS = {
+    ready: [
+      "Systems nominal. I've triple-checked the corridor. Ready when you are, Pilot.",
+      "All systems green. The Moon is waiting. It's been doing that for 4.5 billion years, so no rush.",
+      "Guidance computer online. Fun fact: the Apollo computer had less RAM than your toaster. You'll be fine."
+    ],
+    launch: [
+      "And we're live. Remember: small corrections early, not heroic burns late. I've seen things.",
+      "Engines confirmed. The Moon doesn't care about your feelings — it only respects Newton's laws.",
+      "Descent initiated. Gravity is now your primary concern. Well, gravity and your piloting skills."
+    ],
+    approach: [
+      "Approach phase. You've got altitude to work with — don't waste it panicking.",
+      "High approach. This is the part where planning matters more than reflexes.",
+    ],
+    corridor: [
+      "Corridor build phase. Bring that predicted marker toward the pad. Gently.",
+      "Mid-descent. If you're not aimed at the pad yet, now would be an excellent time.",
+    ],
+    braking: [
+      "Final braking. This is where it gets real. Gravity doesn't negotiate.",
+      "Vertical speed needs to come down. Physics tip: F·cos(θ)/m needs to exceed 1.62 m/s².",
+    ],
+    flare: [
+      "Landing flare. Small inputs only. The Moon punishes overcorrection. Trust the physics.",
+      "Almost there. Gentle hands. Pretend the throttle is made of glass.",
+    ],
+    safe: [
+      "Touchdown confirmed! That was... actually beautiful. The cargo is intact.",
+      "Perfect landing. I'm framing this telemetry and putting it on my wall.",
+      "Textbook. The outpost crew is already unloading. Outstanding work, Pilot."
+    ],
+    rough: [
+      "You made it to the surface. In one piece, mostly. The cargo team will need extra padding next time.",
+      "Landed, but outside the envelope. The physics worked — your corridor didn't quite.",
+      "Contact confirmed. The capsule bounced a little. Let's call it 'character building.'"
+    ],
+    crash: [
+      "Well. That happened. For the record, I mentioned the early corrections thing.",
+      "Capsule lost. On the bright side, you've created a new crater. Named after you, probably.",
+      "Impact detected. The good news: the Moon's surface is now slightly more interesting.",
+      "That wasn't a landing. That was lithobraking. Very aggressive lithobraking."
+    ],
+    lowFuel: [
+      "Fuel margin getting thin. Every Newton counts now.",
+      "Fuel warning. Smooth hands — you can't refuel in lunar orbit. Yet."
+    ],
+    highAngle: [
+      "That angle is getting scary. Straighten up before you arrive sideways.",
+      "Attitude warning. Capsules land on their feet, not their shoulder."
+    ],
+    offCourse: [
+      "Predicted touchdown is off the pad. Correct now, not later.",
+      "You're drifting. The pad isn't going to move for you."
+    ],
+    goodCorridor: [
+      "Looking good. Hold this profile.",
+      "Nice corridor. Don't fiddle with it."
+    ],
+    newBest: "New personal best! I'm saving that to the flight recorder. Outstanding piloting.",
+    hintUsed: "Accessing guidance database... I mean, 'performing advanced calculations.'",
+  };
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function setAtlas(text){ $('atlasText').textContent = text; }
+
+  /* ═══════════════════════════════
+     EASTER EGGS
+  ═══════════════════════════════ */
+  function checkEasterEggs(){
+    if(!state) return;
+    if(Math.abs(state.throttle) < 0.01 && launched && !state.landed && state.y > 200){
+      setAtlas("Bold strategy: flying with zero thrust. Let's see how gravity feels about that.");
+    }
+    if(Math.abs(state.angle) > 27 && launched && !state.landed){
+      setAtlas("Flying sideways is technically a valid approach. On literally any planet except this one.");
+    }
+  }
+
+  /* ═══════════════════════════════
+     HINTS
+  ═══════════════════════════════ */
+  function showHint(){
+    if(!launched || paused || !state || state.landed) return;
+    hintsUsed++;
+    hintPenalty = hintsUsed * 3;
+    sndHint();
+    $('hintsLine').textContent = `${hintsUsed} (−${hintPenalty} pts)`;
+
+    const s = current();
+    const thrust = state.fuel > 0 ? state.throttle * maxThrust : 0;
+    const angleRad = state.angle * Math.PI / 180;
+    const netAy = (thrust / state.mass) * Math.cos(angleRad) - G;
+    const hoverThr = ((state.mass * G) / (maxThrust * Math.cos(angleRad))) * 100;
+
+    // Free-fall time
+    const vyDown = -state.vy;
+    const disc = Math.max(0, vyDown*vyDown + 2*G*Math.max(0,state.y));
+    const tFall = (disc > 0) ? (-vyDown + Math.sqrt(disc))/G : 0;
+    const predX = state.x + state.vx * tFall;
+
+    const hints = [
+      `At ${Math.round(state.throttle*100)}% throttle, thrust = ${thrust.toFixed(0)} N. Net vertical accel = ${netAy.toFixed(2)} m/s². ${netAy > 0 ? 'You\'re decelerating.' : 'You\'re still accelerating downward!'}`,
+      `Free-fall from ${state.y.toFixed(0)}m at Vy = ${state.vy.toFixed(1)} m/s: impact in ≈${tFall.toFixed(1)}s at x ≈ ${predX.toFixed(0)}px. Pad is at x = ${s.world.padX}.`,
+      `To hover: F·cos(θ) = m·g → throttle ≈ ${hoverThr.toFixed(0)}%. You're at ${Math.round(state.throttle*100)}%. ${state.throttle*100 > hoverThr ? 'You\'re slowing down.' : 'You\'re still falling.'}`,
+    ];
+
+    const hint = hints[hintsUsed % hints.length];
+
+    const toast = document.createElement('div');
+    toast.className = 'hintToast';
+    toast.textContent = '💡 ' + hint;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+
+    setAtlas(ATLAS.hintUsed);
+  }
+
+  /* ═══════════════════════════════
+     TERRAIN & COORDINATES
+  ═══════════════════════════════ */
+  function initStars(){
+    stars = Array.from({length:240}, () => ({
+      x:Math.random()*canvas.width, y:Math.random()*canvas.height*0.72,
+      r:0.4+Math.random()*1.8, a:0.15+Math.random()*0.8, p:Math.random()*Math.PI*2
+    }));
+  }
+
+  function buildTerrain(){
+    const s = current();
+    terrain = new Array(canvas.width);
+    const base = canvas.height * 0.79;
+    for(let x=0;x<canvas.width;x++){
+      terrain[x] = base + 18*Math.sin(x*0.018+s.world.terrainSeed) + 11*Math.sin(x*0.041+s.world.terrainSeed*1.8) + 6*Math.sin(x*0.087+s.world.terrainSeed*3.1);
+    }
+    const start = Math.max(0,Math.round(s.world.padX-s.world.padW/2));
+    const end = Math.min(canvas.width-1,Math.round(s.world.padX+s.world.padW/2));
+    for(let x=start;x<=end;x++) terrain[x] = base-2;
+  }
+
+  function terrainHeightAt(x){ x=Math.max(0,Math.min(canvas.width-1,Math.round(x))); return terrain[x]||canvas.height*0.79; }
+  function worldToScreenY(y){ return canvas.height*0.76 - y*scaleY; }
+  function screenToWorldY(sy){ return (canvas.height*0.76 - sy)/scaleY; }
+
+  /* ═══════════════════════════════
+     PREDICTED LANDING (ballistic, no thrust)
+  ═══════════════════════════════ */
+  function predictedX(){
+    const vyDown = -state.vy;
+    const disc = Math.max(0, vyDown*vyDown + 2*G*Math.max(0,state.y));
+    const t = (-vyDown + Math.sqrt(disc)) / G;
+    return state.x + state.vx * t;
+  }
+
+  /* ═══════════════════════════════
+     UI UPDATES
+  ═══════════════════════════════ */
+  function applyScenarioText(){
+    const s = current();
+    $('briefText').textContent = s.brief;
+    $('safeText').textContent = s.safe;
+    $('objectiveText').innerHTML = `<strong>Objective:</strong> ${s.objective}`;
+    levelCards.forEach(c => c.classList.toggle('active', parseInt(c.dataset.index,10)===idx()));
+    updateRewardUI();
+  }
+
+  function updatePhaseUI(){
+    if(state.landed){
+      const tags = {safe:['TOUCHDOWN','statusTag'],rough:['HARD LANDING','statusTag warning'],crash:['MISSION FAILED','statusTag danger']};
+      const [t,c] = tags[state.outcome] || tags.crash;
+      $('phaseTag').textContent = t;
+      $('statusTag').textContent = t;
+      $('statusTag').className = c;
+      return;
+    }
+    if(!launched){
+      $('phaseTag').textContent = 'PRE-LAUNCH';
+      $('phaseText').textContent = 'Study the formulas and the corridor before you commit to thrust.';
+      return;
+    }
+    if(state.y > 1100){
+      $('phaseTag').textContent = 'APPROACH';
+      $('phaseText').textContent = 'Stabilise the approach. Build a descent you can continue, not a late rescue burn.';
+    } else if(state.y > 520){
+      $('phaseTag').textContent = 'CORRIDOR BUILD';
+      $('phaseText').textContent = 'Steer the predicted touchdown toward Pad Theta while protecting fuel and attitude.';
+    } else if(state.y > 180){
+      $('phaseTag').textContent = 'FINAL BRAKING';
+      $('phaseText').textContent = 'Reduce vertical speed without losing control of angle and horizontal drift.';
+    } else {
+      $('phaseTag').textContent = 'LANDING FLARE';
+      $('phaseText').textContent = 'Controlled flare. Small corrections only — the Moon will not forgive overreaction.';
+    }
+  }
+
+  /* ═══ FIX: V-Speed and H-Speed now show SIGN ═══ */
+  function updateHUD(){
+    $('altitude').textContent = `${Math.max(0,state.y).toFixed(0)} m`;
+
+    // V speed: negative = descending (red), positive = ascending (green)
+    const vyEl = $('vSpeed');
+    vyEl.textContent = `${state.vy >= 0 ? '+' : ''}${state.vy.toFixed(2)} m/s`;
+    vyEl.style.color = state.vy < -2 ? '#ff8888' : state.vy < 0 ? '#ffd36a' : '#7be495';
+
+    // H speed: show direction — positive = right, negative = left
+    const vxEl = $('hSpeed');
+    const vxDir = state.vx > 0.5 ? '→' : state.vx < -0.5 ? '←' : '';
+    vxEl.textContent = `${vxDir}${state.vx.toFixed(2)} m/s`;
+    vxEl.style.color = Math.abs(state.vx) > 3 ? '#ffd36a' : '#7be495';
+
+    $('throttle').textContent = `${Math.round(state.throttle*100)}%`;
+    $('angle').textContent = `${state.angle.toFixed(1)}°`;
+
+    const fuelEl = $('fuel');
+    fuelEl.textContent = `${Math.max(0,state.fuel).toFixed(0)} kg`;
+    fuelEl.style.color = state.fuel < 80 ? '#ff8888' : state.fuel < 200 ? '#ffd36a' : '';
+
+    $('mass').textContent = `${state.mass.toFixed(0)} kg`;
+    updatePhaseUI();
+  }
+
+  /* ═══ DYNAMIC PHYSICS LENS ═══ */
+  function updatePhysicsLens(){
+    if(!launched || state.landed){
+      $('physicsLens').innerHTML = 'Launch the mission to see live physics calculations here. The lens shows thrust decomposition, net acceleration, and fuel burn rate in real time.';
+      return;
+    }
+    const thrust = state.fuel > 0 ? state.throttle * maxThrust : 0;
+    const angleRad = state.angle * Math.PI/180;
+    const Fy = thrust * Math.cos(angleRad);
+    const Fx = thrust * Math.sin(angleRad);
+    const ay = Fy/state.mass - G;
+    const ax = Fx/state.mass;
+    const mdot = thrust > 0 ? thrust / (Isp * g0) : 0;
+    const twr = thrust / (state.mass * G);
+
+    $('physicsLens').innerHTML = `
+<b>Thrust:</b> ${thrust.toFixed(0)} N at θ=${state.angle.toFixed(1)}°<br>
+<b>F_y = F·cos(θ):</b> ${Fy.toFixed(0)} N → a_y = ${ay>=0?'+':''}${ay.toFixed(2)} m/s²<br>
+<b>F_x = F·sin(θ):</b> ${Fx.toFixed(0)} N → a_x = ${ax>=0?'+':''}${ax.toFixed(3)} m/s²<br>
+<b>Weight:</b> ${(state.mass*G).toFixed(0)} N · <b>TWR:</b> ${twr.toFixed(2)}<br>
+<b>Fuel burn:</b> ${mdot.toFixed(2)} kg/s · <b>Remaining:</b> ${(mdot>0?(state.fuel/mdot).toFixed(0):'∞')}s
+    `.trim();
+  }
+
+  /* ═══ REWARDS ═══ */
+  function makeChips(score){
+    if(!score) return [];
+    const s = current(), chips = [];
+    if(score.safe) chips.push('Touchdown ✓');
+    if(score.vy <= s.thresholds.vy*0.7) chips.push('Soft vertical');
+    if(score.vx <= s.thresholds.vx*0.7) chips.push('Vector control');
+    if(score.angle <= s.thresholds.angle*0.6) chips.push('Attitude lock');
+    if(score.dx <= s.thresholds.dx*0.5) chips.push('Pad precision');
+    if(score.efficiency >= 15) chips.push('Fuel reserve');
+    if(score.total >= 90) chips.push('Gold-standard');
+    else if(score.total >= 78) chips.push('Strong recovery');
+    return [...new Set(chips)].slice(0,4);
+  }
+
+  function updateRewardUI(){
+    const best = progress[scenarioKey()];
+    if(state && state.score){
+      const sc = state.score;
+      $('rewardMedal').className = 'rewardMedal ' + medalClass(sc.medal);
+      $('rewardMedal').textContent = medalIcon(sc.medal);
+      $('rewardHeadline').textContent = sc.medal==='No medal' ? 'No medal' : sc.medal+' medal';
+      $('rewardSubline').textContent = `Mission ${sc.mission}/40 · Science ${sc.science}/30 · Efficiency ${sc.efficiency}/20 · Safety ${sc.safety}/10${hintPenalty>0?' · Hints −'+hintPenalty:''}`;
+      $('currentScoreLine').textContent = `${sc.total} pts`;
+      const chips = makeChips(sc);
+      $('rewardChips').innerHTML = chips.length ? chips.map(c=>`<span class="rewardChip">${c}</span>`).join('') : '';
+    } else {
+      $('rewardMedal').className = 'rewardMedal '+(best?medalClass(best.medal):'none');
+      $('rewardMedal').textContent = best ? medalIcon(best.medal) : '—';
+      $('rewardHeadline').textContent = best ? `Best: ${best.medal}` : 'Awaiting launch';
+      $('rewardSubline').textContent = best ? `Beat ${best.total} pts to improve.` : 'Land safely to earn a medal.';
+      $('currentScoreLine').textContent = 'No run yet';
+      $('rewardChips').innerHTML = '';
+    }
+    $('bestScoreLine').textContent = best ? `${best.total} pts · ${best.medal}` : 'No record';
+  }
+
+  /* ═══════════════════════════════
+     MISSION CONTROL
+  ═══════════════════════════════ */
+  function resetMission(updateText=true){
+    buildTerrain();
+    const s = current();
+    state = {
+      x:s.world.x, y:s.world.altitude, vx:s.world.vx, vy:s.world.vy,
+      angle:0, throttle:0.34, fuel:s.world.fuel, dryMass:s.world.dryMass,
+      mass:s.world.fuel+s.world.dryMass,
+      alive:true, landed:false, score:null, outcome:'', time:0
+    };
+    dust=[]; launched=false; paused=false; commTimer=0; hintsUsed=0; hintPenalty=0; shakeAmount=0;
+    $('pauseBtn').textContent = 'Pause';
+    $('statusTag').textContent = 'Stand by'; $('statusTag').className = 'statusTag';
+    $('hintsLine').textContent = '0 (−0 pts)';
+    $('commsText').textContent = 'ISA Flight: Guidance green. Awaiting launch on Pad Theta corridor.';
+    $('debriefText').textContent = 'Run the mission. The debrief will compare your result to the theoretical optimum.';
+    setAtlas(pick(ATLAS.ready));
+    if(updateText) applyScenarioText();
+    updateHUD(); updateRewardUI(); updatePhysicsLens(); render();
+  }
+
+  function launchMission(){
+    if(!state || state.landed || !state.alive) resetMission(false);
+    launched = true; paused = false;
+    $('pauseBtn').textContent = 'Pause';
+    $('statusTag').textContent = 'Mission live'; $('statusTag').className = 'statusTag';
+    $('commsText').textContent = `ISA Flight: ${current().name} is live. Guidance is yours.`;
+    setAtlas(pick(ATLAS.launch));
+    sndLaunch();
+    render();
+  }
+
+  /* ═══════════════════════════════
+     SCORING & LANDING
+  ═══════════════════════════════ */
+  function scoreLanding(groundY){
+    const s = current();
+    state.landed = true; state.alive = false; launched = false; paused = false;
+    state.y = screenToWorldY(groundY-18);
+
+    const dx = Math.abs(state.x - s.world.padX);
+    const vy = Math.abs(state.vy), vx = Math.abs(state.vx), ang = Math.abs(state.angle);
+    const safe = vy<=s.thresholds.vy && vx<=s.thresholds.vx && ang<=s.thresholds.angle && dx<=s.thresholds.dx;
+    const near = vy<=s.thresholds.vy*1.7 && vx<=s.thresholds.vx*1.9 && ang<=s.thresholds.angle*1.9 && dx<=s.thresholds.dx*2.2;
+
+    const mission = safe ? 40 : near ? 22 : 0;
+    const science = Math.max(0, 30 - (vy*4.6 + vx*5 + ang*1.0 + dx*0.06));
+    const efficiency = Math.max(0, Math.min(20, state.fuel/s.world.fuel*20));
+    const safety = safe ? 10 : near ? 5 : 0;
+    const raw = Math.round(mission + science + efficiency + safety);
+    const total = Math.max(0, raw - hintPenalty);
+
+    let medal = 'No medal';
+    if(safe && total>=90) medal='Gold';
+    else if(safe && total>=78) medal='Silver';
+    else if(near && total>=60) medal='Bronze';
+
+    const achievements = makeChips({mission,science:Math.round(science),efficiency:Math.round(efficiency),safety,total,medal,dx,vy,vx,angle:ang,safe,near});
+    state.score = {mission,science:Math.round(science),efficiency:Math.round(efficiency),safety,total,medal,dx,vy,vx,angle:ang,safe,near,achievements,newBest:false};
+    state.outcome = safe ? 'safe' : near ? 'rough' : 'crash';
+
+    const prev = progress[scenarioKey()];
+    if(!prev || total > prev.total){
+      state.score.newBest = true;
+      progress[scenarioKey()] = {total,medal,achievements,safe,updatedAt:Date.now()};
+      saveProgress();
+    }
+
+    // Sound
+    if(safe) sndTouchdown(); else if(near) sndRough(); else sndCrash();
+
+    // Screen shake on crash
+    if(state.outcome === 'crash') shakeAmount = 12;
+
+    // ATLAS response
+    if(safe){
+      setAtlas(state.score.newBest ? ATLAS.newBest : pick(ATLAS.safe));
+      $('commsText').textContent = state.score.newBest
+        ? 'ISA Flight: Touchdown confirmed. New record on Pad Theta corridor. Outstanding work, Guidance.'
+        : 'ISA Flight: Touchdown confirmed. Pad Theta has the cargo. Beautiful work, Guidance.';
+    } else if(near){
+      setAtlas(pick(ATLAS.rough));
+      $('commsText').textContent = 'ISA Flight: Contact, but rough. Debrief and fly the corridor cleaner next run.';
+    } else {
+      setAtlas(pick(ATLAS.crash));
+      $('commsText').textContent = 'ISA Flight: Capsule lost. Reset and try a more controlled descent corridor.';
+      explode(state.x, groundY-6, true);
+    }
+
+    // ═══ DEBRIEF with theoretical analysis ═══
+    const fuelUsed = s.world.fuel - state.fuel;
+    const dv = Isp * g0 * Math.log((s.world.fuel+s.world.dryMass) / state.mass);
+    const initKE = 0.5*(s.world.fuel+s.world.dryMass)*(s.world.vx*s.world.vx + s.world.vy*s.world.vy);
+    const initPE = (s.world.fuel+s.world.dryMass)*G*s.world.altitude;
+
+    let debrief = '';
+    if(safe){
+      debrief = `✓ Success. Final Vy=${state.vy.toFixed(2)} m/s, Vx=${state.vx.toFixed(2)} m/s, angle=${state.angle.toFixed(1)}°.`
+        + `\n\nFuel used: ${fuelUsed.toFixed(0)} kg of ${s.world.fuel} kg (${(fuelUsed/s.world.fuel*100).toFixed(0)}%).`
+        + `\nΔv budget spent: ≈${dv.toFixed(0)} m/s (Tsiolkovsky).`
+        + `\nInitial KE: ${(initKE/1000).toFixed(1)} kJ, Initial PE: ${(initPE/1000).toFixed(1)} kJ.`
+        + `\n\nLunar landing is about continuous control: gravity, horizontal momentum, and touchdown attitude together.`
+        + (hintPenalty > 0 ? `\nHint penalty: −${hintPenalty} pts.` : '');
+    } else if(near){
+      debrief = `⚠ Near miss. Vy=${state.vy.toFixed(2)} m/s (limit ${s.thresholds.vy}), Vx=${state.vx.toFixed(2)} m/s (limit ${s.thresholds.vx}), angle=${state.angle.toFixed(1)}° (limit ${s.thresholds.angle}°).`
+        + `\n\nWith no drag, excess speed stays until thrust removes it. The physics shows why "almost right" isn't enough.`
+        + `\nFuel used: ${fuelUsed.toFixed(0)}/${s.world.fuel} kg.`;
+    } else {
+      const impactSpeed = Math.sqrt(state.vy*state.vy + state.vx*state.vx);
+      debrief = `✗ Crash. Impact speed: ${impactSpeed.toFixed(1)} m/s.`
+        + `\nVy=${state.vy.toFixed(2)} m/s, Vx=${state.vx.toFixed(2)} m/s, angle=${state.angle.toFixed(1)}°.`
+        + `\n\nGravity added ${G} m/s² every second. Without atmosphere, nothing removed your horizontal motion.`
+        + `\nFuel remaining: ${state.fuel.toFixed(0)} kg. ${state.fuel < 10 ? 'You ran out — earlier braking was needed.' : 'You had fuel left — the issue was corridor control, not resources.'}`;
+    }
+    debrief += `\n\nScore: ${total} — ${medal}.${state.score.newBest ? ' New best!' : ''}`;
+    $('debriefText').textContent = debrief;
+
+    updatePhaseUI(); updateRewardUI(); $('pauseBtn').textContent = 'Pause';
+  }
+
+  /* ═══════════════════════════════
+     PARTICLES
+  ═══════════════════════════════ */
+  function explode(x,y,big){
+    const n = big ? 80 : 28;
+    for(let i=0;i<n;i++){
+      dust.push({x,y,
+        vx:(Math.random()-0.5)*(big?6:2.5), vy:(Math.random()-0.8)*(big?5:2.1),
+        life:28+Math.random()*48, size:1.5+Math.random()*(big?5:3),
+        a:0.95, regolith:Math.random()<0.75
+      });
+    }
+  }
+
+  function updateDust(){
+    dust = dust.filter(p => {
+      p.x+=p.vx; p.y+=p.vy; p.life-=1; p.a=Math.max(0,p.life/50);
+      return p.life > 0;
+    });
+  }
+
+  /* ═══════════════════════════════
+     COMMS (periodic, context-aware)
+  ═══════════════════════════════ */
+  let lastAtlasPhase = '';
+  function updateComms(){
+    commTimer += dt;
+    if(commTimer < 2.5) return;
+    commTimer = 0;
+    const s = current();
+    const dx = state.x - s.world.padX;
+
+    let msg = 'ISA Flight: Corridor steady. Hold the envelope.';
+    let phase = '';
+
+    if(state.y > 1100 && Math.abs(state.vx)>15){ msg='ISA Flight: Approach unstable. Bleed sideways speed while you have altitude.'; phase='approach'; }
+    else if(Math.abs(dx)>120){ msg='ISA Flight: Predicted touchdown off-pad. Correct earlier, not harder.'; phase='offcourse'; }
+    else if(state.y<260 && Math.abs(state.vy)>4.2){ msg='ISA Flight: Final braking open. Vertical speed too high.'; phase='braking'; }
+    else if(state.fuel<90){ msg='ISA Flight: Fuel margin low. Smooth hands.'; phase='lowfuel'; }
+    else if(Math.abs(state.angle)>12){ msg='ISA Flight: Reduce attitude before contact.'; phase='highangle'; }
+    else if(state.y<520 && Math.abs(dx)<70){ msg='ISA Flight: Good corridor. Hold it.'; phase='good'; }
+    $('commsText').textContent = msg;
+
+    // ATLAS contextual commentary (don't repeat same phase)
+    if(phase && phase !== lastAtlasPhase){
+      lastAtlasPhase = phase;
+      if(phase==='lowfuel') setAtlas(pick(ATLAS.lowFuel));
+      else if(phase==='highangle') setAtlas(pick(ATLAS.highAngle));
+      else if(phase==='offcourse') setAtlas(pick(ATLAS.offCourse));
+      else if(phase==='good') setAtlas(pick(ATLAS.goodCorridor));
+    }
+
+    // Phase-based ATLAS (only on phase transition)
+    if(!phase){
+      const p = state.y>1100?'approach':state.y>520?'corridor':state.y>180?'braking':'flare';
+      if(p !== lastAtlasPhase){
+        lastAtlasPhase = p;
+        if(p==='approach') setAtlas(pick(ATLAS.approach));
+        else if(p==='corridor') setAtlas(pick(ATLAS.corridor));
+        else if(p==='braking') setAtlas(pick(ATLAS.braking));
+        else if(p==='flare') setAtlas(pick(ATLAS.flare));
+      }
+    }
+  }
+
+  /* ═══════════════════════════════
+     PHYSICS ENGINE
+  ═══════════════════════════════ */
+  function updatePhysics(){
+    if(!launched || paused || !state.alive || state.landed) return;
+
+    // Input
+    if(isKeyDown('ArrowUp')||isKeyDown('KeyW')) state.throttle = clamp(state.throttle+0.015,0,1);
+    if(isKeyDown('ArrowDown')||isKeyDown('KeyS')) state.throttle = clamp(state.throttle-0.015,0,1);
+    if(isKeyDown('ArrowLeft')||isKeyDown('KeyA')) state.angle = clamp(state.angle-1.1,-28,28);
+    if(isKeyDown('ArrowRight')||isKeyDown('KeyD')) state.angle = clamp(state.angle+1.1,-28,28);
+
+    // Physics
+    const angleRad = state.angle * Math.PI / 180;
+    const thrust = state.fuel > 0 ? state.throttle * maxThrust : 0;
+    const ax = (thrust/state.mass) * Math.sin(angleRad);
+    const ay = (thrust/state.mass) * Math.cos(angleRad) - G;
+
+    state.vx += ax * dt;
+    state.vy += ay * dt;
+    state.x += state.vx * dt * scaleX;
+    state.y += state.vy * dt;
+    state.time += dt;
+
+    // Fuel consumption
+    if(thrust > 0 && state.fuel > 0){
+      const mdot = thrust / (Isp * g0);
+      const burn = Math.min(state.fuel, mdot * dt);
+      state.fuel -= burn;
+      state.mass = state.dryMass + state.fuel;
+
+      // Thrust particles
+      for(let i=0;i<4+Math.floor(state.throttle*7);i++){
+        dust.push({
+          x:state.x+(Math.random()-0.5)*8, y:worldToScreenY(state.y)+16,
+          vx:(Math.random()-0.5)*0.6-Math.sin(angleRad)*1.2,
+          vy:1.2+Math.random()*1.8+Math.cos(angleRad),
+          life:18+Math.random()*18, size:1+Math.random()*2.6, a:0.9, glow:true
+        });
+      }
+      // Regolith near ground
+      if(state.y < 220){
+        for(let i=0;i<5+Math.floor(state.throttle*10);i++){
+          dust.push({
+            x:state.x+(Math.random()-0.5)*18, y:terrainHeightAt(state.x)-3+Math.random()*5,
+            vx:(Math.random()-0.5)*(1.2+state.throttle*3), vy:-Math.random()*(0.6+state.throttle*1.5),
+            life:15+Math.random()*18, size:1+Math.random()*3.5, a:0.85, regolith:true
+          });
+        }
+      }
+      // Thrust sound
+      thrustSndTimer += dt;
+      if(thrustSndTimer > 0.15){ thrustSndTimer=0; if(state.throttle>0.15) sndThrust(); }
+    }
+
+    // Bounds
+    state.x = clamp(state.x, 20, canvas.width-20);
+
+    // Landing detection
+    const shipBottom = worldToScreenY(state.y) + 18;
+    const groundY = terrainHeightAt(state.x);
+    if(shipBottom >= groundY) scoreLanding(groundY);
+
+    // Easter eggs
+    checkEasterEggs();
+
+    updateDust(); updateComms(); updateHUD(); updatePhysicsLens();
+  }
+
+  /* ═══════════════════════════════
+     RENDERING (kept from original, improved)
+  ═══════════════════════════════ */
+  function drawBackdrop(time){
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0,'#020813'); g.addColorStop(0.32,'#06172e');
+    g.addColorStop(0.72,'#0a2340'); g.addColorStop(1,'#102848');
+    ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    [[canvas.width*0.16,canvas.height*0.16,180,'rgba(55,110,255,.10)'],
+     [canvas.width*0.58,canvas.height*0.10,220,'rgba(160,90,255,.07)'],
+     [canvas.width*0.76,canvas.height*0.28,180,'rgba(90,235,255,.06)']
+    ].forEach(([x,y,r,c])=>{
+      const rg=ctx.createRadialGradient(x,y,10,x,y,r);
+      rg.addColorStop(0,c); rg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    });
+
+    for(const s of stars){
+      const a=s.a*(0.55+0.45*Math.sin(time*0.0013+s.p));
+      ctx.fillStyle=`rgba(255,255,255,${a})`;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+      if(s.r>1.45){
+        ctx.strokeStyle=`rgba(255,255,255,${a*0.35})`;
+        ctx.beginPath();ctx.moveTo(s.x-4,s.y);ctx.lineTo(s.x+4,s.y);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(s.x,s.y-4);ctx.lineTo(s.x,s.y+4);ctx.stroke();
+      }
+    }
+
+    // Earth
+    const ex=canvas.width*0.83,ey=canvas.height*0.16,er=64;
+    const halo=ctx.createRadialGradient(ex,ey,12,ex,ey,er*1.8);
+    halo.addColorStop(0,'rgba(188,245,255,.25)'); halo.addColorStop(1,'rgba(45,89,161,0)');
+    ctx.fillStyle=halo; ctx.beginPath(); ctx.arc(ex,ey,er*1.8,0,Math.PI*2); ctx.fill();
+    const earth=ctx.createRadialGradient(ex-20,ey-18,8,ex,ey,er);
+    earth.addColorStop(0,'#f7ffff'); earth.addColorStop(0.24,'#9bf2ff');
+    earth.addColorStop(0.52,'#2b8af0'); earth.addColorStop(1,'rgba(7,42,103,.25)');
+    ctx.fillStyle=earth; ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2); ctx.fill();
+
+    // Horizon haze
+    const hg=ctx.createLinearGradient(0,canvas.height*0.48,0,canvas.height*0.82);
+    hg.addColorStop(0,'rgba(95,152,255,0)'); hg.addColorStop(1,'rgba(126,193,255,.08)');
+    ctx.fillStyle=hg; ctx.fillRect(0,canvas.height*0.48,canvas.width,canvas.height*0.34);
+  }
+
+  function drawFarRidges(){
+    const base=canvas.height*0.69;
+    ctx.fillStyle='rgba(155,184,212,.11)';
+    ctx.beginPath(); ctx.moveTo(0,canvas.height); ctx.lineTo(0,base+12);
+    for(let x=0;x<=canvas.width;x+=24) ctx.lineTo(x,base+16*Math.sin(x*0.014+0.6)+8*Math.sin(x*0.037+1.4));
+    ctx.lineTo(canvas.width,canvas.height); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle='rgba(180,210,230,.07)';
+    ctx.beginPath(); ctx.moveTo(0,canvas.height); ctx.lineTo(0,base+40);
+    for(let x=0;x<=canvas.width;x+=28) ctx.lineTo(x,base+42+10*Math.sin(x*0.010+2.0)+7*Math.sin(x*0.03+0.2));
+    ctx.lineTo(canvas.width,canvas.height); ctx.closePath(); ctx.fill();
+  }
+
+  function drawTerrain(time){
+    ctx.beginPath(); ctx.moveTo(0,terrain[0]);
+    for(let x=0;x<canvas.width;x++) ctx.lineTo(x,terrain[x]);
+    ctx.lineTo(canvas.width,canvas.height); ctx.lineTo(0,canvas.height); ctx.closePath();
+    const tg=ctx.createLinearGradient(0,canvas.height*0.62,0,canvas.height);
+    tg.addColorStop(0,'#7b8799'); tg.addColorStop(0.44,'#5d6676'); tg.addColorStop(1,'#313744');
+    ctx.fillStyle=tg; ctx.fill();
+
+    for(let i=0;i<6;i++){
+      const x=110+i*130+(i%2)*28,y=terrainHeightAt(x)+8;
+      ctx.strokeStyle='rgba(30,36,45,.45)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.ellipse(x,y,22+(i%3)*10,9+(i%2)*3,0,0,Math.PI*2); ctx.stroke();
+    }
+
+    const s=current(),px=s.world.padX,pw=s.world.padW,py=terrainHeightAt(px);
+    const corr=ctx.createRadialGradient(px,py-8,12,px,py-10,pw*0.96);
+    corr.addColorStop(0,'rgba(110,220,255,.24)'); corr.addColorStop(1,'rgba(110,220,255,0)');
+    ctx.fillStyle=corr; ctx.beginPath(); ctx.ellipse(px,py-10,pw*0.82,24,0,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle='#d9efff'; ctx.fillRect(px-pw/2,py-3,pw,6);
+    ctx.strokeStyle='rgba(103,215,255,.72)'; ctx.lineWidth=2;
+    ctx.strokeRect(px-pw/2,py-3,pw,6);
+    ctx.fillStyle='rgba(218,239,255,.95)'; ctx.font='bold 16px Segoe UI,Arial';
+    ctx.fillText('PAD THETA',px-38,py-12);
+
+    [px-pw/2,px+pw/2].forEach(bx=>{
+      const pulse=0.4+0.4*Math.sin(time*0.008+bx);
+      ctx.fillStyle='#8ee6ff'; ctx.fillRect(bx-2,py-22,4,20);
+      ctx.fillStyle=`rgba(120,230,255,${pulse})`;
+      ctx.beginPath(); ctx.arc(bx,py-24,5+pulse*4,0,Math.PI*2); ctx.fill();
+    });
+
+    [px+pw/2+42,px+pw/2+86].forEach((dx,i)=>{
+      const domeY=py-2;
+      ctx.fillStyle=i===0?'rgba(151,179,206,.92)':'rgba(126,153,181,.92)';
+      ctx.beginPath(); ctx.arc(dx,domeY,18-i*3,Math.PI,Math.PI*2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='rgba(116,230,255,.28)'; ctx.fillRect(dx-9,domeY-7,18-i*4,4);
+    });
+    ctx.fillStyle='rgba(126,153,181,.82)'; ctx.fillRect(px+pw/2+18,py-18,18,16);
+  }
+
+  function drawCorridor(){
+    const s=current(),px=s.world.padX,py=terrainHeightAt(px)-8;
+    ctx.setLineDash([7,7]);
+    ctx.strokeStyle='rgba(126,230,255,.18)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px,py-200); ctx.lineTo(px,py-8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px-36,py-160); ctx.lineTo(px,py-112); ctx.lineTo(px+36,py-160); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawPredicted(){
+    const pred=clamp(predictedX(),18,canvas.width-18);
+    const y=terrainHeightAt(pred);
+    ctx.strokeStyle='rgba(255,209,102,.92)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(pred,y-44); ctx.lineTo(pred,y-8); ctx.stroke();
+    ctx.fillStyle='rgba(255,209,102,.96)';
+    ctx.beginPath(); ctx.moveTo(pred,y-6); ctx.lineTo(pred-8,y-18); ctx.lineTo(pred+8,y-18); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(255,209,102,.26)';
+    ctx.beginPath(); ctx.arc(pred,y-26,18,0,Math.PI*2); ctx.stroke();
+    // ═══ FIX: Label as "no thrust" prediction ═══
+    ctx.fillStyle='rgba(255,223,151,.95)'; ctx.font='11px Segoe UI,Arial';
+    ctx.fillText('Predicted (no thrust)',pred-48,y-50);
+  }
+
+  function drawLander(){
+    const sx=state.x,sy=worldToScreenY(state.y);
+    ctx.save(); ctx.translate(sx,sy); ctx.rotate(state.angle*Math.PI/180);
+
+    // Shadow
+    ctx.save(); ctx.rotate(-state.angle*Math.PI/180);
+    const gy=terrainHeightAt(state.x),dist=Math.max(0,gy-sy);
+    ctx.fillStyle=`rgba(0,0,0,${Math.max(0.08,0.28-dist/600)})`;
+    ctx.beginPath(); ctx.ellipse(0,dist,18+dist*0.03,8+dist*0.01,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // Body
+    const body=ctx.createLinearGradient(-18,-22,18,18);
+    body.addColorStop(0,'#f7fbff'); body.addColorStop(0.55,'#b8cadf'); body.addColorStop(1,'#7589a3');
+    ctx.fillStyle=body;
+    ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(16,-8); ctx.lineTo(12,16); ctx.lineTo(-12,16); ctx.lineTo(-16,-8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#ffd166'; ctx.fillRect(-11,-7,22,9);
+    ctx.fillStyle='#101922'; ctx.fillRect(-7,-4,14,5);
+    ctx.fillStyle='rgba(126,230,255,.78)'; ctx.fillRect(-4,-19,8,6);
+    ctx.fillStyle='rgba(255,255,255,.24)'; ctx.fillRect(-10,5,20,3);
+
+    // Legs
+    ctx.strokeStyle='#d9e6f4'; ctx.lineWidth=3;
+    [-11,11].forEach(leg=>{
+      ctx.beginPath(); ctx.moveTo(leg,14); ctx.lineTo(leg*1.65,28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(leg*1.65-7,28); ctx.lineTo(leg*1.65+7,28); ctx.stroke();
+    });
+
+    // Plume
+    if(launched && state.fuel>0 && state.throttle>0.02){
+      const intensity=state.throttle;
+      const plume=ctx.createLinearGradient(0,12,0,55+intensity*42);
+      plume.addColorStop(0,'rgba(255,252,205,.95)'); plume.addColorStop(0.35,'rgba(255,185,72,.86)'); plume.addColorStop(1,'rgba(255,120,64,0)');
+      ctx.fillStyle=plume;
+      ctx.beginPath();
+      ctx.moveTo(-6,14);
+      ctx.lineTo(-14-intensity*10,34+Math.random()*5);
+      ctx.lineTo(0,58+intensity*42*Math.random());
+      ctx.lineTo(14+intensity*10,34+Math.random()*5);
+      ctx.lineTo(6,14); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawParticles(){
+    for(const p of dust){
+      if(p.regolith) ctx.fillStyle=`rgba(${180+Math.floor(Math.random()*20)},${170+Math.floor(Math.random()*18)},${160+Math.floor(Math.random()*20)},${p.a})`;
+      else if(p.glow) ctx.fillStyle=`rgba(255,${170+Math.floor(Math.random()*55)},120,${p.a})`;
+      else ctx.fillStyle=`rgba(255,180,120,${p.a})`;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  function drawHelpers(){
+    const sy=worldToScreenY(state.y);
+    // Altitude scale
+    ctx.strokeStyle='rgba(191,232,255,.14)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(78,sy); ctx.lineTo(78,terrainHeightAt(78)); ctx.stroke();
+    for(let i=0;i<6;i++){
+      const y=sy+i*(terrainHeightAt(78)-sy)/5;
+      ctx.beginPath(); ctx.moveTo(72,y); ctx.lineTo(84,y); ctx.stroke();
+    }
+    ctx.fillStyle='rgba(200,230,255,.84)'; ctx.font='12px Segoe UI,Arial';
+    ctx.fillText('Altitude',42,sy-12);
+
+    // Velocity vectors
+    const vxScale=3.5, vyScale=3.0;
+    ctx.strokeStyle='rgba(102,199,255,.78)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(state.x,sy); ctx.lineTo(state.x+state.vx*vxScale,sy); ctx.stroke();
+    ctx.strokeStyle='rgba(255,107,107,.76)';
+    ctx.beginPath(); ctx.moveTo(state.x,sy); ctx.lineTo(state.x,sy-state.vy*vyScale); ctx.stroke();
+
+    // ═══ FIX: Label velocity vectors ═══
+    ctx.font='10px Segoe UI,Arial';
+    if(Math.abs(state.vx)>1){
+      ctx.fillStyle='rgba(102,199,255,.9)';
+      ctx.fillText(`Vx ${state.vx.toFixed(1)}`,state.x+state.vx*vxScale+(state.vx>0?4:-34),sy-4);
+    }
+    if(Math.abs(state.vy)>1){
+      ctx.fillStyle='rgba(255,107,107,.9)';
+      ctx.fillText(`Vy ${state.vy.toFixed(1)}`,state.x+6,sy-state.vy*vyScale+(state.vy>0?-4:12));
+    }
+
+    // Pad target box
+    const s=current(),py=terrainHeightAt(s.world.padX)-28;
+    ctx.strokeStyle='rgba(123,228,149,.72)';
+    ctx.strokeRect(s.world.padX-s.world.padW/2,py-16,s.world.padW,20);
+  }
+
+  function drawFrameLabel(time){
+    ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1;
+    ctx.strokeRect(8,8,canvas.width-16,canvas.height-16);
+    ctx.strokeStyle='rgba(151,219,255,.20)'; ctx.lineWidth=2;
+    const L=28;
+    [[18,18],[canvas.width-18,18],[18,canvas.height-18],[canvas.width-18,canvas.height-18]].forEach(([x,y],i)=>{
+      ctx.beginPath();
+      if(i===0){ctx.moveTo(x+L,y);ctx.lineTo(x,y);ctx.lineTo(x,y+L);}
+      if(i===1){ctx.moveTo(x-L,y);ctx.lineTo(x,y);ctx.lineTo(x,y+L);}
+      if(i===2){ctx.moveTo(x,y-L);ctx.lineTo(x,y);ctx.lineTo(x+L,y);}
+      if(i===3){ctx.moveTo(x-L,y);ctx.lineTo(x,y);ctx.lineTo(x,y-L);}
+      ctx.stroke();
+    });
+    ctx.fillStyle='rgba(238,245,255,.95)'; ctx.font='bold 18px Segoe UI,Arial';
+    ctx.fillText(`${current().name} — ${current().difficulty}`,22,30);
+
+    // ═══ Timer ═══
+    if(launched && !state.landed){
+      ctx.fillStyle='rgba(210,232,255,.7)'; ctx.font='13px Segoe UI,Arial';
+      ctx.fillText(`T+${state.time.toFixed(1)}s`,22,canvas.height-18);
+    } else {
+      ctx.fillStyle='rgba(210,232,255,.60)'; ctx.font='12px Segoe UI,Arial';
+      ctx.fillText('Guidance view',22,canvas.height-18);
+    }
+  }
+
+  function drawOverlay(){
+    if(!launched && !state.landed){
+      ctx.fillStyle='rgba(8,18,32,.52)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#eef5ff'; ctx.font='bold 30px Segoe UI,Arial';
+      ctx.fillText('Mission ready',38,74);
+      const s=current();
+      const color=s.difficulty==='Easy'?'rgba(123,228,149,.95)':s.difficulty==='Medium'?'rgba(255,209,102,.95)':'rgba(255,129,129,.95)';
+      ctx.fillStyle=color; ctx.fillRect(38,86,112,30);
+      ctx.fillStyle='#07111e'; ctx.font='bold 16px Segoe UI,Arial'; ctx.fillText(s.difficulty.toUpperCase(),56,107);
+      ctx.fillStyle='#cae4ff'; ctx.font='18px Segoe UI,Arial';
+      ctx.fillText('Press "Launch mission" to begin the descent.',38,144);
+      ctx.fillStyle='rgba(221,238,255,.88)'; ctx.font='16px Segoe UI,Arial';
+      ctx.fillText('Tip: use small early corrections and protect your final landing angle.',38,172);
+
+      // ═══ Show initial conditions ═══
+      ctx.fillStyle='rgba(190,220,255,.7)'; ctx.font='14px Segoe UI,Arial';
+      ctx.fillText(`Initial: alt ${s.world.altitude}m · Vy ${s.world.vy} m/s · Vx ${s.world.vx} m/s · fuel ${s.world.fuel} kg`,38,200);
+    }
+    if(paused && launched){
+      ctx.fillStyle='rgba(4,11,20,.52)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#eef5ff'; ctx.font='bold 30px Segoe UI,Arial'; ctx.fillText('⏸ Paused — time to calculate',42,74);
+
+      // ═══ PAUSE CALCULATION HELPER ═══
+      ctx.fillStyle='rgba(200,230,255,.85)'; ctx.font='16px Segoe UI,Arial';
+      const thrust=state.fuel>0?state.throttle*maxThrust:0;
+      const ar=state.angle*Math.PI/180;
+      ctx.fillText(`Current: alt ${state.y.toFixed(0)}m · Vy ${state.vy.toFixed(2)} m/s · Vx ${state.vx.toFixed(2)} m/s`,42,112);
+      ctx.fillText(`Thrust: ${thrust.toFixed(0)} N at θ=${state.angle.toFixed(1)}° · Mass: ${state.mass.toFixed(0)} kg · Fuel: ${state.fuel.toFixed(0)} kg`,42,138);
+      ctx.fillText(`Net a_y = ${((thrust/state.mass)*Math.cos(ar)-G).toFixed(2)} m/s² · Net a_x = ${((thrust/state.mass)*Math.sin(ar)).toFixed(3)} m/s²`,42,164);
+      ctx.fillStyle='rgba(167,139,250,.8)'; ctx.font='14px Segoe UI,Arial';
+      ctx.fillText('Press P or ⏸ to resume. Press H or 💡 for a hint.',42,196);
+    }
+    if(state.landed){
+      ctx.fillStyle='rgba(4,11,20,.42)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      const pX=28,pY=26,pW=460,pH=160;
+      const pg=ctx.createLinearGradient(pX,pY,pX,pY+pH);
+      pg.addColorStop(0,'rgba(9,23,42,.96)'); pg.addColorStop(1,'rgba(5,14,28,.92)');
+      ctx.fillStyle=pg; ctx.fillRect(pX,pY,pW,pH);
+      ctx.strokeStyle='rgba(129,189,255,.16)'; ctx.strokeRect(pX,pY,pW,pH);
+
+      ctx.fillStyle='#eef5ff'; ctx.font='bold 28px Segoe UI,Arial';
+      const t=state.outcome==='safe'?'✓ Touchdown confirmed':state.outcome==='rough'?'⚠ Hard landing':'✗ Mission failed';
+      ctx.fillText(t,48,66);
+
+      if(state.score){
+        const mf=state.score.medal==='Gold'?'#f5cc59':state.score.medal==='Silver'?'#d9e9ff':state.score.medal==='Bronze'?'#d99663':'#49647d';
+        ctx.fillStyle=mf;
+        ctx.beginPath(); ctx.arc(430,66,26,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=state.score.medal==='No medal'?'#eef5ff':'#07111e';
+        ctx.font='bold 20px Segoe UI,Arial';
+        ctx.fillText(medalIcon(state.score.medal),422,74);
+
+        ctx.font='17px Segoe UI,Arial'; ctx.fillStyle='#cae4ff';
+        ctx.fillText(`Score ${state.score.total} · ${state.score.medal}${hintPenalty>0?' (−'+hintPenalty+' hints)':''}`,48,98);
+        ctx.fillText(`Vy ${state.vy.toFixed(2)} m/s · Vx ${state.vx.toFixed(2)} m/s · Angle ${state.angle.toFixed(1)}°`,48,124);
+        ctx.fillStyle='#9fe7ff'; ctx.font='14px Segoe UI,Arial';
+        ctx.fillText(state.score.newBest?'⭐ New scenario best saved!':'Press Restart to run the scenario again.',48,150);
+        ctx.fillText(`Fuel remaining: ${state.fuel.toFixed(0)} kg · Flight time: ${state.time.toFixed(1)}s`,48,172);
+      }
+    }
+  }
+
+  function render(now=performance.now()){
+    // Screen shake
+    ctx.save();
+    if(shakeAmount>0.5){
+      ctx.translate((Math.random()-0.5)*shakeAmount,(Math.random()-0.5)*shakeAmount);
+      shakeAmount *= 0.88;
+    }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawBackdrop(now);
+    drawFarRidges();
+    drawTerrain(now);
+    drawCorridor();
+    drawPredicted();
+    drawParticles();
+    drawLander();
+    drawHelpers();
+    drawFrameLabel(now);
+    drawOverlay();
+    ctx.restore();
+  }
+
+  /* ═══════════════════════════════
+     GAME LOOP
+  ═══════════════════════════════ */
+  function loop(now){
+    const elapsed = Math.min(0.05,(now-lastTime)/1000);
+    lastTime = now;
+    const steps = Math.max(1,Math.round(elapsed/dt));
+    for(let i=0;i<steps;i++) updatePhysics();
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  /* ═══════════════════════════════
+     INPUT: Keyboard
+  ═══════════════════════════════ */
+  document.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if(e.code==='KeyP' && launched){ paused=!paused; $('pauseBtn').textContent=paused?'Resume':'Pause'; }
+    if(e.code==='KeyR') resetMission(false);
+    if(e.code==='KeyH') showHint();
+    if(e.code==='Space' && !launched){ e.preventDefault(); launchMission(); }
+  });
+  document.addEventListener('keyup', e => { keys[e.code]=false; });
+
+  /* ═══════════════════════════════
+     INPUT: Touch controls
+  ═══════════════════════════════ */
+  const touchMap = {up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'};
+  document.querySelectorAll('.touchBtn').forEach(btn => {
+    const action = btn.dataset.touch;
+
+    function handleStart(e){
+      e.preventDefault();
+      btn.classList.add('held');
+      ensureAudio();
+      if(touchMap[action]) touchKeys[touchMap[action]] = true;
+      if(action==='pause' && launched){ paused=!paused; $('pauseBtn').textContent=paused?'Resume':'Pause'; }
+      if(action==='hint') showHint();
+    }
+    function handleEnd(e){
+      e.preventDefault();
+      btn.classList.remove('held');
+      if(touchMap[action]) touchKeys[touchMap[action]] = false;
+    }
+
+    btn.addEventListener('touchstart', handleStart, {passive:false});
+    btn.addEventListener('touchend', handleEnd, {passive:false});
+    btn.addEventListener('touchcancel', handleEnd, {passive:false});
+    btn.addEventListener('mousedown', handleStart);
+    btn.addEventListener('mouseup', handleEnd);
+    btn.addEventListener('mouseleave', handleEnd);
+  });
+
+  /* ═══════════════════════════════
+     BUTTON LISTENERS
+  ═══════════════════════════════ */
+  $('launchBtn').addEventListener('click', ()=>{ ensureAudio(); launchMission(); });
+  $('pauseBtn').addEventListener('click', ()=>{ if(!launched)return; paused=!paused; $('pauseBtn').textContent=paused?'Resume':'Pause'; });
+  $('hintBtn').addEventListener('click', showHint);
+  $('restartBtn').addEventListener('click', ()=>resetMission(false));
+  $('scenarioSelect').addEventListener('change', ()=>resetMission(true));
+  levelCards.forEach(c => c.addEventListener('click', ()=>{
+    $('scenarioSelect').value = c.dataset.index;
+    resetMission(true);
+  }));
+
+  /* ═══════════════════════════════
+     INIT
+  ═══════════════════════════════ */
+  initStars();
+  applyScenarioText();
+  resetMission(false);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
