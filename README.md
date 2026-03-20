@@ -1,6 +1,6 @@
 # Mission ATLAS — Astronomy-Themed Physics Games
 
-Mission ATLAS is a browser-based portfolio of upper-secondary physics games framed by **Big Ideas in Astronomy** and the **Astrojourneys** project.  
+Mission ATLAS is a browser-based portfolio of upper-secondary physics games framed by **Big Ideas in Astronomy** and the **Astrojourneys** Project.
 Each mission turns a common student misconception into a playable decision problem: learners calculate, predict, test, fail safely, and try again.
 
 Current playable set in this repository:
@@ -14,6 +14,18 @@ Current playable set in this repository:
 The landing page for GitHub hosting is:
 
 - `index.html`
+
+## Play online
+
+Landing page:
+- https://physicsplay.github.io/Astrojourneys/
+
+Direct game links:
+- Lunar Rescue: https://physicsplay.github.io/Astrojourneys/Lunar_Rescue.html
+- Orbital Rendezvous: https://physicsplay.github.io/Astrojourneys/Orbital_Rendezvous.html
+- Mars Landing Window: https://physicsplay.github.io/Astrojourneys/Mars_Landing_Window.html
+- Mars EVA Traverse: https://physicsplay.github.io/Astrojourneys/Mars_EVA_Traverse.html
+- Habitat Blackout: https://physicsplay.github.io/Astrojourneys/Habitat_blackout.html
 
 ## License
 
@@ -54,6 +66,9 @@ The mapping is intentionally **topic-based**, not a claim that the exact scenari
 
 ## Lunar Rescue
 
+**Play online:** https://physicsplay.github.io/Astrojourneys/Lunar_Rescue.html
+
+
 ### Summary
 A crew guidance specialist must land an emergency cargo capsule near a lunar outpost. The player manages thrust, attitude, descent speed, and fuel under lunar gravity, with no atmospheric drag.
 
@@ -91,6 +106,9 @@ Fits the physics course areas centered on kinematics, dynamics, gravitation, and
 
 ## Orbital Rendezvous
 
+**Play online:** https://physicsplay.github.io/Astrojourneys/Orbital_Rendezvous.html
+
+
 ### Summary
 A chaser spacecraft must phase, approach, and dock safely with a damaged station module. The player succeeds only by matching **relative motion**, not by thrusting straight at the target.
 
@@ -127,6 +145,9 @@ Fits upper-secondary kinematics/dynamics/energy treatment of orbit-like motion a
 ---
 
 ## Mars Landing Window
+
+**Play online:** https://physicsplay.github.io/Astrojourneys/Mars_Landing_Window.html
+
 
 ### Summary
 A supply module must land near a Mars habitat. The player chooses only two variables—**parachute deployment altitude** and **retro-burn ignition altitude**—and must reason with drag, gravity, drift, and stopping distance.
@@ -166,6 +187,9 @@ Fits kinematics, dynamics, and energy in the upper-secondary physics sequence.
 
 ## Mars EVA Traverse
 
+**Play online:** https://physicsplay.github.io/Astrojourneys/Mars_EVA_Traverse.html
+
+
 ### Summary
 An astronaut must reach shelter before a dust front while still meeting a science target. The player chooses a route and pace, balancing time, traction, power, battery, oxygen, and terrain risk.
 
@@ -203,6 +227,9 @@ Fits mechanics, friction, work, and power in upper-secondary physics.
 ---
 
 ## Habitat Blackout
+
+**Play online:** https://physicsplay.github.io/Astrojourneys/Habitat_blackout.html
+
 
 ### Summary
 After a cascading fault, the crew engineer must reroute habitat power without blowing a fuse, collapsing life support, or exhausting backup reserve. The player compares line resistance, load profiles, bus voltage, and battery margin before committing.
