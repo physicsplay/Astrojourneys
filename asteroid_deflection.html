@@ -1,0 +1,2920 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>☄️ ASTEROID DEFLECTION — Kinetic Impactor Planner (ATLAS)</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#030308; --bg1:#0a0a1a; --bg2:#121a31;
+  --text:#eef4ff; --muted:rgba(220,230,255,.72);
+  --line:rgba(255,255,255,.10); --soft:rgba(255,255,255,.05);
+  --card:rgba(255,255,255,.055); --shadow:0 12px 30px rgba(0,0,0,.35);
+  --cyan:#4ecdc4; --gold:#ffd60a; --red:#ff5964; --green:#06d6a0; --violet:#9b5de5; --orange:#ff9f1c;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --ui: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  --r:18px;
+}
+html,body{height:100%;background:var(--bg0);color:var(--text);font-family:var(--ui);overflow:hidden}
+button,input,select,textarea{font:inherit}
+.hidden{display:none !important}
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 380px;
+  grid-template-rows:auto 1fr auto;
+}
+@media (max-width:1060px){
+  html,body{overflow:auto}
+  .app{height:auto;min-height:100vh;grid-template-columns:1fr;grid-template-rows:auto min(56vh,430px) auto auto}
+  .side{border-left:none;border-top:1px solid var(--line);max-height:none}
+}
+header{
+  grid-column:1/-1;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:10px 12px;
+  background:linear-gradient(180deg, rgba(10,10,26,.96), rgba(10,10,26,.82));
+  border-bottom:1px solid var(--line);
+  position:relative;z-index:5;
+}
+.title{display:flex;align-items:center;gap:10px;font-family:var(--mono);letter-spacing:.06em}
+.title .badge{
+  font-size:.70rem;padding:4px 8px;border-radius:999px;
+  background:rgba(255,159,28,.14);border:1px solid rgba(255,159,28,.34);color:#ffd7a1
+}
+.stats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.stat{
+  min-width:88px;padding:8px 10px;text-align:center;border-radius:14px;
+  background:rgba(255,255,255,.04);border:1px solid var(--line)
+}
+.stat .v{font-family:var(--mono);font-size:1.05rem}
+.stat .k{font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.stage{
+  position:relative;
+  background:
+    radial-gradient(900px 500px at 65% 28%, rgba(78,205,196,.12), transparent 55%),
+    radial-gradient(750px 440px at 25% 72%, rgba(155,93,229,.10), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg0));
+}
+canvas{width:100%;height:100%;display:block}
+.canvasOverlay{
+  position:absolute;left:12px;bottom:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none
+}
+.pill{
+  background:rgba(0,0,0,.42);border:1px solid var(--line);padding:6px 10px;border-radius:999px;
+  font-size:.74rem;color:rgba(240,244,255,.92);font-family:var(--mono);backdrop-filter:blur(4px)
+}
+.pill.warn{border-color:rgba(255,214,10,.35);color:#ffe58a}
+.pill.ok{border-color:rgba(6,214,160,.35);color:#9ff2cf}
+.pill.bad{border-color:rgba(255,89,100,.35);color:#ffb1b7}
+.side{
+  border-left:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,10,26,.78), rgba(10,10,26,.58));
+  padding:12px;overflow:auto;
+}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px;box-shadow:var(--shadow);margin-bottom:10px;
+}
+.card h3{
+  font-size:.86rem;letter-spacing:.10em;text-transform:uppercase;font-family:var(--mono);
+  color:rgba(240,244,255,.92);display:flex;gap:8px;align-items:center;margin-bottom:10px
+}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:7px 0;border-top:1px dashed rgba(255,255,255,.09)}
+.row:first-of-type{border-top:none}
+.row .k{color:var(--muted);font-size:.83rem}
+.row .v{font-family:var(--mono)}
+.mini{font-size:.80rem;color:rgba(220,230,255,.78);line-height:1.28;margin-top:8px}
+.note{font-size:.78rem;color:rgba(220,230,255,.75);line-height:1.28;margin-top:8px}
+.note strong{color:#ffe58a}
+.statusline{margin-top:8px;color:rgba(240,244,255,.9);font-size:.90rem;line-height:1.3}
+.slider-wrap{margin-top:10px}
+label{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;color:rgba(220,230,255,.83)}
+input[type=range]{width:100%;accent-color:#ffd60a;margin-top:5px}
+select,input[type=number]{
+  width:100%;margin-top:5px;background:rgba(255,255,255,.05);color:var(--text);
+  border:1px solid var(--line);border-radius:12px;padding:10px 12px
+}
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;
+  padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)
+}
+.toggle-row .mini{margin-top:0}
+input[type=checkbox]{width:18px;height:18px;accent-color:#4ecdc4}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn{
+  border:none;cursor:pointer;border-radius:14px;padding:10px 12px;
+  font-family:var(--mono);letter-spacing:.06em;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
+  transition:.15s transform,.15s background,.15s opacity;user-select:none;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.primary{background:linear-gradient(135deg, rgba(255,214,10,.95), rgba(255,165,0,.95));color:#0a0a1a;border-color:rgba(255,214,10,.50)}
+.btn.hint{background:rgba(78,205,196,.10);border-color:rgba(78,205,196,.30)}
+.btn.danger{background:rgba(255,89,100,.12);border-color:rgba(255,89,100,.35)}
+.btn.full{grid-column:1/-1}
+.log{
+  max-height:145px;overflow:auto;padding-right:4px;margin-top:8px;border-top:1px dashed rgba(255,255,255,.09)
+}
+.log-item{font-size:.78rem;line-height:1.28;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.07);color:rgba(232,238,255,.88)}
+.log-item:last-child{border-bottom:none}
+.formula{
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.08);font-family:var(--mono);font-size:.78rem;line-height:1.42
+}
+.formula strong{color:#ffe58a}
+footer{
+  grid-column:1/-1;padding:8px 12px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  color:rgba(220,230,255,.72);font-size:.78rem;background:rgba(6,8,18,.92)
+}
+.langs,.picks{display:flex;gap:8px;flex-wrap:wrap}
+.lang-btn,.pick{
+  border:none;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:6px 10px;font-size:.92rem;transition:.15s transform,.15s background
+}
+.lang-btn:hover,.pick:hover{transform:translateY(-1px)}
+.lang-btn.active,.pick.active{background:rgba(78,205,196,.12);border-color:rgba(78,205,196,.35)}
+.overlay{
+  position:fixed;inset:0;background:rgba(3,3,8,.82);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:16px;z-index:30
+}
+.modal{
+  width:min(980px,100%);max-height:min(92vh,980px);overflow:auto;
+  border-radius:24px;border:1px solid var(--line);background:linear-gradient(180deg, rgba(10,10,26,.98), rgba(10,10,26,.88));
+  box-shadow:0 18px 50px rgba(0,0,0,.45);padding:18px
+}
+.intro-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+@media (max-width:840px){.intro-grid{grid-template-columns:1fr}}
+.modal h1{font-family:var(--mono);letter-spacing:.07em;font-size:1.35rem;margin-bottom:10px}
+.hero{
+  padding:14px;border-radius:20px;background:
+  radial-gradient(700px 250px at 20% 10%, rgba(255,159,28,.12), transparent 60%),
+  rgba(255,255,255,.04);border:1px solid var(--line)
+}
+.dialogue{font-size:.95rem;line-height:1.45;color:rgba(240,244,255,.93)}
+.dialogue .who{color:#ffd60a;font-family:var(--mono)}
+.dialogue .par{color:#9ff2cf}
+.intro-list{margin-top:10px;display:grid;gap:10px}
+.intro-item{padding:12px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.intro-item .label{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono);margin-bottom:6px}
+.intro-item .text{line-height:1.38;color:rgba(240,244,255,.94)}
+.sidebox{padding:14px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.controls-inline{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mission-badge{display:inline-flex;align-items:center;gap:8px;font-size:.74rem;font-family:var(--mono);letter-spacing:.09em;color:#ffd7a1}
+.kbd{display:inline-block;padding:2px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);font-family:var(--mono);font-size:.8rem}
+.pause-grid,.end-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:860px){.pause-grid,.end-grid{grid-template-columns:1fr}}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{padding:8px 10px;border-bottom:1px dashed rgba(255,255,255,.08);font-size:.84rem;text-align:left;vertical-align:top}
+.table th{color:rgba(220,230,255,.72);font-weight:600}
+.table td:last-child{font-family:var(--mono)}
+.medal{font-size:2.1rem}
+.big-num{font-size:1.55rem;font-family:var(--mono);color:#ffe58a}
+.answer-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.answer-row .btn{flex:1}
+.reflection{
+  min-height:88px;width:100%;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);
+  border:1px solid var(--line);color:var(--text);resize:vertical
+}
+.chart-wrap{margin-top:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:8px}
+#historyCanvas{width:100%;height:160px;display:block}
+.toast{
+  position:fixed;right:14px;top:14px;max-width:min(420px,calc(100vw - 28px));
+  padding:12px 14px;border-radius:16px;background:rgba(10,10,26,.95);
+  border:1px solid rgba(255,214,10,.35);box-shadow:0 12px 32px rgba(0,0,0,.35);
+  color:rgba(240,244,255,.95);z-index:40;transform:translateY(-12px);opacity:0;pointer-events:none;transition:.25s
+}
+.toast.show{transform:translateY(0);opacity:1}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.76rem;color:rgba(220,230,255,.74)}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+.step-list{display:grid;gap:8px}
+.step{
+  display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:flex-start;
+  padding:9px 10px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)
+}
+.step .n{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,214,10,.16);border:1px solid rgba(255,214,10,.32);color:#ffe58a;font-family:var(--mono);font-weight:700
+}
+.step .txt{font-size:.83rem;line-height:1.34;color:rgba(240,244,255,.94)}
+.canvas-tag{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;
+  background:rgba(5,8,18,.76);border:1px solid rgba(255,255,255,.12);font-size:.72rem;color:rgba(240,244,255,.94);
+  font-family:var(--mono)
+}
+.track-note{
+  margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(255,159,28,.08);
+  border:1px solid rgba(255,159,28,.24);font-size:.79rem;line-height:1.3;color:rgba(255,233,198,.92)
+}
+.campaign-box{
+  margin-bottom:10px;padding:10px 12px;border-radius:14px;background:rgba(78,205,196,.08);
+  border:1px solid rgba(78,205,196,.24)
+}
+.campaign-box .mini{margin-top:8px}
+.campaign-box .statusline{margin-top:6px}
+.campaign-box .awards,.awards{
+  margin-top:8px;font-family:var(--mono);font-size:.78rem;line-height:1.35;
+  color:rgba(240,244,255,.9)
+}
+
+/* === PHYSICS QUIZ BANK (during pause) === */
+.quizBank{margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(255,214,10,.25);background:rgba(255,214,10,.05)}
+.quizBank h4{margin:0 0 8px;font-size:.84rem;color:#ffd60a;font-family:var(--mono)}
+.quizBank .qText{color:#eef4ff;margin-bottom:8px;line-height:1.4;font-size:.84rem}
+.quizBank .qOpts{display:flex;flex-direction:column;gap:5px}
+.quizBank .qOpt{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;color:#d8e8ff;font-size:.82rem;transition:.12s}
+.quizBank .qOpt:hover{border-color:rgba(78,205,196,.35);background:rgba(78,205,196,.07)}
+.quizBank .qOpt.correct{border-color:rgba(6,214,160,.5);background:rgba(6,214,160,.1);color:#9ff5d0}
+.quizBank .qOpt.wrong{border-color:rgba(255,89,100,.4);background:rgba(255,89,100,.08);color:#ffb3b3}
+.quizBank .qExplain{margin-top:8px;padding:8px;border-radius:10px;background:rgba(0,0,0,.2);color:#c4daef;font-size:.82rem;line-height:1.35;display:none}
+.quizBank .qExplain.show{display:block}
+/* === DEMO + SLOW BUTTONS === */
+.btn.demo{background:rgba(255,159,28,.11);border-color:rgba(255,159,28,.32);color:#ffd7a1}
+.btn.slow{background:rgba(6,214,160,.08);border-color:rgba(6,214,160,.22);color:#b8f5d2}
+/* === NOTEBOOK PREDICT === */
+.nbCard{margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(78,205,196,.22);background:rgba(78,205,196,.04)}
+.nbCard h4{margin:0 0 8px;font-size:.84rem;color:#4ecdc4;font-family:var(--mono)}
+.nbGrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.nbResult2{margin-top:8px;padding:8px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.16)}
+.nbRow2{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:.8rem;border-top:1px dashed rgba(255,255,255,.08)}
+.nbRow2:first-child{border:none}
+.nbRow2 .k{color:var(--muted)}
+.nbRow2 .v{font-family:var(--mono)}
+.nbLock2{margin-top:6px;font-size:.78rem;padding:6px 8px;border-radius:10px}
+.nbLock2.locked{color:#ffd60a;background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.18)}
+.nbLock2.unlocked{color:#06d6a0;background:rgba(6,214,160,.06);border:1px solid rgba(6,214,160,.18)}
+</style>
+</head>
+<body>
+<div id="introOverlay" class="overlay">
+  <div class="modal">
+    <div class="intro-grid">
+      <div class="hero">
+        <div class="mission-badge">☄️ <span id="introBadge">MISSION ATLAS • GAME 06</span></div>
+        <h1 id="introTitle"></h1>
+        <div id="introDialogue" class="dialogue"></div>
+        <div class="intro-list">
+          <div class="intro-item"><div class="label" id="learningTargetLabel"></div><div class="text" id="learningTargetText"></div></div>
+          <div class="intro-item"><div class="label" id="bigIdeaLabel"></div><div class="text" id="bigIdeaText"></div></div>
+          <div class="intro-item"><div class="label" id="assumptionsLabel"></div><div class="text" id="assumptionsText"></div></div>
+          <div class="intro-item"><div class="label" id="misconceptionLabel"></div><div class="text" id="misconceptionText"></div></div>
+        </div>
+      </div>
+      <div class="sidebox">
+        <div class="intro-item">
+          <div class="label" id="langLabel"></div>
+          <div class="langs" id="introLangs">
+            <button class="lang-btn langPick" data-lang="el">EL</button>
+            <button class="lang-btn langPick" data-lang="en">EN</button>
+            <button class="lang-btn langPick" data-lang="it">IT</button>
+          </div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="difficultyLabel"></div>
+          <div class="picks" id="introDiffs">
+            <button class="pick diffPick" data-diff="easy"></button>
+            <button class="pick diffPick" data-diff="medium"></button>
+            <button class="pick diffPick" data-diff="hard"></button>
+          </div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="missionLabel"></div>
+          <div class="text" id="missionText"></div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="howToIntroLabel"></div>
+          <div class="text" id="howToIntroText"></div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="scoringLabel"></div>
+          <div class="text" id="scoringText"></div>
+        </div>
+        <div class="controls-inline">
+          <span class="kbd">Space</span><span class="kbd">Enter</span><span class="kbd">P</span><span class="kbd">R</span><span class="kbd">H</span>
+        </div>
+        <div class="mini" id="introHintNote"></div>
+        <div class="btns" style="margin-top:14px">
+          <button id="startBtn" class="btn primary full"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <header>
+    <div class="title">
+      <span>☄️ <span id="headerTitle"></span></span>
+      <span class="badge" id="headerBadge"></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="attemptsVal">0</div><div class="k" id="attemptsLabel"></div></div>
+      <div class="stat"><div class="v" id="scoreVal">100</div><div class="k" id="scoreLabel"></div></div>
+      <div class="stat"><div class="v" id="hintsVal">0</div><div class="k" id="hintsLabel"></div></div>
+      <div class="langs" id="headerLangs">
+        <button class="lang-btn" data-lang="el">EL</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="it">IT</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <canvas id="gameCanvas" aria-label="Asteroid deflection visualization"></canvas>
+    <div class="canvasOverlay">
+      <div class="pill" id="pillPhase">—</div>
+      <div class="pill warn" id="pillWindow">—</div>
+      <div class="pill" id="pillTrack">—</div>
+      <div class="pill" id="pillHover">—</div>
+      <div class="pill ok" id="pillConfidence">—</div>
+    </div>
+  </main>
+
+  <aside class="side">
+    <section class="card">
+      <h3 id="obsTitle"></h3>
+      <div class="row"><div class="k" id="diameterLabel"></div><div class="v" id="diameterVal">—</div></div>
+      <div class="row"><div class="k" id="massEstLabel"></div><div class="v" id="massEstVal">—</div></div>
+      <div class="row"><div class="k" id="uncertaintyLabel"></div><div class="v" id="uncertaintyVal">—</div></div>
+      <div class="row"><div class="k" id="densityLabel"></div><div class="v" id="densityVal">—</div></div>
+      <div class="mini" id="obsMini"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:#4ecdc4"></span><span id="legendObs"></span></span>
+        <span><span class="sw" style="background:#ffd60a"></span><span id="legendMean"></span></span>
+        <span><span class="sw" style="background:#ff5964"></span><span id="legendTrue"></span></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 id="missionDataTitle"></h3>
+      <div class="row"><div class="k" id="safeMissLabel"></div><div class="v" id="safeMissVal">—</div></div>
+      <div class="row"><div class="k" id="trackLabel"></div><div class="v" id="trackVal">—</div></div>
+      <div class="row"><div class="k" id="missionProfileLabel"></div><div class="v" id="missionProfileVal">—</div></div>
+      <div class="row"><div class="k" id="vrelLabel"></div><div class="v" id="vrelVal">—</div></div>
+      <div class="row"><div class="k" id="costMultiplierLabel"></div><div class="v" id="costMultiplierVal">—</div></div>
+      <div class="row"><div class="k" id="windowRangeLabel"></div><div class="v" id="windowRangeVal">—</div></div>
+      <div class="row"><div class="k" id="confidenceLabel"></div><div class="v" id="confidenceVal">—</div></div>
+      <div class="statusline" id="statusNote"></div>
+      <div class="note" id="missionNote"></div>
+    </section>
+
+    <section class="card">
+      <h3 id="howToTitle"></h3>
+      <div class="step-list">
+        <div class="step"><div class="n">1</div><div class="txt" id="step1Text"></div></div>
+        <div class="step"><div class="n">2</div><div class="txt" id="step2Text"></div></div>
+        <div class="step"><div class="n">3</div><div class="txt" id="step3Text"></div></div>
+        <div class="step"><div class="n">4</div><div class="txt" id="step4Text"></div></div>
+      </div>
+      <div class="track-note" id="howToMini"></div>
+    </section>
+
+    <section class="card">
+      <h3 id="plannerTitle"></h3>
+      <div class="campaign-box">
+        <div class="row"><div class="k" id="campaignLabel"></div><div class="v" id="campaignVal">—</div></div>
+        <div class="statusline" id="campaignStatus"></div>
+        <div class="mini" id="campaignMini"></div>
+        <div class="mini awards" id="campaignStars"></div>
+      </div>
+      <div class="slider-wrap">
+        <label for="trackSelect"><span id="trackPickLabel"></span><span class="v" id="trackPickVal">—</span></label>
+        <select id="trackSelect">
+          <option value="visible"></option>
+          <option value="blind"></option>
+        </select>
+      </div>
+      <div class="slider-wrap">
+        <label for="profileSelect"><span id="profilePickLabel"></span><span class="v" id="profilePickVal">—</span></label>
+        <select id="profileSelect">
+          <option value="scout"></option>
+          <option value="standard"></option>
+          <option value="heavy"></option>
+        </select>
+      </div>
+      <div class="slider-wrap">
+        <label for="timeSlider"><span id="timeLabel"></span><span class="v" id="timeVal">—</span></label>
+        <input id="timeSlider" type="range" min="0.5" max="12" step="0.1"/>
+      </div>
+      <div class="slider-wrap">
+        <label for="massSlider"><span id="impactorLabel"></span><span class="v" id="massVal">—</span></label>
+        <input id="massSlider" type="range" min="200" max="12000" step="50"/>
+      </div>
+      <div class="slider-wrap">
+        <label for="advancedToggle"><span id="advancedLabel"></span><span class="v" id="advancedState">—</span></label>
+        <div class="toggle-row">
+          <div class="mini" id="advancedMini"></div>
+          <input id="advancedToggle" type="checkbox"/>
+        </div>
+      </div>
+      <div class="slider-wrap hidden" id="betaWrap">
+        <label for="betaSlider"><span id="betaLabel"></span><span class="v" id="betaVal">1.00</span></label>
+        <input id="betaSlider" type="range" min="1" max="3" step="0.05" value="1"/>
+      </div>
+      <div class="row"><div class="k" id="currentImpulseLabel"></div><div class="v" id="currentImpulseVal">—</div></div>
+      <div class="row"><div class="k" id="betaNowLabel"></div><div class="v" id="betaNowVal">—</div></div>
+      <div class="row"><div class="k" id="currentDvLabel"></div><div class="v" id="currentDvVal">—</div></div>
+      <div class="row"><div class="k" id="currentMissLabel"></div><div class="v" id="currentMissVal">—</div></div>
+      <div class="row"><div class="k" id="worstMissLabel"></div><div class="v" id="worstMissVal">—</div></div>
+      <div class="mini" id="plannerMini"></div>
+      <div class="btns">
+        <button id="simulateBtn" class="btn primary"></button>
+        <button id="pauseBtn" class="btn"></button>
+        <button id="hintBtn" class="btn hint"></button>
+        <button id="resetBtn" class="btn danger"></button>
+        <button id="lateHitBtn" class="btn demo full">⏰ Late-hit demo</button>
+        <button id="slowBtn" class="btn slow full">🐌 Slow motion</button>
+      </div>
+    </section>
+
+    <section class="card nbCard" id="notebookCard">
+      <h4>📓 MISSION NOTEBOOK</h4>
+      <div class="mini">Before simulating, predict the required impactor mass. Compare with the model — like a real mission review.</div>
+      <div class="nbGrid2">
+        <div>
+          <label for="predMassInput"><span>Predicted mass (kg)</span></label>
+          <input id="predMassInput" type="number" min="0" step="50" placeholder="kg"/>
+        </div>
+        <div>
+          <label for="predMissInput"><span>Predicted miss (km)</span></label>
+          <input id="predMissInput" type="number" min="0" step="100" placeholder="km"/>
+        </div>
+      </div>
+      <div class="btns" style="margin-top:8px">
+        <button class="btn full" id="compareNbBtn">📓 COMPARE & UNLOCK SIM</button>
+      </div>
+      <div class="nbLock2 locked" id="nbLock">🔒 Enter predictions to unlock SIMULATE.</div>
+      <div class="nbResult2 hidden" id="nbResult">
+        <div class="nbRow2"><div class="k">Actual req. mass</div><div class="v" id="nbActualMass">—</div></div>
+        <div class="nbRow2"><div class="k">Actual worst miss</div><div class="v" id="nbActualMiss">—</div></div>
+        <div class="nbRow2"><div class="k">Mass error</div><div class="v" id="nbMassErr">—</div></div>
+        <div class="nbRow2"><div class="k">Miss error</div><div class="v" id="nbMissErr">—</div></div>
+        <div class="nbRow2"><div class="k">Notebook accuracy</div><div class="v" id="nbAcc">—</div></div>
+      </div>
+      <div class="mini" style="margin-top:6px">Good predictions boost your academy score: 60% plan + 40% notebook.</div>
+    </section>
+
+    <section class="card">
+      <h3 id="physicsTitle"></h3>
+      <div class="formula" id="formula1"></div>
+      <div class="formula" id="formula2"></div>
+      <div class="formula" id="formula3"></div>
+      <div class="mini" id="formulaNote"></div>
+    </section>
+
+    <section class="card">
+      <h3 id="logTitle"></h3>
+      <div id="logMini" class="mini"></div>
+      <div id="logBox" class="log"></div>
+    </section>
+  </aside>
+
+  <footer>
+    <div id="footerLeft"></div>
+    <div id="footerRight"></div>
+  </footer>
+</div>
+
+<div id="pauseOverlay" class="overlay hidden">
+  <div class="modal">
+    <h1 id="pauseTitle"></h1>
+    <div class="mini" id="pauseSubtitle"></div>
+    <div class="pause-grid" style="margin-top:12px">
+      <div class="sidebox">
+        <div class="label" style="font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono)" id="computePanelTitle"></div>
+        <table class="table">
+          <tbody>
+            <tr><th id="compConfigLabel"></th><td id="compConfigVal">—</td></tr>
+            <tr><th id="compImpulseLabel"></th><td id="compImpulseVal">—</td></tr>
+            <tr><th id="compDvLabel"></th><td id="compDvVal">—</td></tr>
+            <tr><th id="compNomLabel"></th><td id="compNomVal">—</td></tr>
+            <tr><th id="compWorstLabel"></th><td id="compWorstVal">—</td></tr>
+            <tr><th id="compNeededLabel"></th><td id="compNeededVal">—</td></tr>
+          </tbody>
+        </table>
+        <div class="mini" id="computeHelp"></div>
+      </div>
+      <div class="sidebox">
+        <div class="label" style="font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono)" id="quizTitle"></div>
+        <div class="mini" id="quizText"></div>
+        <div class="slider-wrap">
+          <label for="quizInput1"><span id="quizInput1Label"></span><span class="v">km</span></label>
+          <input id="quizInput1" type="number" min="0" step="100"/>
+        </div>
+        <div class="slider-wrap">
+          <label for="quizInput2"><span id="quizInput2Label"></span><span class="v">kg</span></label>
+          <input id="quizInput2" type="number" min="0" step="50"/>
+        </div>
+        <div class="btns">
+          <button id="submitQuizBtn" class="btn"></button>
+          <button id="resumeBtn" class="btn primary"></button>
+        </div>
+        <div class="statusline" id="quizFeedback"></div>
+      </div>
+    </div>
+    <div class="quizBank hidden" id="pauseQuizBank">
+      <h4>🧠 Physics Challenge (+3 pts)</h4>
+      <div class="qText" id="pqText"></div>
+      <div class="qOpts" id="pqOpts"></div>
+      <div class="qExplain" id="pqExplain"></div>
+    </div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay hidden">
+  <div class="modal">
+    <h1 id="endTitle"></h1>
+    <div class="end-grid">
+      <div class="sidebox">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div class="medal" id="endMedal">💔</div>
+          <div>
+            <div id="endNarrative" class="statusline"></div>
+            <div class="big-num" id="endScoreBig">0</div>
+            <div class="track-note" id="campaignEndStatus"></div>
+            <div class="mini awards" id="stageAwardNow"></div>
+            <div class="mini awards" id="campaignAwardSummary"></div>
+          </div>
+        </div>
+        <div class="label" style="font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono)" id="resultsTitle"></div>
+        <table class="table">
+          <tbody>
+            <tr><th id="resScoreLabel"></th><td id="resScoreVal">—</td></tr>
+            <tr><th id="resConfigLabel"></th><td id="resConfigVal">—</td></tr>
+            <tr><th id="resErrorLabel"></th><td id="resErrorVal">—</td></tr>
+            <tr><th id="resNomMissLabel"></th><td id="resNomMissVal">—</td></tr>
+            <tr><th id="resWorstMissLabel"></th><td id="resWorstMissVal">—</td></tr>
+            <tr><th id="resCostLabel"></th><td id="resCostVal">—</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-wrap">
+          <div class="label" style="font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono)" id="chartTitle"></div>
+          <canvas id="historyCanvas" width="500" height="160"></canvas>
+        </div>
+      </div>
+      <div class="sidebox">
+        <div class="label" style="font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(220,230,255,.68);font-family:var(--mono)" id="analysisTitle"></div>
+        <table class="table">
+          <thead><tr><th id="aMetric"></th><th id="aValue"></th><th id="aNote"></th></tr></thead>
+          <tbody id="analysisBody"></tbody>
+        </table>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="theoryVsSimTitle"></div>
+          <div class="text" id="theoryVsSimText"></div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="misTitle"></div>
+          <div class="text" id="misText"></div>
+          <div class="answer-row">
+            <button id="misTrueBtn" class="btn"></button>
+            <button id="misFalseBtn" class="btn"></button>
+          </div>
+          <div class="statusline" id="misFeedback"></div>
+        </div>
+        <div class="intro-item" style="margin-top:10px">
+          <div class="label" id="reflectionTitle"></div>
+          <div class="text" id="reflectionText"></div>
+          <textarea id="reflectionBox" class="reflection"></textarea>
+        </div>
+        <div class="btns" style="margin-top:12px">
+          <button id="retryBtn" class="btn"></button>
+          <button id="newMissionBtn" class="btn primary"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+'use strict';
+
+const TAU = Math.PI * 2;
+const DAY = 86400;
+const YEAR = 365.25 * DAY;
+const RHO_AST = 2500;
+const EARTH_SAFE_BASE_KM = 8000;
+const CAMPAIGN_STORAGE_KEY = 'asteroid_deflection_campaign_v4';
+const LAUNCH_PROFILES = {
+  scout: { vRel: 12000, costMult: 0.85 },
+  standard: { vRel: 15000, costMult: 1.00 },
+  heavy: { vRel: 19000, costMult: 1.35 }
+};
+const MISSION_TRACKS = {
+  visible: { hiddenApproach:false, noiseMult:1.00, obsDelta:0, safeBonus:0, timeBonus:0, angleMaxRad:0.11 },
+  blind: { hiddenApproach:true, noiseMult:1.22, obsDelta:-1, safeBonus:1200, timeBonus:-0.8, angleMaxRad:0.16 }
+};
+
+const $ = (id)=>document.getElementById(id);
+const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a + (b-a)*t;
+const fmtNum = (n, d=0)=>Number(n).toLocaleString(undefined, {maximumFractionDigits:d, minimumFractionDigits:d});
+const fmtKg = (n)=> n >= 1e9 ? `${fmtNum(n/1e9,2)}×10⁹ kg` : `${fmtNum(n,0)} kg`;
+const fmtMs = (n)=> `${fmtNum(n,3)} m/s`;
+const fmtKm = (n)=> `${fmtNum(n,0)} km`;
+const fmtYears = (n)=> `${fmtNum(n,1)} y`;
+function asteroidMassFromDiameter(d){ return (Math.PI/6) * RHO_AST * Math.pow(d,3); }
+function gaussian(mean=0, sigma=1){
+  let u = 0, v = 0;
+  while(u===0) u = Math.random();
+  while(v===0) v = Math.random();
+  return mean + sigma * Math.sqrt(-2*Math.log(u)) * Math.cos(TAU*v);
+}
+function median(arr){
+  const a = [...arr].sort((x,y)=>x-y);
+  const m = Math.floor(a.length/2);
+  return a.length%2 ? a[m] : 0.5*(a[m-1]+a[m]);
+}
+
+const I18N = {
+  el: {
+    introTitle: "ASTEROID DEFLECTION — KINETIC IMPACTOR PLANNER",
+    introDialogue: `
+      <div class="dialogue">
+        <span class="who">MISSION CONTROL:</span> «Το αντικείμενο είναι μικρό. Το πρόβλημα είναι ότι η Γη είναι... μπροστά του.»
+        <br><span class="who">NEWTON:</span> «Η ορμή δεν εντυπωσιάζεται από πανικό. Θέλει σωστό <span class="par">Δp</span> και σωστό <span class="par">χρόνο</span>.»
+        <br><span class="who">ΕΣΥ:</span> «Άρα όχι “ηρωικό χτύπημα στο παρά πέντε”. Η Φυσική μισεί το δράμα με deadline.»
+      </div>`,
+    learningTargetLabel: "Learning Target",
+    learningTargetText: "Να χρησιμοποιώ ορμή, ώση και μοντελοποίηση για να εκτιμώ πώς ένα μικρό έγκαιρο Δv μπορεί να αλλάξει την πορεία ενός αστεροειδούς.",
+    bigIdeaLabel: "Big Idea Hook",
+    bigIdeaText: "Big Idea #11.2 + #7.8: παρακολουθούμε δυνητικά επικίνδυνα σώματα και τα αστεροειδή είναι απομεινάρια του Ηλιακού Συστήματος — άρα η πλανητική άμυνα είναι εφαρμοσμένη Φυσική, όχι σενάριο ταινίας.",
+    assumptionsLabel: "Μοντέλο / Υποθέσεις",
+    assumptionsText: "Σφαιρικός αστεροειδής, ρ = 2500 kg/m³, πλευρικό κτύπημα. Στο basic mode παίρνουμε β = 1, ενώ στο advanced mode μπορείς να θέσεις β > 1 για ejecta enhancement. Αγνοούμε βαρυτική εστίαση, θραύση και πλήρη τροχιακή γεωμετρία. Χρησιμοποιούμε τη γραμμικοποιημένη σχέση d≈Δv·t. SI μονάδες.",
+    misconceptionLabel: "Misconception to Break",
+    misconceptionText: "«Μια τεράστια τελευταία πρόσκρουση είναι πάντα καλύτερη.» Όχι: συνήθως ένα μικρό νωρίς δίνει πολύ μεγαλύτερο miss distance αργότερα.",
+    langLabel: "ΓΛΩΣΣΑ",
+    difficultyLabel: "ΔΥΣΚΟΛΙΑ",
+    diffEasy: "ΕΥΚΟΛΟ",
+    diffMedium: "ΜΕΣΑΙΟ",
+    diffHard: "ΔΥΣΚΟΛΟ",
+    missionLabel: "ΑΠΟΣΤΟΛΗ",
+    missionText: "Campaign 2 σταδίων: κέρδισε πρώτα το VISIBLE APPROACH, ξεκλείδωσε μετά το BLIND APPROACH, και σε κάθε πίστα εκτίμησε μάζα, διάλεξε profile, lead time και impactor ώστε να πετύχεις ασφαλές miss distance με όσο γίνεται λιγότερο κόστος.",
+    howToIntroLabel: "ΠΩΣ ΠΑΙΖΕΤΑΙ",
+    howToIntroText: "1) Ξεκίνα από το VISIBLE APPROACH. 2) Κέρδισέ το για να ξεκλειδώσεις το BLIND APPROACH. 3) Ρύθμισε profile, χρόνο και impactor. 4) Μέτρα πάντα το worst-case miss, όχι μόνο το nominal.",
+    scoringLabel: "SCORING",
+    scoringText: "Accuracy rubric: 40% miss distance • 30% timing leverage • 20% cost efficiency • 10% uncertainty handling. Τελικό score = 70% προσπάθειες + 30% accuracy. Μετάλλια: 🥇<5% • 🥈<10% • 🥉<20% • 💔 αλλιώς. Campaign stars ανά πίστα: ★ clear • ★★ με score ≥ 80 • ★★★ με score ≥ 92 και error < 10%.",
+    introHintNote: "Πάτα PAUSE για αριθμητικό “Pause & Compute”. Το trial-and-error δεν κάνει πλανητική άμυνα.",
+    startBtn: "START MISSION",
+    headerTitle: "ASTEROID DEFLECTION",
+    headerBadge: "BIG IDEA #11.2 / #7.8",
+    attemptsLabel: "ΠΡΟΣΠΑΘΕΙΕΣ",
+    scoreLabel: "SCORE",
+    hintsLabel: "HINTS",
+    obsTitle: "ΠΑΡΑΤΗΡΗΣΕΙΣ",
+    diameterLabel: "Διάμετρος (mean ± σ)",
+    massEstLabel: "Εκτ. μάζα",
+    uncertaintyLabel: "Αβεβαιότητα μάζας",
+    densityLabel: "Υπόθεση ρ",
+    obsMini: "Κάτω στο Canvas: θορυβώδεις μετρήσεις διαμέτρου. Εσύ είσαι ο ανθρώπινος αλγόριθμος — όχι ο slider goblin.",
+    legendObs: "μετρήσεις",
+    legendMean: "μέση τιμή",
+    legendTrue: "πραγματική τιμή (κρυφή λογική sim)",
+    missionDataTitle: "MISSION DATA",
+    safeMissLabel: "Ασφαλές miss",
+    trackLabel: "Mission track",
+    trackPickLabel: "Mission track",
+    missionProfileLabel: "Launch profile",
+    profilePickLabel: "Launch profile",
+    trackVisible: "VISIBLE APPROACH",
+    trackBlind: "BLIND APPROACH",
+    campaignLabel: "Campaign",
+    campaignValStage1: "STAGE 1 / 2",
+    campaignValStage2: "STAGE 2 / 2",
+    campaignValComplete: "CAMPAIGN CLEAR",
+    campaignStatusStage1: "Ξεκίνα με το VISIBLE APPROACH. Κέρδισέ το για να ξεκλειδώσεις το BLIND APPROACH.",
+    campaignStatusUnlocked: "Το Stage 2 είναι πλέον διαθέσιμο. Μπορείς να μείνεις στο Stage 1 ή να πατήσεις NEXT STAGE.",
+    campaignStatusStage2: "Τώρα είσαι στο BLIND APPROACH: σχεδιασμός χωρίς να βλέπεις από πριν τη γωνία προσέγγισης.",
+    campaignStatusComplete: "Και οι δύο πίστες καθαρίστηκαν. Τώρα παίζεις ελεύθερα όποια θέλεις.",
+    campaignMiniLocked: "Το BLIND APPROACH μένει κλειδωμένο μέχρι επιτυχημένο ασφαλές miss στο Stage 1.",
+    campaignMiniUnlocked: "Το track selector άνοιξε. Το κουμπί NEXT STAGE σε στέλνει κατευθείαν στη δεύτερη πίστα.",
+    campaignMiniStage2: "Δεύτερη πίστα: λιγότερη οπτική βοήθεια, ίδια Φυσική, μεγαλύτερη ανάγκη για σωστό planning.",
+    campaignMiniComplete: "2/2 complete — το mission lab λειτουργεί πλέον και σαν free-play sandbox.",
+    campaignAwardsLabel: "Stage awards",
+    stageAwardRun: "Αυτή η προσπάθεια: {stage} {medal} {stars}",
+    stageAwardNoClear: "Αυτή η προσπάθεια: {stage} χωρίς αστέρια ακόμα — δεν επιτεύχθηκε safe miss.",
+    stageBestAwards: "Καλύτερα records: {summary}",
+    campaignLockedToast: "Το BLIND APPROACH είναι ακόμα κλειδωμένο. Πρώτα ολοκλήρωσε το VISIBLE APPROACH.",
+    campaignEndUnlock: "🔓 Stage 2 unlocked: το BLIND APPROACH είναι τώρα διαθέσιμο.",
+    campaignEndComplete: "🏁 Campaign clear: καθάρισες και τις δύο πίστες.",
+    campaignEndRetry1: "Η Stage 1 μένει ενεργή μέχρι να πετύχεις ασφαλές miss distance.",
+    campaignEndRetry2: "Η Stage 2 μένει ενεργή: τώρα πρέπει να τα καταφέρεις χωρίς ορατή αρχική γωνία.",
+    nextStageBtn: "NEXT STAGE",
+    vrelLabel: "Σχετ. v impact",
+    costMultiplierLabel: "Cost multiplier",
+    windowRangeLabel: "Lead-time range",
+    confidenceLabel: "Confidence",
+    profileScout: "SCOUT",
+    profileStandard: "STANDARD",
+    profileHeavy: "HEAVY",
+    missionNoteVisible: "Το nominal plan χρησιμοποιεί τη μέση εκτίμηση. Το worst-case χρησιμοποιεί τη μεγάλη εκτίμηση μάζας για να ελέγξει αν η λύση αντέχει στην αβεβαιότητα. Στο Visible Approach βλέπεις από πριν τη γεωμετρία προσέγγισης, ενώ το launch profile αλλάζει v_rel και cost multiplier.",
+    missionNoteBlind: "Στο Blind Approach η γωνία προσέγγισης και το intercept geometry κρύβονται μέχρι να πατήσεις SIMULATE. Η Φυσική μένει ίδια, αλλά χάνεις οπτική βοήθεια και η πίστα γίνεται αυστηρότερη σε χρόνο και ασφάλεια.",
+    howToTitle: "ΟΔΗΓΙΕΣ ΑΠΟΣΤΟΛΗΣ",
+    step1Text: "Διάβασε τις noisy μετρήσεις διαμέτρου και εκτίμησε μάζα με το M = ρ(π/6)D³.",
+    step2Text: "Stage 1 = Visible Approach. Μόνο μετά από επιτυχημένο deflection ξεκλειδώνει το Stage 2 = Blind Approach, όπου δεν φαίνεται από πριν η γωνία προσέγγισης.",
+    step3Text: "Ρύθμισε launch profile, lead time, impactor mass και προαιρετικά β στο advanced mode.",
+    step4Text: "Χρησιμοποίησε PAUSE για αριθμητικό έλεγχο και σύγκρινε πάντα το worst-case miss με το safe threshold.",
+    howToMini: "Στόχος: πρώτα clear το Stage 1, μετά δείξε ότι μπορείς να πετύχεις και χωρίς ορατή γεωμετρία προσέγγισης.",
+    plannerTitle: "PLANNER",
+    timeLabel: "Lead time πριν από Earth pass",
+    impactorLabel: "Μάζα impactor",
+    advancedLabel: "Advanced β-mode",
+    advancedMini: "OFF = β=1.00 • ON = ρυθμίζεις ejecta enhancement.",
+    advancedStateOff: "OFF",
+    advancedStateOn: "ON",
+    betaLabel: "Συντελεστής β (ejecta)",
+    currentImpulseLabel: "Δp plan",
+    betaNowLabel: "Τρέχον β",
+    currentDvLabel: "Nominal Δv_ast",
+    currentMissLabel: "Nominal miss",
+    worstMissLabel: "Worst-case miss",
+    plannerMini: "Στόχος: safe miss με όχι-υστερικό budget. Η Φυσική προτιμά έγκαιρες νίκες από εντυπωσιακά late mistakes.",
+    simulateBtn: "SIMULATE",
+    pauseBtn: "PAUSE",
+    hintBtn: "HINT (-5)",
+    resetBtn: "RESET",
+    physicsTitle: "ΦΥΣΙΚΗ",
+    formula1: "<strong>M</strong> = ρ·(π/6)·D³",
+    formula2: "<strong>Δp</strong> = mᵢ·v_rel  και <strong>Δv_ast</strong> = βΔp / M_ast",
+    formula3: "<strong>d_miss</strong> ≈ Δv_ast · t_lead",
+    formulaNote: "Σημείωση: ο τύπος d≈Δv·t είναι γραμμικοποιημένο μοντέλο για μικρή εκτροπή. Στο basic mode έχεις β=1, ενώ στο advanced mode το β εμφανίζεται σαν ejecta enhancement χωρίς να παριστάνουμε πλήρη τροχιακή δυναμική. Στο animation το πρόσημο της εκτροπής ακολουθεί το εγκάρσιο πρόσημο της ορμής του impactor.",
+    logTitle: "MISSION LOG",
+    footerLeft: "Space/Enter: SIMULATE • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "No libraries • Touch + keyboard • SI units • Hollywood not found",
+    pauseTitle: "PAUSE & COMPUTE",
+    pauseSubtitle: "Πάγωσε το mission, υπολόγισε, μετά αποφάσισε. Η βιασύνη είναι κακή στρατηγική όταν το αντικείμενο είναι κυριολεκτικά αντικείμενο.",
+    computePanelTitle: "Compute Targets",
+    compConfigLabel: "Profile / β",
+    compImpulseLabel: "Δp plan",
+    compDvLabel: "Nominal Δv",
+    compNomLabel: "Nominal miss",
+    compWorstLabel: "Worst-case miss",
+    compNeededLabel: "Req. mass for current time (worst-case)",
+    computeHelp: "Διάβασε profile, v_rel, β και required mass μαζί. Δεν είναι μαγική λύση· είναι η λογιστική της ορμής.",
+    quizTitle: "Mini-check",
+    quizText: "Πρόβλεψε πριν πατήσεις resume: πόσο worst-case miss distance (km) και πόση απαιτούμενη μάζα (kg) χρειάζεται περίπου για το τρέχον t;",
+    quizInput1Label: "Η εκτίμησή σου για worst-case miss",
+    quizInput2Label: "Η εκτίμησή σου για req. mass",
+    submitQuizBtn: "SUBMIT",
+    resumeBtn: "RESUME",
+    endTitle: "MISSION DEBRIEF",
+    endSuccess: "✅ Η Γη δεν δέχτηκε ραντεβού με αστεροειδή. Καλή δουλειά.",
+    endFail: "💔 Το miss distance δεν έφτασε. Η Φυσική δεν τιμωρεί· απλώς κρατάει λογαριασμό.",
+    resultsTitle: "ΑΠΟΤΕΛΕΣΜΑΤΑ",
+    resScoreLabel: "Τελικό score",
+    resConfigLabel: "Profile / β",
+    resErrorLabel: "Σφάλμα %",
+    resNomMissLabel: "Nominal miss",
+    resWorstMissLabel: "Worst-case miss",
+    resCostLabel: "Cost tag",
+    chartTitle: "ΙΣΤΟΡΙΚΟ ΠΡΟΣΠΑΘΕΙΩΝ",
+    analysisTitle: "ΑΝΑΛΥΣΗ",
+    aMetric: "Metric",
+    aValue: "Value",
+    aNote: "Note",
+    theoryVsSimTitle: "Θεωρία vs Simulation",
+    theoryVsSimText: "Η θεωρία λέει ότι το miss distance μεγαλώνει περίπου γραμμικά με το t_lead. Η προσομοίωση προσθέτει αβεβαιότητα από τις παρατηρήσεις και συγκρίνει nominal με worst-case αντί να σε αφήνει να χαρείς πρόωρα.",
+    misTitle: "Misconception Check",
+    misText: "«Αν αργήσεις αρκετά, μπορείς πάντα να το σώσεις απλώς με πολύ μεγαλύτερη μάζα impactor.»",
+    misTrueBtn: "TRUE",
+    misFalseBtn: "FALSE",
+    misFeedbackRight: "Σωστό: FALSE. Το leverage του χρόνου είναι τεράστιο· αργά πληρώνεις δραματικά περισσότερο σε impulse.",
+    misFeedbackWrong: "Όχι. Αυτό ακριβώς σπάει το παιχνίδι: late drama ≠ good physics.",
+    reflectionTitle: "Mini-reflection",
+    reflectionText: "Τι άλλαξες ανάμεσα στις προσπάθειες: χρόνο, μάζα ή τον τρόπο που διάβασες την αβεβαιότητα;",
+    retryBtn: "RETRY",
+    newMissionBtn: "NEW MISSION",
+    statusIdle: "Παρατήρησε τα δεδομένα, μετά σχεδίασε.",
+    statusPreview: "Preview ενεργό: σύγκρινε nominal vs worst-case πριν δεσμεύσεις impactor.",
+    statusBlindPreview: "Blind preview: η γωνία προσέγγισης μένει κρυφή μέχρι να τρέξει η προσομοίωση.",
+    statusRunning: "Simulation σε εξέλιξη… δες πού μεγεθύνει το χρόνο η μικρή εκτροπή.",
+    statusPaused: "Paused. Υπολόγισε πρώτα, σώσε πλανήτη μετά.",
+    phaseIdle: "PHASE: PLAN",
+    phaseRun: "PHASE: DEFLECT",
+    trackPillPrefix: "TRACK",
+    trackPillPrefix: "TRACK",
+    trackPillPrefix: "TRACK",
+    phaseDone: "PHASE: DEBRIEF",
+    windowEarly: "EARLY WINDOW",
+    windowMid: "MID WINDOW",
+    windowLate: "LATE WINDOW",
+    confidenceHigh: "Confidence: υψηλή",
+    confidenceMed: "Confidence: μέτρια",
+    confidenceLow: "Confidence: χαμηλή",
+    hoverDefault: "Άγγιξε/κάνε hover σε observation point",
+    hoverPoint: "Obs {i}: day {day}, D≈{diam} m",
+    hoverImpact: "Impact εδώ → μικρό Δv, μεγάλο future payoff",
+    quizGood: "Μπράβο. Οι εκτιμήσεις σου ήταν κοντά· +4 score bonus.",
+    quizOk: "Κοντά ήσουν. Η κατεύθυνση της σκέψης είναι σωστή.",
+    quizBad: "Όχι ακόμη. Πρόσεξε κυρίως ότι το t μπαίνει πολλαπλασιαστικά στο miss distance.",
+    logNewMission: "Νέα αποστολή: εκτίμησε μάζα και διάλεξε πότε θα χτυπήσεις.",
+    logTrackReveal: "Blind approach: η γωνία προσέγγισης αποκαλύφθηκε μόλις ξεκίνησε η προσομοίωση.",
+    logHintUsed: "Χρησιμοποιήθηκε hint. Score penalty: -5.",
+    logQuizBonus: "Mini-check bonus προστέθηκε.",
+    logSuccess: "Επιτυχία: ασφαλές miss distance με ανεκτό κόστος.",
+    logFail: "Αποτυχία: το safe miss δεν καλύφθηκε.",
+    logStage2Unlocked: "Campaign update: ξεκλειδώθηκε το Stage 2 — Blind Approach.",
+    logCampaignComplete: "Campaign complete: καθάρισες και τις δύο πίστες.",
+    campaignLaunchStage2: "Stage 2 briefing: Blind Approach ενεργό.",
+    hintLines: [
+      "Hint: Αν διπλασιάσεις το t_lead, για ίδιο στόχο μπορείς περίπου να μισώσεις το απαιτούμενο Δv.",
+      "Hint: Μην κοιτάς μόνο το nominal miss. Το worst-case είναι η ερώτηση “κι αν οι παρατηρήσεις σε κοροϊδεύουν λίγο;”.",
+      "Hint: Η μάζα του αστεροειδούς προκύπτει από D³. Μικρό λάθος στη διάμετρο → όχι και τόσο μικρό λάθος στη μάζα.",
+      "Hint: Θυμήσου: Δv_ast = β(mᵢ v_rel)/M_ast. Ο αστεροειδής δεν εντυπωσιάζεται από ευχές.",
+      "Hint: Fast profile σημαίνει μεγαλύτερο v_rel, αλλά όχι πάντα φθηνότερο mission. Κοίτα και το cost multiplier."
+    ],
+    diagLate: "Διάγνωση: το σχέδιο ήταν πολύ αργό. Το lead time είναι ο μεγάλος πολλαπλασιαστής.",
+    diagLight: "Διάγνωση: η μάζα impactor ήταν χαμηλή για αυτό το t.",
+    diagWaste: "Διάγνωση: πέτυχες αλλά με ακριβό overkill. Η επιτυχία θέλει και αποδοτικότητα.",
+    diagProfile: "Διάγνωση: έσωσες τη Γη, αλλά όχι το budget. Άλλο launch profile θα έβγαζε φθηνότερο mission.",
+    diagUncertain: "Διάγνωση: το nominal πέρασε, αλλά το worst-case όχι. Η αβεβαιότητα σε νίκησε, όχι η αισιοδοξία.",
+    endScoreBigLabel: "SCORE",
+    analysisMiss: "Earth miss distance",
+    analysisTiming: "Timing leverage",
+    analysisCost: "Cost efficiency",
+    analysisUnc: "Uncertainty handling",
+    analysisAttempts: "Attempts efficiency",
+    noteMiss: "Το κριτήριο ασφάλειας είναι το worst-case miss > safe threshold.",
+    noteTiming: "Νωρίτερα → μεγαλύτερο payoff ανά ίδιο Δv.",
+    noteCost: "Το score κόστους κοιτά το συνολικό mission cost, όχι μόνο τη μάζα.",
+    noteUnc: "Αντέχει η λύση στην αβεβαιότητα;",
+    noteAttempts: "Λιγότερες προσπάθειες και hints κρατούν score.",
+    costUnit: "credits",
+    canvasEarthLabel: "Γη",
+    canvasImpactLabel: "impact",
+    canvasImpactorLabel: "IMPACTOR",
+    canvasBlindHint: "Blind track: η γωνία θα φανεί μόνο στο SIMULATE.",
+    canvasRevealHint: "τροχιά revealed",
+    canvasApproachVisible: "ορατή προσέγγιση",
+    joke1: "Ορμή: το πιο βαρετό μέγεθος μέχρι να σώσει πλανήτη.",
+    joke2: "Το σύμπαν δεν κάνει extention στο deadline πρόσκρουσης.",
+    joke3: "‘Θα το δούμε αργότερα’ — τελευταία λόγια κακού mission planner.",
+    easterEgg: "🥚 7.8 χρόνια; Big Idea #7.8 λέει γεια: οι αστεροειδείς είναι leftovers του Ηλιακού Συστήματος."
+  },
+  en: {
+    introTitle: "ASTEROID DEFLECTION — KINETIC IMPACTOR PLANNER",
+    introDialogue: `
+      <div class="dialogue">
+        <span class="who">MISSION CONTROL:</span> “The object is small. The problem is that Earth is... in front of it.”
+        <br><span class="who">NEWTON:</span> “Momentum does not care about panic. It wants the right <span class="par">Δp</span> at the right <span class="par">time</span>.”
+        <br><span class="who">YOU:</span> “So, no heroic last-minute smash. Physics hates deadline drama.”
+      </div>`,
+    learningTargetLabel: "Learning Target",
+    learningTargetText: "Use momentum, impulse and modelling to estimate how a small early Δv can shift an asteroid onto a safe miss path.",
+    bigIdeaLabel: "Big Idea Hook",
+    bigIdeaText: "Big Idea #11.2 + #7.8: we monitor potentially hazardous objects, and asteroids are Solar System leftovers — so planetary defence is applied physics, not movie magic.",
+    assumptionsLabel: "Model / Assumptions",
+    assumptionsText: "Spherical asteroid, ρ = 2500 kg/m³, side impact. In basic mode we set β = 1; in optional advanced mode you may choose β > 1 to model ejecta enhancement. We ignore gravitational focusing, fragmentation and full orbital geometry. We use the linearised relation d≈Δv·t. SI units.",
+    misconceptionLabel: "Misconception to Break",
+    misconceptionText: "“A huge last-minute hit is always best.” Not usually: a small early push often produces a much larger later miss distance.",
+    langLabel: "LANGUAGE",
+    difficultyLabel: "DIFFICULTY",
+    diffEasy: "EASY",
+    diffMedium: "MEDIUM",
+    diffHard: "HARD",
+    missionLabel: "MISSION",
+    missionText: "Two-stage campaign: clear VISIBLE APPROACH first, unlock BLIND APPROACH next, and on each stage estimate mass, choose the launch profile, lead time and impactor mass to achieve a safe miss distance at minimum cost.",
+    howToIntroLabel: "HOW TO PLAY",
+    howToIntroText: "1) Start on VISIBLE APPROACH. 2) Clear it to unlock BLIND APPROACH. 3) Tune profile, lead time and impactor. 4) Judge success from the worst-case miss, not only the nominal one.",
+    scoringLabel: "SCORING",
+    scoringText: "Accuracy rubric: 40% miss distance • 30% timing leverage • 20% cost efficiency • 10% uncertainty handling. Final score = 70% attempts + 30% accuracy. Medals: 🥇<5% • 🥈<10% • 🥉<20% • 💔 otherwise. Campaign stars per stage: ★ clear • ★★ with score ≥ 80 • ★★★ with score ≥ 92 and error < 10%.",
+    introHintNote: "Press PAUSE for a numerical “Pause & Compute”. Trial-and-error is not a planetary-defence strategy.",
+    startBtn: "START MISSION",
+    headerTitle: "ASTEROID DEFLECTION",
+    headerBadge: "BIG IDEA #11.2 / #7.8",
+    attemptsLabel: "ATTEMPTS",
+    scoreLabel: "SCORE",
+    hintsLabel: "HINTS",
+    obsTitle: "OBSERVATIONS",
+    diameterLabel: "Diameter (mean ± σ)",
+    massEstLabel: "Mass estimate",
+    uncertaintyLabel: "Mass uncertainty",
+    densityLabel: "Assumed ρ",
+    obsMini: "In the canvas: noisy diameter measurements. You are the human algorithm — not the slider goblin.",
+    legendObs: "observations",
+    legendMean: "mean",
+    legendTrue: "true value (hidden sim logic)",
+    missionDataTitle: "MISSION DATA",
+    safeMissLabel: "Safe miss",
+    trackLabel: "Mission track",
+    trackPickLabel: "Mission track",
+    missionProfileLabel: "Launch profile",
+    profilePickLabel: "Launch profile",
+    trackVisible: "VISIBLE APPROACH",
+    trackBlind: "BLIND APPROACH",
+    campaignLabel: "Campaign",
+    campaignValStage1: "STAGE 1 / 2",
+    campaignValStage2: "STAGE 2 / 2",
+    campaignValComplete: "CAMPAIGN CLEAR",
+    campaignStatusStage1: "Start on VISIBLE APPROACH. Clear it to unlock BLIND APPROACH.",
+    campaignStatusUnlocked: "Stage 2 is now available. You can stay on Stage 1 or press NEXT STAGE.",
+    campaignStatusStage2: "You are now in BLIND APPROACH: planning without seeing the incoming angle in advance.",
+    campaignStatusComplete: "Both stages are cleared. You can now replay either one freely.",
+    campaignMiniLocked: "BLIND APPROACH stays locked until you achieve a safe miss on Stage 1.",
+    campaignMiniUnlocked: "The track selector is now open. NEXT STAGE sends you directly into Stage 2.",
+    campaignMiniStage2: "Second stage: less visual help, same Physics, stronger demand for careful planning.",
+    campaignMiniComplete: "2/2 complete — the mission lab now also works as a free-play sandbox.",
+    campaignAwardsLabel: "Stage awards",
+    stageAwardRun: "This run: {stage} {medal} {stars}",
+    stageAwardNoClear: "This run: {stage} no stars yet — safe miss not achieved.",
+    stageBestAwards: "Best records: {summary}",
+    campaignLockedToast: "BLIND APPROACH is still locked. Complete VISIBLE APPROACH first.",
+    campaignEndUnlock: "🔓 Stage 2 unlocked: BLIND APPROACH is now available.",
+    campaignEndComplete: "🏁 Campaign clear: you completed both stages.",
+    campaignEndRetry1: "Stage 1 remains active until you achieve a safe miss distance.",
+    campaignEndRetry2: "Stage 2 remains active: now you must succeed without a visible initial approach angle.",
+    nextStageBtn: "NEXT STAGE",
+    vrelLabel: "Relative impact speed",
+    costMultiplierLabel: "Cost multiplier",
+    windowRangeLabel: "Lead-time range",
+    confidenceLabel: "Confidence",
+    profileScout: "SCOUT",
+    profileStandard: "STANDARD",
+    profileHeavy: "HEAVY",
+    missionNoteVisible: "The nominal plan uses the mean estimate. The worst-case uses the high-mass estimate to test whether your plan survives uncertainty. In Visible Approach you also see the incoming geometry in advance, while the launch profile changes v_rel and cost multiplier.",
+    missionNoteBlind: "In Blind Approach the incoming angle and intercept geometry stay hidden until you press SIMULATE. The physics is the same, but you lose the visual cue and the mission window becomes stricter.",
+    howToTitle: "MISSION STEPS",
+    step1Text: "Read the noisy diameter measurements and estimate mass with M = ρ(π/6)D³.",
+    step2Text: "Stage 1 = Visible Approach. Only after a successful deflection does Stage 2 = Blind Approach unlock, where the incoming angle stays hidden until SIMULATE.",
+    step3Text: "Set launch profile, lead time, impactor mass and optional β in advanced mode.",
+    step4Text: "Use PAUSE for a numerical check and always compare worst-case miss with the safe threshold.",
+    howToMini: "Goal: first clear Stage 1, then prove you can plan a successful deflection even without visible approach geometry.",
+    plannerTitle: "PLANNER",
+    timeLabel: "Lead time before Earth pass",
+    impactorLabel: "Impactor mass",
+    advancedLabel: "Advanced β-mode",
+    advancedMini: "OFF = β=1.00 • ON = choose ejecta enhancement.",
+    advancedStateOff: "OFF",
+    advancedStateOn: "ON",
+    betaLabel: "β factor (ejecta)",
+    currentImpulseLabel: "Plan Δp",
+    betaNowLabel: "Current β",
+    currentDvLabel: "Nominal Δv_ast",
+    currentMissLabel: "Nominal miss",
+    worstMissLabel: "Worst-case miss",
+    plannerMini: "Goal: safe miss without panic-budget engineering. Physics prefers early wins to spectacular late mistakes.",
+    simulateBtn: "SIMULATE",
+    pauseBtn: "PAUSE",
+    hintBtn: "HINT (-5)",
+    resetBtn: "RESET",
+    physicsTitle: "PHYSICS",
+    formula1: "<strong>M</strong> = ρ·(π/6)·D³",
+    formula2: "<strong>Δp</strong> = mᵢ·v_rel  and <strong>Δv_ast</strong> = βΔp / M_ast",
+    formula3: "<strong>d_miss</strong> ≈ Δv_ast · t_lead",
+    formulaNote: "Note: d≈Δv·t is a linearised small-deflection model. Basic mode keeps β=1; advanced mode exposes β as ejecta enhancement instead of pretending to be full orbital dynamics. In the animation, the sign of the bend follows the transverse sign of the impactor momentum.",
+    logTitle: "MISSION LOG",
+    footerLeft: "Space/Enter: SIMULATE • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "No libraries • Touch + keyboard • SI units • Hollywood not found",
+    pauseTitle: "PAUSE & COMPUTE",
+    pauseSubtitle: "Freeze the mission, compute, then decide. Haste is poor strategy when the object is literally an object.",
+    computePanelTitle: "Compute Targets",
+    compConfigLabel: "Profile / β",
+    compImpulseLabel: "Plan Δp",
+    compDvLabel: "Nominal Δv",
+    compNomLabel: "Nominal miss",
+    compWorstLabel: "Worst-case miss",
+    compNeededLabel: "Req. mass for current time (worst-case)",
+    computeHelp: "Read profile, v_rel, β and required mass together. They are not a magic answer; they are the bookkeeping of momentum.",
+    quizTitle: "Mini-check",
+    quizText: "Predict before resume: about how much worst-case miss distance (km) and required mass (kg) does the current t need?",
+    quizInput1Label: "Your estimate for worst-case miss",
+    quizInput2Label: "Your estimate for req. mass",
+    submitQuizBtn: "SUBMIT",
+    resumeBtn: "RESUME",
+    endTitle: "MISSION DEBRIEF",
+    endSuccess: "✅ Earth did not accept the asteroid's appointment. Good work.",
+    endFail: "💔 The miss distance was not enough. Physics does not punish; it keeps accounts.",
+    resultsTitle: "RESULTS",
+    resScoreLabel: "Final score",
+    resConfigLabel: "Profile / β",
+    resErrorLabel: "Error %",
+    resNomMissLabel: "Nominal miss",
+    resWorstMissLabel: "Worst-case miss",
+    resCostLabel: "Cost tag",
+    chartTitle: "ATTEMPT HISTORY",
+    analysisTitle: "ANALYSIS",
+    aMetric: "Metric",
+    aValue: "Value",
+    aNote: "Note",
+    theoryVsSimTitle: "Theory vs Simulation",
+    theoryVsSimText: "Theory says miss distance grows roughly linearly with lead time. The simulation adds observation uncertainty and compares nominal with worst-case so you cannot celebrate too early.",
+    misTitle: "Misconception Check",
+    misText: "“If you wait long enough, you can always save the mission by simply using a much larger impactor mass.”",
+    misTrueBtn: "TRUE",
+    misFalseBtn: "FALSE",
+    misFeedbackRight: "Correct: FALSE. Time leverage is huge; late action becomes dramatically more expensive in impulse.",
+    misFeedbackWrong: "Nope. That is exactly what this game overturns: late drama ≠ good physics.",
+    reflectionTitle: "Mini-reflection",
+    reflectionText: "What changed between attempts: timing, mass, or the way you read uncertainty?",
+    retryBtn: "RETRY",
+    newMissionBtn: "NEW MISSION",
+    statusIdle: "Inspect the data, then plan.",
+    statusPreview: "Preview active: compare nominal vs worst-case before committing the impactor.",
+    statusBlindPreview: "Blind preview: the incoming angle stays hidden until the simulation starts.",
+    statusRunning: "Simulation running… watch a tiny deflection become a large future shift.",
+    statusPaused: "Paused. Compute first, save world second.",
+    phaseIdle: "PHASE: PLAN",
+    phaseRun: "PHASE: DEFLECT",
+    trackPillPrefix: "TRACK",
+    phaseDone: "PHASE: DEBRIEF",
+    windowEarly: "EARLY WINDOW",
+    windowMid: "MID WINDOW",
+    windowLate: "LATE WINDOW",
+    confidenceHigh: "Confidence: high",
+    confidenceMed: "Confidence: medium",
+    confidenceLow: "Confidence: low",
+    hoverDefault: "Touch / hover an observation point",
+    hoverPoint: "Obs {i}: day {day}, D≈{diam} m",
+    hoverImpact: "Impact here → tiny Δv, large future payoff",
+    quizGood: "Nice. Your estimates were close; +4 score bonus.",
+    quizOk: "Close enough. The direction of thought is right.",
+    quizBad: "Not yet. Watch especially how t enters multiplicatively in miss distance.",
+    logNewMission: "New mission: estimate mass and choose when to hit.",
+    logTrackReveal: "Blind approach: the incoming angle is now revealed by the running simulation.",
+    logHintUsed: "Hint used. Score penalty: -5.",
+    logQuizBonus: "Mini-check bonus added.",
+    logSuccess: "Success: safe miss distance with tolerable cost.",
+    logFail: "Failure: safe miss was not achieved.",
+    logStage2Unlocked: "Campaign update: Stage 2 — Blind Approach — has been unlocked.",
+    logCampaignComplete: "Campaign complete: both stages cleared.",
+    campaignLaunchStage2: "Stage 2 briefing: Blind Approach is now active.",
+    hintLines: [
+      "Hint: If you double t_lead, then for the same target you can roughly halve the required Δv.",
+      "Hint: Do not look only at nominal miss. Worst-case asks: what if the observations are slightly lying to you?",
+      "Hint: Asteroid mass comes from D³. A small diameter error is not such a small mass error.",
+      "Hint: Remember: Δv_ast = β(mᵢ v_rel)/M_ast. The asteroid is not impressed by wishes.",
+      "Hint: A faster profile raises v_rel, but a larger cost multiplier can still make it a worse bargain."
+    ],
+    diagLate: "Diagnosis: the plan was too late. Lead time is the giant multiplier.",
+    diagLight: "Diagnosis: the impactor mass was too low for this t.",
+    diagWaste: "Diagnosis: you succeeded but with expensive overkill. Success should also be efficient.",
+    diagProfile: "Diagnosis: Earth was saved, but the budget was not. Another launch profile could have done the job more cheaply.",
+    diagUncertain: "Diagnosis: nominal passed, worst-case failed. Uncertainty beat your optimism.",
+    endScoreBigLabel: "SCORE",
+    analysisMiss: "Earth miss distance",
+    analysisTiming: "Timing leverage",
+    analysisCost: "Cost efficiency",
+    analysisUnc: "Uncertainty handling",
+    analysisAttempts: "Attempts efficiency",
+    noteMiss: "Safety criterion: worst-case miss > safe threshold.",
+    noteTiming: "Earlier → more payoff per same Δv.",
+    noteCost: "Cost score tracks total mission cost, not just impactor mass.",
+    noteUnc: "Does the plan survive uncertainty?",
+    noteAttempts: "Fewer attempts and hints preserve score.",
+    costUnit: "credits",
+    canvasEarthLabel: "Earth",
+    canvasImpactLabel: "impact",
+    canvasImpactorLabel: "IMPACTOR",
+    canvasBlindHint: "Blind track: the angle is revealed only after SIMULATE.",
+    canvasRevealHint: "trajectory revealed",
+    canvasApproachVisible: "visible approach",
+    joke1: "Momentum: the most boring quantity until it saves a planet.",
+    joke2: "The Universe does not grant deadline extensions on impacts.",
+    joke3: "‘We'll deal with it later’ — final words of a bad mission planner.",
+    easterEgg: "🥚 7.8 years? Big Idea #7.8 says hi: asteroids are Solar System leftovers."
+  },
+  it: {
+    introTitle: "ASTEROID DEFLECTION — KINETIC IMPACTOR PLANNER",
+    introDialogue: `
+      <div class="dialogue">
+        <span class="who">MISSION CONTROL:</span> “L’oggetto è piccolo. Il problema è che la Terra è... davanti.”
+        <br><span class="who">NEWTON:</span> “La quantità di moto non si impressiona per il panico. Vuole il giusto <span class="par">Δp</span> al giusto <span class="par">tempo</span>.”
+        <br><span class="who">TU:</span> “Quindi niente colpo eroico all’ultimo minuto. La fisica odia il dramma con scadenza.”
+      </div>`,
+    learningTargetLabel: "Learning Target",
+    learningTargetText: "Usare quantità di moto, impulso e modellizzazione per stimare come un piccolo Δv anticipato possa spostare un asteroide su una traiettoria di mancato impatto.",
+    bigIdeaLabel: "Big Idea Hook",
+    bigIdeaText: "Big Idea #11.2 + #7.8: monitoriamo oggetti potenzialmente pericolosi e gli asteroidi sono resti del Sistema Solare — quindi la difesa planetaria è fisica applicata, non magia da film.",
+    assumptionsLabel: "Modello / Assunzioni",
+    assumptionsText: "Asteroide sferico, ρ = 2500 kg/m³, impatto laterale. In modalità base poniamo β = 1; in modalità avanzata opzionale puoi scegliere β > 1 per modellare l’ejecta enhancement. Ignoriamo focalizzazione gravitazionale, frammentazione e geometria orbitale completa. Usiamo la relazione linearizzata d≈Δv·t. Unità SI.",
+    misconceptionLabel: "Misconception to Break",
+    misconceptionText: "“Un colpo enorme all’ultimo minuto è sempre meglio.” Di solito no: una piccola spinta anticipata produce spesso un mancato impatto molto maggiore.",
+    langLabel: "LINGUA",
+    difficultyLabel: "DIFFICOLTÀ",
+    diffEasy: "FACILE",
+    diffMedium: "MEDIA",
+    diffHard: "DIFFICILE",
+    missionLabel: "MISSIONE",
+    missionText: "Campagna in 2 fasi: completa prima VISIBLE APPROACH, poi sblocca BLIND APPROACH, e in ogni fase stima la massa, scegli launch profile, lead time e massa dell’impattatore per ottenere un safe miss con il minor costo possibile.",
+    howToIntroLabel: "COME SI GIOCA",
+    howToIntroText: "1) Inizia da VISIBLE APPROACH. 2) Completalo per sbloccare BLIND APPROACH. 3) Regola profile, lead time e impattatore. 4) Valuta il successo dal miss worst-case, non solo dal nominale.",
+    scoringLabel: "SCORING",
+    scoringText: "Accuracy rubric: 40% miss distance • 30% timing leverage • 20% cost efficiency • 10% uncertainty handling. Score finale = 70% tentativi + 30% accuracy. Medaglie: 🥇<5% • 🥈<10% • 🥉<20% • 💔 altrimenti. Stelle campagna per stage: ★ clear • ★★ con score ≥ 80 • ★★★ con score ≥ 92 ed errore < 10%.",
+    introHintNote: "Premi PAUSE per un “Pause & Compute” numerico. Il trial-and-error non è strategia di difesa planetaria.",
+    startBtn: "START MISSION",
+    headerTitle: "ASTEROID DEFLECTION",
+    headerBadge: "BIG IDEA #11.2 / #7.8",
+    attemptsLabel: "TENTATIVI",
+    scoreLabel: "SCORE",
+    hintsLabel: "HINTS",
+    obsTitle: "OSSERVAZIONI",
+    diameterLabel: "Diametro (media ± σ)",
+    massEstLabel: "Stima massa",
+    uncertaintyLabel: "Incertezza massa",
+    densityLabel: "ρ assunta",
+    obsMini: "Nel canvas: misure rumorose del diametro. Tu sei l’algoritmo umano — non il goblin degli slider.",
+    legendObs: "osservazioni",
+    legendMean: "media",
+    legendTrue: "valore reale (logica nascosta)",
+    missionDataTitle: "DATI MISSIONE",
+    safeMissLabel: "Safe miss",
+    trackLabel: "Mission track",
+    trackPickLabel: "Mission track",
+    missionProfileLabel: "Launch profile",
+    profilePickLabel: "Launch profile",
+    trackVisible: "VISIBLE APPROACH",
+    trackBlind: "BLIND APPROACH",
+    campaignLabel: "Campagna",
+    campaignValStage1: "STAGE 1 / 2",
+    campaignValStage2: "STAGE 2 / 2",
+    campaignValComplete: "CAMPAGNA COMPLETA",
+    campaignStatusStage1: "Inizia con VISIBLE APPROACH. Completalo per sbloccare BLIND APPROACH.",
+    campaignStatusUnlocked: "Lo Stage 2 è ora disponibile. Puoi restare nello Stage 1 oppure premere NEXT STAGE.",
+    campaignStatusStage2: "Ora sei in BLIND APPROACH: pianificazione senza vedere in anticipo l’angolo di arrivo.",
+    campaignStatusComplete: "Entrambi gli stage sono completati. Ora puoi rigiocarli liberamente.",
+    campaignMiniLocked: "BLIND APPROACH resta bloccato finché non ottieni un safe miss nello Stage 1.",
+    campaignMiniUnlocked: "Il selettore del track è ora aperto. NEXT STAGE ti porta direttamente allo Stage 2.",
+    campaignMiniStage2: "Secondo stage: meno aiuto visivo, stessa Fisica, maggiore bisogno di pianificazione accurata.",
+    campaignMiniComplete: "2/2 completato — il mission lab funziona ora anche come sandbox free-play.",
+    campaignAwardsLabel: "Premi stage",
+    stageAwardRun: "Questo tentativo: {stage} {medal} {stars}",
+    stageAwardNoClear: "Questo tentativo: {stage} ancora senza stelle — safe miss non raggiunto.",
+    stageBestAwards: "Migliori record: {summary}",
+    campaignLockedToast: "BLIND APPROACH è ancora bloccato. Completa prima VISIBLE APPROACH.",
+    campaignEndUnlock: "🔓 Stage 2 sbloccato: BLIND APPROACH è ora disponibile.",
+    campaignEndComplete: "🏁 Campagna completata: hai superato entrambi gli stage.",
+    campaignEndRetry1: "Lo Stage 1 resta attivo finché non ottieni una distanza di mancato impatto sicura.",
+    campaignEndRetry2: "Lo Stage 2 resta attivo: ora devi riuscirci senza angolo iniziale visibile.",
+    nextStageBtn: "NEXT STAGE",
+    vrelLabel: "Velocità relativa impatto",
+    costMultiplierLabel: "Moltiplicatore costo",
+    windowRangeLabel: "Intervallo lead time",
+    confidenceLabel: "Confidence",
+    profileScout: "SCOUT",
+    profileStandard: "STANDARD",
+    profileHeavy: "HEAVY",
+    missionNoteVisible: "Il piano nominale usa la stima media. Il worst-case usa la stima di massa alta per verificare se il piano regge l’incertezza. In Visible Approach vedi in anticipo la geometria d’arrivo, mentre il launch profile cambia v_rel e cost multiplier.",
+    missionNoteBlind: "In Blind Approach l’angolo di arrivo e la geometria di intercetto restano nascosti finché non premi SIMULA. La fisica è la stessa, ma perdi l’aiuto visivo e la finestra è più severa.",
+    howToTitle: "PASSI MISSIONE",
+    step1Text: "Leggi le misure rumorose del diametro e stima la massa con M = ρ(π/6)D³.",
+    step2Text: "Stage 1 = Visible Approach. Solo dopo una deflessione riuscita si sblocca Stage 2 = Blind Approach, dove l’angolo di arrivo resta nascosto fino a SIMULATE.",
+    step3Text: "Imposta launch profile, lead time, massa dell’impattatore e β opzionale in modalità avanzata.",
+    step4Text: "Usa PAUSE per un controllo numerico e confronta sempre il miss worst-case con la soglia di sicurezza.",
+    howToMini: "Obiettivo: prima superare lo Stage 1, poi dimostrare che sai pianificare bene anche senza geometria di approccio visibile.",
+    plannerTitle: "PLANNER",
+    timeLabel: "Lead time prima del passaggio terrestre",
+    impactorLabel: "Massa dell’impattatore",
+    advancedLabel: "Modalità β avanzata",
+    advancedMini: "OFF = β=1.00 • ON = scegli ejecta enhancement.",
+    advancedStateOff: "OFF",
+    advancedStateOn: "ON",
+    betaLabel: "Fattore β (ejecta)",
+    currentImpulseLabel: "Δp del piano",
+    betaNowLabel: "β attuale",
+    currentDvLabel: "Δv_ast nominale",
+    currentMissLabel: "Miss nominale",
+    worstMissLabel: "Miss worst-case",
+    plannerMini: "Obiettivo: safe miss senza budget isterico. La fisica preferisce vittorie anticipate a errori spettacolari e tardivi.",
+    simulateBtn: "SIMULA",
+    pauseBtn: "PAUSE",
+    hintBtn: "HINT (-5)",
+    resetBtn: "RESET",
+    physicsTitle: "FISICA",
+    formula1: "<strong>M</strong> = ρ·(π/6)·D³",
+    formula2: "<strong>Δp</strong> = mᵢ·v_rel  e <strong>Δv_ast</strong> = βΔp / M_ast",
+    formula3: "<strong>d_miss</strong> ≈ Δv_ast · t_lead",
+    formulaNote: "Nota: d≈Δv·t è un modello linearizzato a piccola deflessione. La modalità base mantiene β=1; la modalità avanzata espone β come ejecta enhancement senza fingere dinamica orbitale completa.",
+    logTitle: "MISSION LOG",
+    footerLeft: "Space/Enter: SIMULA • P: PAUSE • R: RESET • H: HINT",
+    footerRight: "No libraries • Touch + keyboard • Unità SI • Hollywood non trovato",
+    pauseTitle: "PAUSE & COMPUTE",
+    pauseSubtitle: "Ferma la missione, calcola, poi decidi. La fretta è una cattiva strategia quando l’oggetto è letteralmente un oggetto.",
+    computePanelTitle: "Calcola target",
+    compConfigLabel: "Profile / β",
+    compImpulseLabel: "Δp del piano",
+    compDvLabel: "Δv nominale",
+    compNomLabel: "Miss nominale",
+    compWorstLabel: "Miss worst-case",
+    compNeededLabel: "Massa req. per il tempo attuale (worst-case)",
+    computeHelp: "Leggi insieme profile, v_rel, β e massa richiesta. Non sono una soluzione magica; sono la contabilità della quantità di moto.",
+    quizTitle: "Mini-check",
+    quizText: "Prevedi prima di riprendere: circa quanto miss worst-case (km) e quale massa richiesta (kg) servono per il t attuale?",
+    quizInput1Label: "La tua stima del miss worst-case",
+    quizInput2Label: "La tua stima della massa richiesta",
+    submitQuizBtn: "INVIA",
+    resumeBtn: "RIPRENDI",
+    endTitle: "MISSION DEBRIEF",
+    endSuccess: "✅ La Terra non ha accettato l’appuntamento con l’asteroide. Ottimo lavoro.",
+    endFail: "💔 Il miss distance non è bastato. La fisica non punisce; tiene i conti.",
+    resultsTitle: "RISULTATI",
+    resScoreLabel: "Score finale",
+    resConfigLabel: "Profile / β",
+    resErrorLabel: "Errore %",
+    resNomMissLabel: "Miss nominale",
+    resWorstMissLabel: "Miss worst-case",
+    resCostLabel: "Costo",
+    chartTitle: "STORIA TENTATIVI",
+    analysisTitle: "ANALISI",
+    aMetric: "Metrica",
+    aValue: "Valore",
+    aNote: "Nota",
+    theoryVsSimTitle: "Teoria vs Simulazione",
+    theoryVsSimText: "La teoria dice che il miss distance cresce circa linearmente con il lead time. La simulazione aggiunge incertezza osservativa e confronta nominale e worst-case, così non festeggi troppo presto.",
+    misTitle: "Misconception Check",
+    misText: "“Se aspetti abbastanza, puoi sempre salvare la missione usando semplicemente una massa molto più grande.”",
+    misTrueBtn: "TRUE",
+    misFalseBtn: "FALSE",
+    misFeedbackRight: "Corretto: FALSE. Il leverage del tempo è enorme; l’azione tardiva diventa molto più costosa in impulso.",
+    misFeedbackWrong: "No. È proprio questo che il gioco smonta: dramma tardivo ≠ buona fisica.",
+    reflectionTitle: "Mini-riflessione",
+    reflectionText: "Che cosa hai cambiato tra i tentativi: tempo, massa o il modo in cui leggi l’incertezza?",
+    retryBtn: "RIPROVA",
+    newMissionBtn: "NUOVA MISSIONE",
+    statusIdle: "Osserva i dati, poi pianifica.",
+    statusPreview: "Preview attiva: confronta nominale e worst-case prima di impegnare l’impattatore.",
+    statusBlindPreview: "Blind preview: l’angolo di arrivo resta nascosto finché la simulazione non parte.",
+    statusRunning: "Simulazione in corso… guarda una piccola deflessione diventare un grande spostamento futuro.",
+    statusPaused: "In pausa. Prima calcola, poi salva il mondo.",
+    phaseIdle: "FASE: PIANO",
+    phaseRun: "FASE: DEVIA",
+    trackPillPrefix: "TRACK",
+    phaseDone: "FASE: DEBRIEF",
+    windowEarly: "EARLY WINDOW",
+    windowMid: "MID WINDOW",
+    windowLate: "LATE WINDOW",
+    confidenceHigh: "Confidence: alta",
+    confidenceMed: "Confidence: media",
+    confidenceLow: "Confidence: bassa",
+    hoverDefault: "Tocca / passa su un punto osservativo",
+    hoverPoint: "Obs {i}: giorno {day}, D≈{diam} m",
+    hoverImpact: "Impatto qui → piccolo Δv, grande payoff futuro",
+    quizGood: "Bene. Le tue stime erano vicine; +4 bonus score.",
+    quizOk: "Abbastanza vicino. La direzione del ragionamento è giusta.",
+    quizBad: "Non ancora. Guarda soprattutto come t entra moltiplicativamente nel miss distance.",
+    logNewMission: "Nuova missione: stima la massa e scegli quando colpire.",
+    logTrackReveal: "Blind approach: l’angolo di arrivo viene rivelato quando parte la simulazione.",
+    logHintUsed: "Hint usato. Penalità score: -5.",
+    logQuizBonus: "Bonus mini-check aggiunto.",
+    logSuccess: "Successo: safe miss con costo tollerabile.",
+    logFail: "Fallimento: safe miss non raggiunto.",
+    logStage2Unlocked: "Aggiornamento campagna: Stage 2 — Blind Approach — sbloccato.",
+    logCampaignComplete: "Campagna completata: entrambi gli stage superati.",
+    campaignLaunchStage2: "Briefing Stage 2: Blind Approach attivo.",
+    hintLines: [
+      "Hint: Se raddoppi t_lead, per lo stesso target puoi circa dimezzare il Δv richiesto.",
+      "Hint: Non guardare solo il miss nominale. Il worst-case chiede: e se le osservazioni ti mentissero un po'?",
+      "Hint: La massa dell’asteroide dipende da D³. Un piccolo errore nel diametro non è un piccolo errore nella massa.",
+      "Hint: Ricorda: Δv_ast = β(mᵢ v_rel)/M_ast. L’asteroide non si impressiona per i desideri.",
+      "Hint: Un profile più veloce aumenta v_rel, ma un moltiplicatore di costo più grande può comunque renderlo inefficiente."
+    ],
+    diagLate: "Diagnosi: il piano era troppo tardivo. Il lead time è il grande moltiplicatore.",
+    diagLight: "Diagnosi: la massa dell’impattatore era troppo bassa per questo t.",
+    diagWaste: "Diagnosi: hai avuto successo ma con overkill costoso. Il successo dovrebbe essere anche efficiente.",
+    diagProfile: "Diagnosi: la Terra è salva, ma il budget no. Un altro launch profile avrebbe potuto fare lo stesso lavoro a costo minore.",
+    diagUncertain: "Diagnosi: il nominale passava, il worst-case no. L’incertezza ha battuto il tuo ottimismo.",
+    endScoreBigLabel: "SCORE",
+    analysisMiss: "Earth miss distance",
+    analysisTiming: "Timing leverage",
+    analysisCost: "Efficienza costo",
+    analysisUnc: "Gestione incertezza",
+    analysisAttempts: "Efficienza tentativi",
+    noteMiss: "Criterio di sicurezza: miss worst-case > soglia di sicurezza.",
+    noteTiming: "Prima → più payoff a parità di Δv.",
+    noteCost: "Il punteggio costo guarda il costo totale di missione, non solo la massa dell’impattatore.",
+    noteUnc: "Il piano regge l’incertezza?",
+    noteAttempts: "Meno tentativi e hint preservano lo score.",
+    costUnit: "crediti",
+    canvasEarthLabel: "Terra",
+    canvasImpactLabel: "impact",
+    canvasImpactorLabel: "IMPACTOR",
+    canvasBlindHint: "Blind track: l’angolo si vede solo dopo SIMULA.",
+    canvasRevealHint: "traiettoria rivelata",
+    canvasApproachVisible: "approccio visibile",
+    joke1: "Quantità di moto: la grandezza più noiosa finché non salva un pianeta.",
+    joke2: "L’Universo non concede proroghe sulle collisioni.",
+    joke3: "‘Ci penseremo più tardi’ — ultime parole di un pessimo mission planner.",
+    easterEgg: "🥚 7.8 anni? Big Idea #7.8 saluta: gli asteroidi sono resti del Sistema Solare."
+  }
+};
+
+const state = {
+  language: 'el',
+  difficulty: 'medium',
+  attempts: 0,
+  hints: 0,
+  score: 100,
+  accuracy: 0,
+  lastErrorPct: 999,
+  mission: null,
+  observations: [],
+  obsHover: -1,
+  running: false,
+  paused: false,
+  endShown: false,
+  quizDone: false,
+  quizBonusGiven: false,
+  animationT: 0,
+  animationStart: 0,
+  animationDuration: 7200,
+  profile: 'standard',
+  track: 'visible',
+  advancedMode: false,
+  geometryRevealed: false,
+  preview: null,
+  lastResult: null,
+  campaign: {
+    visibleCleared: false,
+    blindUnlocked: false,
+    blindCleared: false,
+    justUnlocked: false,
+    awards: {
+      visible: { stars:0, medal:'💔', bestScore:0, bestError:999 },
+      blind: { stars:0, medal:'🔒', bestScore:0, bestError:999 }
+    }
+  },
+  history: [],
+  logs: [],
+  stars: [],
+  easterEggHit: false
+};
+
+function t(key){
+  return I18N[state.language][key];
+}
+function replaceTokens(str, map){
+  return String(str).replace(/\{(\w+)\}/g, (_,k)=> map[k] ?? `{${k}}`);
+}
+
+function launchProfile(key=state.profile){
+  return LAUNCH_PROFILES[key] || LAUNCH_PROFILES.standard;
+}
+function missionTrack(key=state.track){
+  return MISSION_TRACKS[key] || MISSION_TRACKS.visible;
+}
+function profileName(key=state.profile){
+  return key==='scout' ? t('profileScout') : key==='heavy' ? t('profileHeavy') : t('profileStandard');
+}
+function trackName(key=state.track){
+  return key==='blind' ? t('trackBlind') : t('trackVisible');
+}
+function missionNoteText(){
+  return state.track==='blind' ? t('missionNoteBlind') : t('missionNoteVisible');
+}
+function currentBeta(){
+  if(!state.advancedMode) return 1;
+  return clamp(Number($('betaSlider')?.value || 1), 1, 3);
+}
+function defaultAwardRecord(trackKey='visible'){
+  return { stars:0, medal: trackKey==='blind' ? '🔒' : '💔', bestScore:0, bestError:999 };
+}
+function normalizeAwardRecord(saved, trackKey='visible'){
+  const base = defaultAwardRecord(trackKey);
+  return {
+    stars: clamp(Math.round(Number(saved?.stars)||0), 0, 3),
+    medal: typeof saved?.medal === 'string' && saved.medal ? saved.medal : base.medal,
+    bestScore: Math.max(0, Math.round(Number(saved?.bestScore)||0)),
+    bestError: Number.isFinite(Number(saved?.bestError)) ? Number(saved.bestError) : 999
+  };
+}
+function awardRecord(trackKey='visible'){
+  state.campaign.awards = state.campaign.awards || {};
+  if(!state.campaign.awards[trackKey]){
+    state.campaign.awards[trackKey] = defaultAwardRecord(trackKey);
+  }
+  return state.campaign.awards[trackKey];
+}
+function stageShortLabel(trackKey='visible'){
+  return trackKey === 'blind' ? 'S2' : 'S1';
+}
+function starBar(stars=0){
+  const n = clamp(Math.round(Number(stars)||0), 0, 3);
+  return '★'.repeat(n) + '☆'.repeat(3-n);
+}
+function totalCampaignStars(){
+  return awardRecord('visible').stars + awardRecord('blind').stars;
+}
+function campaignAwardsInline(){
+  const vis = awardRecord('visible');
+  const blind = awardRecord('blind');
+  const visTxt = `${stageShortLabel('visible')} ${vis.medal} ${starBar(vis.stars)}`;
+  const blindTxt = (state.campaign.blindUnlocked || blind.stars > 0)
+    ? `${stageShortLabel('blind')} ${(blind.medal === '🔒' ? '💔' : blind.medal)} ${starBar(blind.stars)}`
+    : `${stageShortLabel('blind')} 🔒`;
+  return `${visTxt} • ${blindTxt}`;
+}
+function stageAwardForResult(result){
+  let stars = 0;
+  if(result.success){
+    stars = 1;
+    if(result.finalScore >= 80) stars = 2;
+    if(result.finalScore >= 92 && result.errorPct < 10) stars = 3;
+  }
+  return { stars, medal: medalForError(result.errorPct) };
+}
+function updateStageAwards(result){
+  const key = state.track;
+  const earned = stageAwardForResult(result);
+  const rec = awardRecord(key);
+  if(key === 'blind' && rec.medal === '🔒') rec.medal = '💔';
+  result.stageStars = earned.stars;
+  result.stageMedal = earned.medal;
+  const betterStars = earned.stars > rec.stars;
+  const tieBetterScore = earned.stars === rec.stars && result.finalScore > rec.bestScore;
+  const tieBetterError = earned.stars === rec.stars && result.finalScore === rec.bestScore && result.errorPct < rec.bestError;
+  if(betterStars || tieBetterScore || tieBetterError){
+    rec.stars = earned.stars;
+    rec.medal = earned.stars > 0 ? earned.medal : '💔';
+    rec.bestScore = result.finalScore;
+    rec.bestError = result.errorPct;
+    result.stageRecordImproved = true;
+  }else{
+    result.stageRecordImproved = false;
+  }
+}
+function loadCampaign(){
+  try{
+    const raw = localStorage.getItem(CAMPAIGN_STORAGE_KEY);
+    if(!raw){
+      state.campaign.awards = {
+        visible: defaultAwardRecord('visible'),
+        blind: defaultAwardRecord('blind')
+      };
+      return;
+    }
+    const saved = JSON.parse(raw);
+    const blindUnlocked = !!saved.blindUnlocked || !!saved.visibleCleared;
+    state.campaign = {
+      visibleCleared: !!saved.visibleCleared,
+      blindUnlocked,
+      blindCleared: !!saved.blindCleared,
+      justUnlocked: false,
+      awards: {
+        visible: normalizeAwardRecord(saved.awards?.visible, 'visible'),
+        blind: normalizeAwardRecord(saved.awards?.blind, blindUnlocked ? 'visible' : 'blind')
+      }
+    };
+    if(!blindUnlocked && state.campaign.awards.blind.stars === 0){
+      state.campaign.awards.blind.medal = '🔒';
+    }
+    if(blindUnlocked && state.campaign.awards.blind.medal === '🔒'){
+      state.campaign.awards.blind.medal = '💔';
+    }
+  }catch(e){}
+}
+function saveCampaign(){
+  try{
+    localStorage.setItem(CAMPAIGN_STORAGE_KEY, JSON.stringify({
+      visibleCleared: !!state.campaign.visibleCleared,
+      blindUnlocked: !!state.campaign.blindUnlocked,
+      blindCleared: !!state.campaign.blindCleared,
+      awards: {
+        visible: awardRecord('visible'),
+        blind: awardRecord('blind')
+      }
+    }));
+  }catch(e){}
+}
+function isTrackUnlocked(trackKey){
+  return trackKey === 'visible' || !!state.campaign.blindUnlocked;
+}
+function enforceCampaignTrack(){
+  if(!isTrackUnlocked(state.track)) state.track = 'visible';
+}
+function campaignValueText(){
+  const base = state.campaign.blindCleared ? t('campaignValComplete') : (state.track === 'blind' ? t('campaignValStage2') : t('campaignValStage1'));
+  return `${base} • ${totalCampaignStars()}/6 ⭐`;
+}
+function campaignStatusText(){
+  if(state.campaign.blindCleared) return t('campaignStatusComplete');
+  if(!state.campaign.blindUnlocked) return t('campaignStatusStage1');
+  return state.track === 'blind' ? t('campaignStatusStage2') : t('campaignStatusUnlocked');
+}
+function campaignMiniText(){
+  if(state.campaign.blindCleared) return t('campaignMiniComplete');
+  if(!state.campaign.blindUnlocked) return t('campaignMiniLocked');
+  return state.track === 'blind' ? t('campaignMiniStage2') : t('campaignMiniUnlocked');
+}
+function campaignEndText(result){
+  if(result.success && state.track === 'visible' && state.campaign.justUnlocked) return t('campaignEndUnlock');
+  if(result.success && state.track === 'blind' && state.campaign.blindCleared) return t('campaignEndComplete');
+  return state.track === 'blind' ? t('campaignEndRetry2') : t('campaignEndRetry1');
+}
+function updateCampaignControls(){
+  const tsel = $('trackSelect');
+  if(!tsel) return;
+  const visibleOpt = tsel.querySelector('option[value="visible"]');
+  const blindOpt = tsel.querySelector('option[value="blind"]');
+  if(visibleOpt) visibleOpt.textContent = t('trackVisible');
+  if(blindOpt){
+    blindOpt.disabled = !state.campaign.blindUnlocked;
+    blindOpt.textContent = state.campaign.blindUnlocked ? t('trackBlind') : `${t('trackBlind')} 🔒`;
+  }
+  if(!isTrackUnlocked(state.track)){
+    state.track = 'visible';
+    tsel.value = 'visible';
+  }
+}
+function advanceCampaign(result){
+  state.campaign.justUnlocked = false;
+  if(result.success && state.track === 'visible'){
+    state.campaign.visibleCleared = true;
+    if(!state.campaign.blindUnlocked){
+      state.campaign.blindUnlocked = true;
+      state.campaign.justUnlocked = true;
+      if(awardRecord('blind').medal === '🔒' && awardRecord('blind').stars === 0){
+        awardRecord('blind').medal = '💔';
+      }
+      addLog(t('logStage2Unlocked'));
+    }
+    saveCampaign();
+    return;
+  }
+  if(result.success && state.track === 'blind'){
+    state.campaign.visibleCleared = true;
+    state.campaign.blindUnlocked = true;
+    if(!state.campaign.blindCleared){
+      state.campaign.blindCleared = true;
+      addLog(t('logCampaignComplete'));
+    }
+    saveCampaign();
+  }
+}
+function plannerConfigText(profileKey=state.profile, beta=currentBeta()){
+  const profile = launchProfile(profileKey);
+  return `${profileName(profileKey)} • ${fmtNum(profile.vRel/1000,1)} km/s • β=${fmtNum(beta,2)}`;
+}
+function benchmarkCostForTime(tYears, beta, mission){
+  const timeFactor = 1 + 0.28*(mission.timeMax - tYears)/(mission.timeMax-mission.timeMin+0.001);
+  let best = {key:'standard', cost:Infinity, reqMass:Infinity};
+  Object.entries(LAUNCH_PROFILES).forEach(([key, cfg])=>{
+    const reqMass = mission.safeKm*1000 * mission.massHigh / (Math.max(0.0001, beta*cfg.vRel*tYears*YEAR));
+    const cost = reqMass * cfg.costMult * timeFactor;
+    if(cost < best.cost) best = {key, cost, reqMass};
+  });
+  return best;
+}
+
+function diffCfg(){
+  let cfg;
+  if(state.difficulty==='easy'){
+    cfg = {
+      dMin: 65, dMax: 80, noise: 1.6, obsCount: 6,
+      timeMin: 2, timeMax: 12, vRel: 18000,
+      safeKm: 8000, confidenceTol: 0.08
+    };
+  }else if(state.difficulty==='hard'){
+    cfg = {
+      dMin: 95, dMax: 120, noise: 5.0, obsCount: 5,
+      timeMin: 0.5, timeMax: 5, vRel: 12500,
+      safeKm: 9000, confidenceTol: 0.22
+    };
+  }else{
+    cfg = {
+      dMin: 80, dMax: 100, noise: 3.0, obsCount: 6,
+      timeMin: 1, timeMax: 8, vRel: 15000,
+      safeKm: 8500, confidenceTol: 0.15
+    };
+  }
+  const track = missionTrack();
+  if(track.hiddenApproach){
+    cfg = {
+      ...cfg,
+      noise: cfg.noise * track.noiseMult,
+      obsCount: Math.max(4, cfg.obsCount + track.obsDelta),
+      safeKm: cfg.safeKm + track.safeBonus,
+      timeMax: Math.max(cfg.timeMin + 0.8, cfg.timeMax + track.timeBonus)
+    };
+  }
+  return cfg;
+}
+
+function addLog(msg){
+  state.logs.unshift({ts: Date.now(), msg});
+  state.logs = state.logs.slice(0, 14);
+  updateLogMini();
+}
+function showToast(msg){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._to);
+  showToast._to = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+function randBetween(a,b){ return a + Math.random()*(b-a); }
+
+function createStars(){
+  const count = 140;
+  state.stars = Array.from({length:count}, ()=>({
+    x: Math.random(), y: Math.random(), s: 0.6 + Math.random()*1.9, a: 0.18 + Math.random()*0.55
+  }));
+}
+
+function newMission(resetAttempts=true){
+  enforceCampaignTrack();
+  const cfg = diffCfg();
+  const track = missionTrack();
+  const trueDiameter = randBetween(cfg.dMin, cfg.dMax);
+  const trueMass = asteroidMassFromDiameter(trueDiameter);
+  const safeKm = cfg.safeKm;
+  const obs = [];
+  for(let i=0;i<cfg.obsCount;i++){
+    const day = -20 + i*(18/(Math.max(cfg.obsCount-1,1)));
+    obs.push({
+      day,
+      diameter: Math.max(20, gaussian(trueDiameter, cfg.noise))
+    });
+  }
+  const diameters = obs.map(o=>o.diameter);
+  const dMean = diameters.reduce((a,b)=>a+b,0)/diameters.length;
+  const variance = diameters.reduce((a,b)=>a+Math.pow(b-dMean,2),0)/diameters.length;
+  const sigma = Math.sqrt(variance);
+  const dHigh = dMean + sigma;
+  const massEst = asteroidMassFromDiameter(dMean);
+  const massHigh = asteroidMassFromDiameter(dHigh);
+  const relUnc = clamp((massHigh - massEst)/massEst, 0.02, 0.8);
+  const confidence = relUnc < 0.10 ? 'high' : relUnc < 0.22 ? 'med' : 'low';
+  const approachAngle = randBetween(-track.angleMaxRad, track.angleMaxRad);
+  state.mission = {
+    trueDiameter, trueMass, safeKm, approachAngle,
+    timeMin: cfg.timeMin, timeMax: cfg.timeMax, dMean, sigma, dHigh, massEst, massHigh, relUnc, confidence,
+    obsCount: cfg.obsCount
+  };
+  state.observations = obs;
+  state.obsHover = -1;
+  state.running = false;
+  state.paused = false;
+  state.endShown = false;
+  state.geometryRevealed = false;
+  state.quizDone = false;
+  state.quizBonusGiven = false;
+  state.animationT = 0;
+  state.animationStart = 0;
+  state.lastResult = null;
+  if(resetAttempts){
+    state.attempts = 0;
+    state.hints = 0;
+    state.score = 100;
+    state.history = [];
+    state.logs = [];
+  }
+  const ts = $('timeSlider');
+  const ms = $('massSlider');
+  const tsel = $('trackSelect');
+  const ps = $('profileSelect');
+  const adv = $('advancedToggle');
+  const bs = $('betaSlider');
+  ts.min = String(cfg.timeMin);
+  ts.max = String(cfg.timeMax);
+  ts.value = String((cfg.timeMin + cfg.timeMax)/2);
+  ms.min = "200";
+  ms.max = state.difficulty==='easy' ? "9000" : state.difficulty==='medium' ? "11000" : "14000";
+  ms.value = state.difficulty==='easy' ? "2600" : state.difficulty==='medium' ? "4200" : "6200";
+  if(tsel) tsel.value = state.track;
+  if(ps) ps.value = state.profile;
+  if(adv) adv.checked = state.advancedMode;
+  if(bs && !bs.value) bs.value = '1';
+  syncAdvancedUI();
+  addLog(t('logNewMission'));
+  cycleJoke();
+  updatePreview();
+  updateUI(true);
+}
+
+function cycleJoke(){
+  const jokes = [t('joke1'), t('joke2'), t('joke3')];
+  showToast(jokes[Math.floor(Math.random()*jokes.length)]);
+}
+
+function currentPlan(){
+  const m = Number($('massSlider').value) || 0;
+  const tYears = Number($('timeSlider').value) || 0;
+  const mission = state.mission;
+  const profileKey = state.profile;
+  const profile = launchProfile(profileKey);
+  const beta = currentBeta();
+  const dp = m * profile.vRel;
+  const effDp = beta * dp;
+  const dvNom = effDp / mission.massEst;
+  const dvWorst = effDp / mission.massHigh;
+  const missNomKm = dvNom * tYears * YEAR / 1000;
+  const missWorstKm = dvWorst * tYears * YEAR / 1000;
+  const reqMassWorst = mission.safeKm*1000 * mission.massHigh / (Math.max(0.0001, beta*profile.vRel*tYears*YEAR));
+  const reqMassNom = mission.safeKm*1000 * mission.massEst / (Math.max(0.0001, beta*profile.vRel*tYears*YEAR));
+  const reqTimeForCurrentMass = mission.safeKm*1000 * mission.massHigh / (Math.max(0.0001, m*beta*profile.vRel*YEAR));
+  const timeFactor = 1 + 0.28*(mission.timeMax - tYears)/(mission.timeMax-mission.timeMin+0.001);
+  const benchmark = benchmarkCostForTime(tYears, beta, mission);
+  const cost = Math.round(m * profile.costMult * timeFactor);
+  return {
+    m, tYears, dp, effDp, dvNom, dvWorst, missNomKm, missWorstKm, reqMassWorst, reqMassNom, reqTimeForCurrentMass,
+    profileKey, profile, beta, timeFactor, cost, benchmarkCost: benchmark.cost, benchmarkProfileKey: benchmark.key
+  };
+}
+
+function windowLabelForTime(tYears){
+  const m = state.mission;
+  const frac = (tYears - m.timeMin) / (m.timeMax - m.timeMin || 1);
+  if(frac > 0.66) return t('windowEarly');
+  if(frac > 0.33) return t('windowMid');
+  return t('windowLate');
+}
+function confidenceText(){
+  const c = state.mission.confidence;
+  return c==='high' ? t('confidenceHigh') : c==='med' ? t('confidenceMed') : t('confidenceLow');
+}
+
+function computeAccuracy(result){
+  const missScore = clamp((result.missWorstKm / state.mission.safeKm) * 100, 0, 100);
+  const timingScore = clamp((result.tYears / state.mission.timeMax) * 100, 0, 100);
+  const costScore = result.success ? clamp((result.benchmarkCost / Math.max(result.cost,1))*100, 0, 100) : clamp((result.missWorstKm / state.mission.safeKm)*60, 0, 60);
+  const uncScore = clamp((result.missWorstKm / state.mission.safeKm) * 100, 0, 100);
+  const accuracy = 0.4*missScore + 0.3*timingScore + 0.2*costScore + 0.1*uncScore;
+  return {accuracy, missScore, timingScore, costScore, uncScore};
+}
+
+function computeErrorPct(result){
+  const under = Math.max(0, (state.mission.safeKm - result.missWorstKm) / state.mission.safeKm);
+  const over = Math.max(0, (result.m - result.reqMassWorst) / Math.max(result.reqMassWorst,1));
+  return 100 * clamp(0.75*under + 0.25*over, 0, 9.99);
+}
+
+function evaluatePlan(){
+  const plan = currentPlan();
+  const mission = state.mission;
+  const trueDv = plan.effDp / mission.trueMass;
+  const trueMissKm = trueDv * plan.tYears * YEAR / 1000;
+  const success = trueMissKm >= mission.safeKm && plan.missWorstKm >= mission.safeKm;
+  const evalObj = {
+    ...plan,
+    trueDv,
+    trueMissKm,
+    success,
+    cost: plan.cost
+  };
+  const metrics = computeAccuracy(evalObj);
+  evalObj.accuracy = metrics.accuracy;
+  evalObj.metrics = metrics;
+  evalObj.errorPct = computeErrorPct(evalObj);
+  evalObj.attemptScore = clamp(100 - (state.attempts-1)*12 - state.hints*5, 0, 100);
+  evalObj.finalScore = Math.round(clamp(0.7*evalObj.attemptScore + 0.3*evalObj.accuracy, 0, 100));
+  updateStageAwards(evalObj);
+  saveCampaign();
+  return evalObj;
+}
+
+function medalForError(err){
+  if(err < 5) return '🥇';
+  if(err < 10) return '🥈';
+  if(err < 20) return '🥉';
+  return '💔';
+}
+
+function primaryDiagnosis(result){
+  const timeGap = result.reqTimeForCurrentMass - result.tYears;
+  const massGap = result.reqMassWorst - result.m;
+  if(result.missNomKm >= state.mission.safeKm && result.missWorstKm < state.mission.safeKm) return t('diagUncertain');
+  if(result.success && result.cost > result.benchmarkCost*1.20 && result.benchmarkProfileKey !== result.profileKey) return t('diagProfile');
+  if(result.success && result.m > result.reqMassWorst*1.35) return t('diagWaste');
+  if(timeGap > 0.35 && (timeGap/state.mission.timeMax) > (massGap/Math.max(result.reqMassWorst,1))) return t('diagLate');
+  return t('diagLight');
+}
+
+function syncAdvancedUI(){
+  const wrap = $('betaWrap');
+  const adv = $('advancedToggle');
+  if(wrap && adv) wrap.classList.toggle('hidden', !adv.checked);
+}
+function setProfile(profileKey){
+  if(!LAUNCH_PROFILES[profileKey]) return;
+  state.profile = profileKey;
+  if($('profileSelect')) $('profileSelect').value = profileKey;
+  try{ localStorage.setItem('asteroid_deflection_profile', profileKey); }catch(e){}
+  updatePreview();
+  updateUI(true);
+}
+function setTrack(trackKey){
+  if(!MISSION_TRACKS[trackKey]) return;
+  if(!isTrackUnlocked(trackKey)){
+    state.track = 'visible';
+    if($('trackSelect')) $('trackSelect').value = 'visible';
+    showToast(t('campaignLockedToast'));
+    updateCampaignControls();
+    updateUI(true);
+    return;
+  }
+  state.track = trackKey;
+  if($('trackSelect')) $('trackSelect').value = trackKey;
+  try{ localStorage.setItem('asteroid_deflection_track', trackKey); }catch(e){}
+  newMission(true);
+}
+function setAdvancedMode(flag){
+  state.advancedMode = !!flag;
+  if($('advancedToggle')) $('advancedToggle').checked = state.advancedMode;
+  try{ localStorage.setItem('asteroid_deflection_adv', state.advancedMode ? '1' : '0'); }catch(e){}
+  syncAdvancedUI();
+  updatePreview();
+  updateUI(true);
+}
+function setBetaValue(v){
+  const clamped = clamp(Number(v) || 1, 1, 3);
+  $('betaSlider').value = String(clamped);
+  try{ localStorage.setItem('asteroid_deflection_beta', String(clamped)); }catch(e){}
+  updatePreview();
+  updateUI(true);
+}
+
+function updatePreview(){
+  if(!state.mission) return;
+  state.preview = currentPlan();
+  const p = state.preview;
+  if(!state.easterEggHit && Math.abs(p.tYears - 7.8) < 0.06){
+    state.easterEggHit = true;
+    showToast(t('easterEgg'));
+  }
+  if(Math.abs(p.tYears - 7.8) >= 0.2) state.easterEggHit = false;
+}
+
+function updateLogMini(){
+  $('logBox').innerHTML = state.logs.map(item=>`<div class="log-item">${item.msg}</div>`).join('');
+  $('logMini').textContent = state.logs.length ? state.logs[0].msg : '';
+}
+
+function updateUI(force=false){
+  if(!state.mission) return;
+  const mission = state.mission;
+  const p = state.preview || currentPlan();
+
+  $('attemptsVal').textContent = String(state.attempts);
+  $('scoreVal').textContent = String(Math.round(state.score));
+  $('hintsVal').textContent = String(state.hints);
+
+  $('diameterVal').textContent = `${fmtNum(mission.dMean,1)} ± ${fmtNum(mission.sigma,1)} m`;
+  $('massEstVal').textContent = fmtKg(mission.massEst);
+  $('uncertaintyVal').textContent = `+${fmtNum(mission.relUnc*100,1)}%`;
+  $('densityVal').textContent = `${fmtNum(RHO_AST,0)} kg/m³`;
+
+  $('safeMissVal').textContent = fmtKm(mission.safeKm);
+  $('campaignVal').textContent = campaignValueText();
+  $('campaignStatus').textContent = campaignStatusText();
+  $('campaignMini').textContent = campaignMiniText();
+  $('campaignStars').textContent = `${t('campaignAwardsLabel')}: ${campaignAwardsInline()}`;
+  $('trackVal').textContent = trackName();
+  $('trackPickVal').textContent = trackName();
+  $('missionProfileVal').textContent = profileName(p.profileKey);
+  $('profilePickVal').textContent = profileName(p.profileKey);
+  $('vrelVal').textContent = `${fmtNum(p.profile.vRel/1000,1)} km/s`;
+  $('costMultiplierVal').textContent = `×${fmtNum(p.profile.costMult,2)}`;
+  $('windowRangeVal').textContent = `${fmtNum(mission.timeMin,1)} – ${fmtNum(mission.timeMax,1)} y`;
+  $('confidenceVal').textContent = confidenceText();
+  $('statusNote').textContent = state.running ? t('statusRunning') : state.paused ? t('statusPaused') : (state.track==='blind' ? t('statusBlindPreview') : t('statusPreview'));
+  $('missionNote').textContent = missionNoteText();
+
+  $('timeVal').textContent = fmtYears(p.tYears);
+  $('massVal').textContent = `${fmtNum(p.m,0)} kg`;
+  $('advancedState').textContent = state.advancedMode ? t('advancedStateOn') : t('advancedStateOff');
+  $('betaVal').textContent = fmtNum(p.beta,2);
+  $('currentImpulseVal').textContent = `${fmtNum(p.dp/1e6,2)} MN·s`;
+  $('betaNowVal').textContent = `β = ${fmtNum(p.beta,2)}`;
+  $('currentDvVal').textContent = fmtMs(p.dvNom);
+  $('currentMissVal').textContent = fmtKm(p.missNomKm);
+  $('worstMissVal').textContent = fmtKm(p.missWorstKm);
+
+  $('pillPhase').textContent = state.endShown ? t('phaseDone') : state.running ? t('phaseRun') : t('phaseIdle');
+  $('pillWindow').textContent = windowLabelForTime(p.tYears);
+  $('pillTrack').textContent = `${t('trackPillPrefix')}: ${trackName()}`;
+  $('pillHover').textContent = state.obsHover>=0
+    ? replaceTokens(t('hoverPoint'), {
+        i: String(state.obsHover+1),
+        day: fmtNum(state.observations[state.obsHover].day,0),
+        diam: fmtNum(state.observations[state.obsHover].diameter,1)
+      })
+    : t('hoverDefault');
+  $('pillConfidence').textContent = confidenceText();
+
+  $('simulateBtn').disabled = state.running;
+  $('pauseBtn').textContent = state.paused ? t('resumeBtn') : t('pauseBtn');
+  $('newMissionBtn').textContent = state.campaign.justUnlocked ? t('nextStageBtn') : t('newMissionBtn');
+  updateCampaignControls();
+
+  $('compConfigVal').textContent = plannerConfigText(p.profileKey, p.beta);
+  $('compImpulseVal').textContent = `${fmtNum(p.dp/1e6,2)} MN·s`;
+  $('compDvVal').textContent = fmtMs(p.dvNom);
+  $('compNomVal').textContent = fmtKm(p.missNomKm);
+  $('compWorstVal').textContent = fmtKm(p.missWorstKm);
+  $('compNeededVal').textContent = `${fmtNum(p.reqMassWorst,0)} kg`;
+  syncAdvancedUI();
+
+  if(force) draw();
+}
+
+function applyLanguage(){
+  const keysToText = [
+    'introTitle','learningTargetLabel','learningTargetText','bigIdeaLabel','bigIdeaText','assumptionsLabel','assumptionsText',
+    'misconceptionLabel','misconceptionText','langLabel','difficultyLabel','missionLabel','missionText','howToIntroLabel','howToIntroText','scoringLabel','scoringText','introHintNote',
+    'startBtn','headerTitle','headerBadge','attemptsLabel','scoreLabel','hintsLabel','obsTitle','diameterLabel','massEstLabel',
+    'uncertaintyLabel','densityLabel','obsMini','legendObs','legendMean','legendTrue','missionDataTitle','safeMissLabel',
+    'trackLabel','missionProfileLabel','vrelLabel','costMultiplierLabel','windowRangeLabel','confidenceLabel','howToTitle','step1Text','step2Text','step3Text','step4Text','howToMini','plannerTitle','campaignLabel','trackPickLabel','profilePickLabel','timeLabel','impactorLabel',
+    'advancedLabel','advancedMini','betaLabel','currentImpulseLabel','betaNowLabel','currentDvLabel','currentMissLabel',
+    'worstMissLabel','plannerMini','simulateBtn','hintBtn','resetBtn','physicsTitle','formulaNote','logTitle','footerLeft','footerRight',
+    'pauseTitle','pauseSubtitle','computePanelTitle','compConfigLabel','compImpulseLabel','compDvLabel','compNomLabel','compWorstLabel','compNeededLabel',
+    'computeHelp','quizTitle','quizText','quizInput1Label','quizInput2Label','submitQuizBtn','resumeBtn','endTitle','resultsTitle','chartTitle',
+    'resConfigLabel','analysisTitle','aMetric','aValue','aNote','theoryVsSimTitle','theoryVsSimText','misTitle','misText','misTrueBtn','misFalseBtn',
+    'reflectionTitle','reflectionText','retryBtn','newMissionBtn','formula1','formula2','formula3','endScoreBigLabel'
+  ];
+  keysToText.forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+    if(['introDialogue','formula1','formula2','formula3'].includes(id)) el.innerHTML = t(id);
+    else el.textContent = t(id);
+  });
+
+  $('introDialogue').innerHTML = t('introDialogue');
+  $('pauseBtn').textContent = state.paused ? t('resumeBtn') : t('pauseBtn');
+  const tsel = $('trackSelect');
+  if(tsel){
+    updateCampaignControls();
+  }
+  const ps = $('profileSelect');
+  if(ps){
+    const labels = {scout: t('profileScout'), standard: t('profileStandard'), heavy: t('profileHeavy')};
+    Array.from(ps.options).forEach(opt=>{ opt.textContent = labels[opt.value] || opt.value; });
+  }
+
+  $('.diffPick');
+  $$('.diffPick').forEach((btn)=>{
+    btn.textContent = btn.dataset.diff==='easy' ? t('diffEasy') : btn.dataset.diff==='medium' ? t('diffMedium') : t('diffHard');
+    btn.classList.toggle('active', btn.dataset.diff===state.difficulty);
+  });
+  $$('.lang-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.lang===state.language));
+  updateUI(true);
+}
+
+function setLanguage(lang){
+  if(!I18N[lang]) return;
+  state.language = lang;
+  try{ localStorage.setItem('asteroid_deflection_lang', lang); }catch(e){}
+  applyLanguage();
+}
+function setDifficulty(diff){
+  if(!['easy','medium','hard'].includes(diff)) return;
+  state.difficulty = diff;
+  try{ localStorage.setItem('asteroid_deflection_diff', diff); }catch(e){}
+  $$('.diffPick').forEach(btn=>btn.classList.toggle('active', btn.dataset.diff===state.difficulty));
+  newMission(true);
+}
+
+function resizeCanvas(){
+  const c = $('gameCanvas');
+  const rect = c.getBoundingClientRect();
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  c.width = Math.round(rect.width * dpr);
+  c.height = Math.round(rect.height * dpr);
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+
+
+function sceneGeometry(p, w, h){
+  const mission = state.mission;
+  const topH = h*0.62;
+  const ex = w*0.82, ey = topH*0.46, earthR = Math.min(46, w*0.05);
+  const safeR = earthR*1.35;
+  const startX = 70;
+  const angle = mission.approachAngle || 0;
+  const ux = Math.cos(angle), uy = Math.sin(angle);
+  const nx = -uy, ny = ux;
+  const timeFrac = clamp((p.tYears - mission.timeMin)/(mission.timeMax - mission.timeMin || 1), 0, 1);
+  // More lead time → intercept the asteroid EARLIER in its orbit → FURTHER from Earth
+  const impactX = lerp(startX+70, ex-110, 0.60 - 0.42*timeFrac);
+  const distStart = (ex - startX)/Math.max(0.35, ux);
+  const distImpact = (ex - impactX)/Math.max(0.35, ux);
+  const start = { x: ex - ux*distStart, y: ey - uy*distStart };
+  const impact = { x: ex - ux*distImpact, y: ey - uy*distImpact };
+  // Impactor launches FROM Earth toward the intercept point in deep space
+  const dock = { x: ex, y: ey + earthR + 18 };
+  const launchDx = impact.x - dock.x;
+  const launchDy = impact.y - dock.y;
+  const launchLen = Math.hypot(launchDx, launchDy) || 1;
+  const ix = launchDx / launchLen;
+  const iy = launchDy / launchLen;
+  const transverseSign = (ix*nx + iy*ny) >= 0 ? 1 : -1;
+  const pathScale = Math.max(mission.safeKm*1.5, p.missNomKm, p.missWorstKm, 1);
+  const missNomPx = clamp((p.missNomKm/pathScale) * (topH*0.24), -topH*0.28, topH*0.28);
+  const missWorstPx = clamp((p.missWorstKm/pathScale) * (topH*0.24), -topH*0.28, topH*0.28);
+  const endNom = { x: ex + nx*missNomPx*transverseSign, y: ey + ny*missNomPx*transverseSign };
+  const endWorst = { x: ex + nx*missWorstPx*transverseSign, y: ey + ny*missWorstPx*transverseSign };
+  return {topH, ex, ey, earthR, safeR, start, impact, endNom, endWorst, ux, uy, nx, ny, dock, ix, iy, transverseSign};
+}
+function drawAsteroidShape(ctx, x, y, r){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.beginPath();
+  const pts = [1.0,0.88,1.08,0.82,1.12,0.9,1.04,0.86];
+  pts.forEach((m, i)=>{
+    const a = (TAU/pts.length)*i + 0.16;
+    const px = Math.cos(a)*r*m;
+    const py = Math.sin(a)*r*m;
+    if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  });
+  ctx.closePath();
+  const g = ctx.createRadialGradient(-r*0.25, -r*0.3, r*0.25, 0, 0, r*1.25);
+  g.addColorStop(0, '#cdb8ff');
+  g.addColorStop(1, '#6d4cb7');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.34)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.restore();
+}
+function drawImpactorCraft(ctx, x, y, angle, scale=1, label=''){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = 'rgba(120,220,255,.92)';
+  ctx.fillRect(-16, -3, 10, 6);
+  ctx.fillRect(6, -3, 10, 6);
+  ctx.fillStyle = 'rgba(255,180,60,.96)';
+  ctx.beginPath();
+  ctx.moveTo(-6,-5); ctx.lineTo(8,0); ctx.lineTo(-6,5); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgba(240,244,255,.95)';
+  ctx.fillRect(-8, -2, 10, 4);
+  ctx.fillStyle = 'rgba(255,120,80,.88)';
+  ctx.beginPath();
+  ctx.moveTo(-11,0); ctx.lineTo(-18,-4); ctx.lineTo(-18,4); ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  if(label){
+    ctx.fillStyle = 'rgba(240,244,255,.96)';
+    ctx.font = '12px ui-monospace, monospace';
+    ctx.fillText(label, x + 16, y - 10);
+  }
+}
+function draw(){
+  const c = $('gameCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.getBoundingClientRect().width;
+  const h = c.getBoundingClientRect().height;
+
+  ctx.clearRect(0,0,w,h);
+  state.stars.forEach(s=>{
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle = '#eaf2ff';
+    ctx.beginPath(); ctx.arc(s.x*w, s.y*h, s.s, 0, TAU); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  if(!state.mission) return;
+
+  const mission = state.mission;
+  const p = state.preview || currentPlan();
+  const g = sceneGeometry(p, w, h);
+  const revealGeometry = !missionTrack().hiddenApproach || state.geometryRevealed;
+  const plotY = h*0.68;
+  const plotH = h*0.24;
+  const left = 28, right = w-26;
+
+  ctx.save();
+  const grad = ctx.createLinearGradient(0,0,0,g.topH);
+  grad.addColorStop(0,'rgba(12,22,42,.25)');
+  grad.addColorStop(1,'rgba(8,8,18,.04)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,w,g.topH);
+
+  ctx.beginPath(); ctx.arc(g.ex, g.ey, g.safeR, 0, TAU);
+  ctx.fillStyle = 'rgba(255,89,100,.08)';
+  ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle='rgba(255,89,100,.4)'; ctx.stroke();
+  const eg = ctx.createRadialGradient(g.ex-g.earthR*.25, g.ey-g.earthR*.25, 5, g.ex, g.ey, g.earthR);
+  eg.addColorStop(0,'#8ce0ff'); eg.addColorStop(1,'#1a72e8');
+  ctx.beginPath(); ctx.arc(g.ex, g.ey, g.earthR, 0, TAU); ctx.fillStyle = eg; ctx.fill();
+
+  ctx.fillStyle = 'rgba(220,230,255,.84)';
+  ctx.font = '12px ui-monospace, monospace';
+  ctx.fillText(t('canvasEarthLabel'), g.ex-18, g.ey+g.earthR+18);
+
+  ctx.strokeStyle = 'rgba(255,89,100,.35)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(g.ex, g.ey-g.safeR); ctx.lineTo(g.ex, g.ey+g.safeR); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,150,156,.84)';
+  ctx.fillText(`safe ≈ ${fmtNum(mission.safeKm,0)} km`, g.ex-58, g.ey-g.safeR-10);
+
+  if(revealGeometry){
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,6]);
+    ctx.strokeStyle = 'rgba(255,255,255,.18)';
+    ctx.beginPath(); ctx.moveTo(g.start.x, g.start.y); ctx.lineTo(g.ex, g.ey); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(255,214,10,.20)';
+    ctx.fillStyle = 'rgba(255,214,10,.08)';
+    ctx.beginPath();
+    ctx.moveTo(g.impact.x, g.impact.y);
+    ctx.lineTo(g.endWorst.x, g.endWorst.y);
+    ctx.lineTo(g.endNom.x, g.endNom.y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,214,10,.92)';
+    ctx.beginPath(); ctx.moveTo(g.impact.x, g.impact.y); ctx.lineTo(g.endNom.x, g.endNom.y); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(78,205,196,.95)';
+    ctx.beginPath(); ctx.moveTo(g.impact.x, g.impact.y); ctx.lineTo(g.endWorst.x, g.endWorst.y); ctx.stroke();
+
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,159,28,.55)';
+    ctx.beginPath(); ctx.moveTo(g.impact.x - g.nx*30, g.impact.y - g.ny*30); ctx.lineTo(g.impact.x + g.nx*30, g.impact.y + g.ny*30); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,159,28,.92)';
+    ctx.fillText(t('canvasImpactLabel'), g.impact.x+10, g.impact.y-12);
+
+    ctx.fillStyle = 'rgba(220,230,255,.65)';
+    ctx.fillText(state.track==='blind' ? t('canvasRevealHint') : t('canvasApproachVisible'), g.start.x+8, g.start.y-12);
+
+    if(state.obsHover<0 && !state.running && !state.endShown){
+      ctx.fillStyle = 'rgba(220,230,255,.78)';
+      ctx.fillText(t('hoverImpact'), g.impact.x-92, g.impact.y+74);
+    }
+  }else{
+    const rx = 88, ry = g.topH*0.18;
+    ctx.strokeStyle = 'rgba(78,205,196,.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(rx, ry, 18, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rx-24, ry); ctx.lineTo(rx+24, ry); ctx.moveTo(rx, ry-24); ctx.lineTo(rx, ry+24); ctx.stroke();
+    drawAsteroidShape(ctx, rx, ry, 9);
+    ctx.fillStyle = 'rgba(240,244,255,.92)';
+    ctx.fillText(t('canvasBlindHint'), rx+24, ry+4);
+  }
+
+  const animT = state.running || state.paused ? state.animationT : state.lastResult ? 1 : 0;
+  const hitFrac = 0.46;
+  let asteroidPos = revealGeometry ? {x:g.start.x, y:g.start.y} : {x:88, y:g.topH*0.18};
+
+  if(animT > 0 && revealGeometry){
+    if(animT < hitFrac){
+      const q = animT / hitFrac;
+      asteroidPos = { x: lerp(g.start.x, g.impact.x, q), y: lerp(g.start.y, g.impact.y, q) };
+    }else{
+      const q = (animT - hitFrac)/(1-hitFrac);
+      asteroidPos = { x: lerp(g.impact.x, g.endWorst.x, q), y: lerp(g.impact.y, g.endWorst.y, q) };
+      ctx.strokeStyle = 'rgba(255,214,10,.25)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(g.impact.x, g.impact.y);
+      ctx.lineTo(lerp(g.impact.x, g.endNom.x, q), lerp(g.impact.y, g.endNom.y, q));
+      ctx.stroke();
+      if(q < 0.12){
+        const flash = 1 - q/0.12;
+        ctx.fillStyle = `rgba(255,214,10,${0.35*flash})`;
+        ctx.beginPath(); ctx.arc(g.impact.x, g.impact.y, 18 + 12*flash, 0, TAU); ctx.fill();
+      }
+    }
+  }
+
+  if(revealGeometry){
+    // Transfer orbit from Earth to intercept (curved for realism)
+    ctx.setLineDash(state.running ? [4,5] : [6,7]);
+    ctx.strokeStyle = 'rgba(255,159,28,.32)';
+    ctx.lineWidth = 1.5;
+    const midX = (g.dock.x + g.impact.x) / 2;
+    const midY = (g.dock.y + g.impact.y) / 2;
+    // Offset control point perpendicular to straight line for a gentle arc
+    const dx = g.impact.x - g.dock.x, dy = g.impact.y - g.dock.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const cpx = midX + (dy/len) * len * 0.18;
+    const cpy = midY - (dx/len) * len * 0.18;
+    ctx.beginPath();
+    ctx.moveTo(g.dock.x, g.dock.y);
+    ctx.quadraticCurveTo(cpx, cpy, g.impact.x, g.impact.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Launch label near Earth
+    ctx.fillStyle = 'rgba(255,200,130,.75)';
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillText('← LAUNCH', g.dock.x - 68, g.dock.y + 16);
+  }
+
+  if(animT > 0 && revealGeometry && animT < hitFrac){
+    const q = animT / hitFrac;
+    // Follow the curved path (quadratic bezier interpolation)
+    const dx = g.impact.x - g.dock.x, dy = g.impact.y - g.dock.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const midX = (g.dock.x + g.impact.x) / 2;
+    const midY = (g.dock.y + g.impact.y) / 2;
+    const cpx = midX + (dy/len) * len * 0.18;
+    const cpy = midY - (dx/len) * len * 0.18;
+    const t1 = 1 - q;
+    const bx = t1*t1*g.dock.x + 2*t1*q*cpx + q*q*g.impact.x;
+    const by = t1*t1*g.dock.y + 2*t1*q*cpy + q*q*g.impact.y;
+    // Tangent angle along the bezier
+    const tangX = 2*t1*(cpx-g.dock.x) + 2*q*(g.impact.x-cpx);
+    const tangY = 2*t1*(cpy-g.dock.y) + 2*q*(g.impact.y-cpy);
+    const ang = Math.atan2(tangY, tangX);
+    drawImpactorCraft(ctx, bx, by, ang, 1.06, t('canvasImpactorLabel'));
+  }else{
+    // Idle: impactor sits on the far side of Earth from the intercept (launchpad),
+    // nose pointing TOWARD the intercept (ready to launch toward the asteroid)
+    const holdAng = revealGeometry ? Math.atan2(g.impact.y - g.dock.y, g.impact.x - g.dock.x) : (Math.PI - 0.15);
+    // Offset OPPOSITE to intercept direction: craft is "behind" Earth
+    const ofsX = g.dock.x - Math.cos(holdAng) * (g.earthR + 22);
+    const ofsY = g.dock.y - Math.sin(holdAng) * (g.earthR + 22);
+    drawImpactorCraft(ctx, ofsX, ofsY, holdAng, 1.1, t('canvasImpactorLabel'));
+  }
+
+  drawAsteroidShape(ctx, asteroidPos.x, asteroidPos.y, 12);
+  ctx.restore();
+
+  const px = left, py = plotY, pw = right-left, ph = plotH;
+  ctx.fillStyle = 'rgba(255,255,255,.03)';
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(px,py,pw,ph);
+  ctx.strokeRect(px,py,pw,ph);
+
+  const days = state.observations.map(o=>o.day);
+  const diams = state.observations.map(o=>o.diameter);
+  const dMin = Math.min(...diams, mission.trueDiameter) - 2.5;
+  const dMax = Math.max(...diams, mission.trueDiameter) + 2.5;
+  const xMap = (day)=> px + ((day - Math.min(...days))/(Math.max(...days)-Math.min(...days)||1))*pw;
+  const yMap = (diam)=> py + ph - ((diam-dMin)/(dMax-dMin||1))*ph;
+
+  ctx.strokeStyle = 'rgba(255,255,255,.14)';
+  ctx.beginPath(); ctx.moveTo(px, py+ph); ctx.lineTo(px+pw, py+ph); ctx.moveTo(px, py); ctx.lineTo(px, py+ph); ctx.stroke();
+  ctx.fillStyle = 'rgba(220,230,255,.68)';
+  ctx.fillText('obs day', px+pw-50, py+ph+16);
+  ctx.save();
+  ctx.translate(px-14, py+ph*0.55);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('D (m)', 0, 0);
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,89,100,.95)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(px, yMap(mission.trueDiameter)); ctx.lineTo(px+pw, yMap(mission.trueDiameter)); ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,214,10,.95)';
+  ctx.setLineDash([8,5]);
+  ctx.beginPath(); ctx.moveTo(px, yMap(mission.dMean)); ctx.lineTo(px+pw, yMap(mission.dMean)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  state.observations.forEach((o,i)=>{
+    const ox = xMap(o.day), oy = yMap(o.diameter);
+    ctx.fillStyle = i===state.obsHover ? 'rgba(78,205,196,1)' : 'rgba(78,205,196,.95)';
+    ctx.beginPath(); ctx.arc(ox, oy, i===state.obsHover ? 5.5 : 4.2, 0, TAU); ctx.fill();
+    if(i===state.obsHover){
+      ctx.strokeStyle = 'rgba(255,255,255,.35)';
+      ctx.stroke();
+    }
+  });
+}
+
+
+function animate(ts){
+  if(state.running){
+    if(!state.animationStart) state.animationStart = ts;
+    state.animationT = clamp((ts - state.animationStart)/state.animationDuration, 0, 1);
+    if(state.animationT >= 1){
+      state.running = false;
+      state.animationStart = 0;
+      finalizeAttempt();
+    }
+  }
+  draw();
+  requestAnimationFrame(animate);
+}
+
+function finalizeAttempt(){
+  const result = evaluatePlan();
+  advanceCampaign(result);
+  state.lastResult = result;
+  state.accuracy = result.accuracy;
+  state.lastErrorPct = result.errorPct;
+  state.score = result.finalScore;
+  state.history.push({attempt: state.attempts, error: result.errorPct, accuracy: result.accuracy, score: result.finalScore});
+  if(result.success) addLog(t('logSuccess')); else addLog(t('logFail'));
+  showEnd(result);
+}
+
+function showEnd(result){
+  state.endShown = true;
+  $('endOverlay').classList.remove('hidden');
+
+  $('endNarrative').textContent = result.success ? t('endSuccess') : t('endFail');
+  $('endScoreBig').textContent = `${t('endScoreBigLabel')}: ${result.finalScore}`;
+  $('endMedal').textContent = medalForError(result.errorPct);
+  $('campaignEndStatus').textContent = campaignEndText(result);
+  $('stageAwardNow').textContent = result.stageStars > 0
+    ? replaceTokens(t('stageAwardRun'), { stage: stageShortLabel(state.track), medal: result.stageMedal, stars: starBar(result.stageStars) })
+    : replaceTokens(t('stageAwardNoClear'), { stage: stageShortLabel(state.track) });
+  $('campaignAwardSummary').textContent = replaceTokens(t('stageBestAwards'), { summary: campaignAwardsInline() });
+
+  $('resScoreVal').textContent = `${result.finalScore}/100`;
+  $('resConfigVal').textContent = plannerConfigText(result.profileKey, result.beta);
+  $('resErrorVal').textContent = `${fmtNum(result.errorPct,1)}%`;
+  $('resNomMissVal').textContent = fmtKm(result.missNomKm);
+  $('resWorstMissVal').textContent = fmtKm(result.missWorstKm);
+  $('resCostVal').textContent = `${fmtNum(result.cost,0)} ${t('costUnit')}`;
+
+  const body = $('analysisBody');
+  const rows = [
+    [t('analysisMiss'), `${fmtNum(result.metrics.missScore,1)} / 100`, t('noteMiss')],
+    [t('analysisTiming'), `${fmtNum(result.metrics.timingScore,1)} / 100`, t('noteTiming')],
+    [t('analysisCost'), `${fmtNum(result.metrics.costScore,1)} / 100`, t('noteCost')],
+    [t('analysisUnc'), `${fmtNum(result.metrics.uncScore,1)} / 100`, t('noteUnc')],
+    [t('analysisAttempts'), `${fmtNum(result.attemptScore,1)} / 100`, t('noteAttempts')]
+  ];
+  body.innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+
+  $('misFeedback').textContent = '';
+  drawHistoryChart();
+  showToast(primaryDiagnosis(result));
+}
+
+function drawHistoryChart(){
+  const c = $('historyCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = 'rgba(255,255,255,.03)';
+  ctx.fillRect(0,0,w,h);
+  if(!state.history.length) return;
+
+  const pad = 30;
+  const bw = Math.max(18, (w-pad*2)/state.history.length - 16);
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.beginPath(); ctx.moveTo(pad, h-pad); ctx.lineTo(w-pad, h-pad); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.stroke();
+  ctx.fillStyle = 'rgba(220,230,255,.68)';
+  ctx.font = '12px ui-monospace, monospace';
+  ctx.fillText('error %', 6, 14);
+
+  state.history.forEach((it, idx)=>{
+    const x = pad + idx*((w-pad*2)/state.history.length) + 12;
+    const hh = clamp((it.error/40)*(h-pad*2), 4, h-pad*2);
+    ctx.fillStyle = it.error < 5 ? 'rgba(6,214,160,.95)' : it.error < 10 ? 'rgba(255,214,10,.95)' : it.error < 20 ? 'rgba(255,159,28,.95)' : 'rgba(255,89,100,.95)';
+    ctx.fillRect(x, h-pad-hh, bw, hh);
+    ctx.fillStyle = 'rgba(240,244,255,.82)';
+    ctx.fillText(String(it.attempt), x+2, h-10);
+  });
+}
+
+function startSimulation(){
+  if(state.running) return;
+  state.attempts += 1;
+  state.endShown = false;
+  if(state.track==='blind' && !state.geometryRevealed){
+    state.geometryRevealed = true;
+    showToast(t('logTrackReveal'));
+  }
+  $('endOverlay').classList.add('hidden');
+  state.running = true;
+  state.paused = false;
+  state.animationT = 0;
+  state.animationStart = 0;
+  updatePreview();
+  updateUI(true);
+}
+
+function togglePause(force){
+  if(state.running){
+    state.running = false;
+    state.paused = true;
+    $('pauseOverlay').classList.remove('hidden');
+    updateUI(true);
+    return;
+  }
+  if(typeof force === 'boolean'){
+    state.paused = force;
+  }else{
+    state.paused = !state.paused;
+  }
+  $('pauseOverlay').classList.toggle('hidden', !state.paused);
+  updateUI(true);
+}
+function resumeFromPause(){
+  state.paused = false;
+  $('pauseOverlay').classList.add('hidden');
+  updateUI(true);
+}
+
+function useHint(){
+  state.hints += 1;
+  state.score = clamp(state.score - 5, 0, 100);
+  addLog(t('logHintUsed'));
+  const hints = t('hintLines');
+  showToast(hints[(state.hints-1)%hints.length]);
+  updateUI(true);
+}
+
+function handleQuiz(){
+  const p = currentPlan();
+  const g1 = Number($('quizInput1').value);
+  const g2 = Number($('quizInput2').value);
+  const e1 = Math.abs(g1 - p.missWorstKm) / Math.max(1,p.missWorstKm);
+  const e2 = Math.abs(g2 - p.reqMassWorst) / Math.max(1,p.reqMassWorst);
+  let msg = t('quizBad');
+  if(e1 < 0.12 && e2 < 0.18){
+    msg = t('quizGood');
+    if(!state.quizBonusGiven){
+      state.score = clamp(state.score + 4, 0, 100);
+      state.quizBonusGiven = true;
+      addLog(t('logQuizBonus'));
+    }
+  }else if(e1 < 0.25 && e2 < 0.35){
+    msg = t('quizOk');
+  }
+  $('quizFeedback').textContent = msg;
+  state.quizDone = true;
+  updateUI(true);
+}
+
+function resetCurrent(){
+  state.running = false;
+  state.paused = false;
+  state.endShown = false;
+  state.geometryRevealed = false;
+  $('pauseOverlay').classList.add('hidden');
+  $('endOverlay').classList.add('hidden');
+  state.animationT = 0;
+  state.animationStart = 0;
+  $('quizInput1').value = '';
+  $('quizInput2').value = '';
+  $('quizFeedback').textContent = '';
+  updatePreview();
+  updateUI(true);
+}
+
+function handleMis(answerTrue){
+  const correct = !answerTrue;
+  $('misFeedback').textContent = correct ? t('misFeedbackRight') : t('misFeedbackWrong');
+}
+
+function bindCanvasPointer(){
+  const c = $('gameCanvas');
+  const onMove = (ev)=>{
+    const rect = c.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    const px = 28, py = rect.height*0.68, pw = rect.width-54, ph = rect.height*0.24;
+    const days = state.observations.map(o=>o.day);
+    const diams = state.observations.map(o=>o.diameter);
+    const dMin = Math.min(...diams, state.mission.trueDiameter) - 2.5;
+    const dMax = Math.max(...diams, state.mission.trueDiameter) + 2.5;
+    const xMap = (day)=> px + ((day - Math.min(...days))/(Math.max(...days)-Math.min(...days)||1))*pw;
+    const yMap = (diam)=> py + ph - ((diam-dMin)/(dMax-dMin||1))*ph;
+    let found = -1;
+    state.observations.forEach((o,i)=>{
+      const dx = x - xMap(o.day), dy = y - yMap(o.diameter);
+      if(dx*dx + dy*dy < 90) found = i;
+    });
+    state.obsHover = found;
+    updateUI(true);
+  };
+  c.addEventListener('pointermove', onMove);
+  c.addEventListener('pointerdown', onMove);
+  c.addEventListener('pointerleave', ()=>{ state.obsHover=-1; updateUI(true); });
+}
+
+function setupEvents(){
+  window.addEventListener('resize', resizeCanvas);
+  $('startBtn').addEventListener('click', ()=>{
+    $('introOverlay').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    resizeCanvas();
+    draw();
+  });
+  $('simulateBtn').addEventListener('click', startSimulation);
+  $('pauseBtn').addEventListener('click', ()=>{
+    if(state.paused) resumeFromPause();
+    else togglePause(true);
+  });
+  $('resumeBtn').addEventListener('click', resumeFromPause);
+  $('resetBtn').addEventListener('click', resetCurrent);
+  $('hintBtn').addEventListener('click', useHint);
+  $('submitQuizBtn').addEventListener('click', handleQuiz);
+  $('retryBtn').addEventListener('click', ()=>{
+    $('endOverlay').classList.add('hidden');
+    state.endShown = false;
+    resetCurrent();
+  });
+  $('newMissionBtn').addEventListener('click', ()=>{
+    $('endOverlay').classList.add('hidden');
+    state.endShown = false;
+    if(state.campaign.justUnlocked){
+      state.campaign.justUnlocked = false;
+      state.track = 'blind';
+      if($('trackSelect')) $('trackSelect').value = 'blind';
+      try{ localStorage.setItem('asteroid_deflection_track', 'blind'); }catch(e){}
+      saveCampaign();
+      newMission(true);
+      showToast(t('campaignLaunchStage2'));
+      return;
+    }
+    newMission(true);
+  });
+  $('misTrueBtn').addEventListener('click', ()=>handleMis(true));
+  $('misFalseBtn').addEventListener('click', ()=>handleMis(false));
+
+  $('timeSlider').addEventListener('input', ()=>{ updatePreview(); updateUI(true); });
+  $('massSlider').addEventListener('input', ()=>{ updatePreview(); updateUI(true); });
+  $('trackSelect').addEventListener('change', ()=>setTrack($('trackSelect').value));
+  $('profileSelect').addEventListener('change', ()=>setProfile($('profileSelect').value));
+  $('advancedToggle').addEventListener('change', ()=>setAdvancedMode($('advancedToggle').checked));
+  $('betaSlider').addEventListener('input', ()=>setBetaValue($('betaSlider').value));
+
+  $$('.lang-btn').forEach(btn=>btn.addEventListener('click', ()=>setLanguage(btn.dataset.lang)));
+  $$('.diffPick').forEach(btn=>btn.addEventListener('click', ()=>setDifficulty(btn.dataset.diff)));
+
+  document.addEventListener('keydown', (e)=>{
+    if(!$('introOverlay').classList.contains('hidden')){
+      if(e.code==='Enter' || e.code==='Space'){ e.preventDefault(); $('startBtn').click(); }
+      return;
+    }
+    if(e.code==='KeyP'){ e.preventDefault(); if(state.paused) resumeFromPause(); else togglePause(true); return; }
+    if(e.code==='KeyR'){ e.preventDefault(); resetCurrent(); return; }
+    if(e.code==='KeyH'){ e.preventDefault(); useHint(); return; }
+    if(e.code==='Enter' || e.code==='Space'){
+      e.preventDefault();
+      if(state.paused) resumeFromPause();
+      else if(!state.running) startSimulation();
+    }
+  });
+
+  bindCanvasPointer();
+}
+
+function init(){
+  createStars();
+  loadCampaign();
+
+  try{
+    const lang = localStorage.getItem('asteroid_deflection_lang');
+    const diff = localStorage.getItem('asteroid_deflection_diff');
+    const track = localStorage.getItem('asteroid_deflection_track');
+    const profile = localStorage.getItem('asteroid_deflection_profile');
+    const adv = localStorage.getItem('asteroid_deflection_adv');
+    const beta = localStorage.getItem('asteroid_deflection_beta');
+    if(lang && I18N[lang]) state.language = lang;
+    if(diff && ['easy','medium','hard'].includes(diff)) state.difficulty = diff;
+    if(track && MISSION_TRACKS[track]) state.track = track;
+    enforceCampaignTrack();
+    if(profile && LAUNCH_PROFILES[profile]) state.profile = profile;
+    if(adv==='1') state.advancedMode = true;
+    if(beta && $('betaSlider')) $('betaSlider').value = beta;
+  }catch(e){}
+
+  applyLanguage();
+  setupEvents();
+  newMission(true);
+  resizeCanvas();
+  requestAnimationFrame(animate);
+}
+
+
+/* ===== PHYSICS QUIZ SYSTEM ===== */
+const DEFLECT_QUIZ = [
+  {q:'Asteroid mass M = ρ(π/6)D³. If the diameter estimate is off by 10%, the mass error is approximately:',
+   opts:['~10%','~30% (because D³)','~50%','~3%'], correct:1,
+   explain:'M ∝ D³. If D is 10% larger (factor 1.1), M is 1.1³ ≈ 1.33, so ~33% more mass. This cubic scaling makes diameter uncertainty dangerous.'},
+  {q:'If you double the lead time t while keeping Δv the same, the miss distance d ≈ Δv·t becomes:',
+   opts:['Same','2× larger','4× larger','√2× larger'], correct:1,
+   explain:'d ≈ Δv·t is LINEAR in t. Double the time → double the miss. This is why early action is the best multiplier in planetary defense.'},
+  {q:'Two impactors: one at 5000 kg hitting at v_rel = 15 km/s, another at 10000 kg hitting at 7.5 km/s. Which delivers more Δp?',
+   opts:['The lighter faster one','The heavier slower one','Same Δp','Cannot determine'], correct:2,
+   explain:'Δp = m·v. First: 5000×15000 = 75 MN·s. Second: 10000×7500 = 75 MN·s. Identical! Momentum is the product, not just mass or speed alone.'},
+  {q:'Why does the "worst-case miss" use the high mass estimate instead of the mean?',
+   opts:['Heavier asteroids are more dangerous','Higher M_ast means smaller Δv_ast = βΔp/M, so less deflection','It is just a safety margin','The formula changes for heavy asteroids'],
+   correct:1,
+   explain:'Δv_ast = βΔp/M_ast. If M_ast is bigger than expected, the same impulse Δp produces a SMALLER Δv. The mission must survive this worst case.'},
+  {q:'β > 1 in advanced mode means ejecta enhancement. Physically this means:',
+   opts:['The impactor bounces','Impact debris flying off the asteroid adds extra momentum in the same direction','The asteroid breaks','The impactor is heavier'],
+   correct:1,
+   explain:'When the impactor hits, material (ejecta) is blasted off the asteroid surface backward. By Newton\'s 3rd law, this adds momentum to the asteroid in the forward direction. β captures this multiplier.'},
+  {q:'A mission planner says: "We can wait until 6 months before closest approach and just use a bigger impactor." What is wrong with this reasoning?',
+   opts:['6 months is fine','d ≈ Δv·t: halving t requires 2× the Δv, which means 2× the mass (and cost), and launch windows shrink','The asteroid speeds up near Earth','Nothing wrong'],
+   correct:1,
+   explain:'The linearized model d ≈ Δv·t shows the penalty clearly: half the time means you need double the impulse for the same deflection. In practice, late missions also face launch constraints and cost explosions. Early wins beat late heroics.'},
+];
+let pqState = {active:false, answered:false, current:null, bonus:0};
+
+function showPauseQuiz(){
+  const bank = $('pauseQuizBank');
+  if(!bank) return;
+  const idx = Math.floor(Math.random() * DEFLECT_QUIZ.length);
+  pqState.current = DEFLECT_QUIZ[idx];
+  pqState.active = true;
+  pqState.answered = false;
+  bank.classList.remove('hidden');
+  $('pqText').textContent = pqState.current.q;
+  const opts = $('pqOpts');
+  opts.innerHTML = '';
+  const ex = $('pqExplain');
+  ex.classList.remove('show');
+  ex.textContent = '';
+  pqState.current.opts.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'qOpt';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => answerPauseQuiz(i, btn));
+    opts.appendChild(btn);
+  });
+}
+
+function answerPauseQuiz(idx, btn){
+  if(pqState.answered) return;
+  pqState.answered = true;
+  const correct = idx === pqState.current.correct;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if(!correct) $('pqOpts').children[pqState.current.correct].classList.add('correct');
+  const ex = $('pqExplain');
+  ex.textContent = (correct ? '✅ ' : '❌ ') + pqState.current.explain;
+  ex.classList.add('show');
+  if(correct){
+    pqState.bonus += 3;
+    state.score = Math.min(100, state.score + 3);
+    $('scoreVal').textContent = Math.round(state.score);
+    showToast('🧠 +3 bonus points!');
+  }
+}
+
+function hidePauseQuiz(){
+  const bank = $('pauseQuizBank');
+  if(bank) bank.classList.add('hidden');
+  pqState.active = false;
+}
+
+/* ===== LATE-HIT DEMO ===== */
+function runLateHitDemo(){
+  if(!state.mission) return;
+  const m = Number($('massSlider').value) || 3000;
+  const profile = launchProfile();
+  const beta = currentBeta();
+  const mission = state.mission;
+  // Same mass, but at minimum lead time
+  const tLate = mission.timeMin;
+  const tCurrent = Number($('timeSlider').value);
+  const dpLate = m * profile.vRel;
+  const dvLatWorst = beta * dpLate / mission.massHigh;
+  const missLateKm = dvLatWorst * tLate * YEAR / 1000;
+  const dpCurrent = m * profile.vRel;
+  const dvCurWorst = beta * dpCurrent / mission.massHigh;
+  const missCurKm = dvCurWorst * tCurrent * YEAR / 1000;
+  const ratio = (tCurrent / tLate).toFixed(1);
+
+  const msg = `⏰ LATE-HIT DEMO: Same ${fmtNum(m,0)} kg impactor.\n` +
+    `At t = ${fmtNum(tCurrent,1)} y → worst miss = ${fmtNum(missCurKm,0)} km\n` +
+    `At t = ${fmtNum(tLate,1)} y → worst miss = ${fmtNum(missLateKm,0)} km\n` +
+    `Time leverage: ${ratio}× more time → ${ratio}× more deflection. Physics prefers early wins!`;
+
+  addLog(msg);
+  showToast(`⏰ Same mass, ${ratio}× more time = ${ratio}× more miss distance!`);
+  updateUI(true);
+}
+
+/* ===== SLOW MOTION ===== */
+let slowMode = false;
+function toggleSlowMode(){
+  slowMode = !slowMode;
+  const btn = $('slowBtn');
+  if(btn){
+    btn.textContent = slowMode ? '🐇 Normal speed' : '🐌 Slow motion';
+    btn.classList.toggle('active', slowMode);
+  }
+  // Adjust animation duration
+  state.animationDuration = slowMode ? 18000 : 7200;
+  showToast(slowMode ? '🐌 Slow motion — watch the deflection grow!' : '🐇 Normal speed');
+}
+
+/* ===== NOTEBOOK PREDICT ===== */
+let nbState = {verified:false, accuracy:0};
+
+function compareNotebook(){
+  if(!state.mission) return;
+  const predMass = parseFloat($('predMassInput').value);
+  const predMiss = parseFloat($('predMissInput').value);
+  if(isNaN(predMass) || isNaN(predMiss) || predMass <= 0 || predMiss <= 0){
+    $('nbLock').className = 'nbLock2 locked';
+    $('nbLock').textContent = '🔒 Enter both predicted mass (kg) and miss (km) to unlock.';
+    return;
+  }
+  const p = currentPlan();
+  const actMass = p.reqMassWorst;
+  const actMiss = p.missWorstKm;
+  const errM = Math.abs(predMass - actMass) / Math.max(1, actMass) * 100;
+  const errD = Math.abs(predMiss - actMiss) / Math.max(1, actMiss) * 100;
+  const acc = Math.max(0, 100 - (errM + errD) / 2);
+
+  $('nbResult').classList.remove('hidden');
+  $('nbActualMass').textContent = fmtNum(actMass, 0) + ' kg';
+  $('nbActualMiss').textContent = fmtNum(actMiss, 0) + ' km';
+  $('nbMassErr').textContent = fmtNum(errM, 1) + '%';
+  $('nbMassErr').style.color = errM < 15 ? '#06d6a0' : errM < 30 ? '#ffd60a' : '#ff5964';
+  $('nbMissErr').textContent = fmtNum(errD, 1) + '%';
+  $('nbMissErr').style.color = errD < 15 ? '#06d6a0' : errD < 30 ? '#ffd60a' : '#ff5964';
+  $('nbAcc').textContent = fmtNum(acc, 0) + '%';
+  $('nbAcc').style.color = acc > 80 ? '#06d6a0' : acc > 50 ? '#ffd60a' : '#ff5964';
+
+  nbState.verified = true;
+  nbState.accuracy = acc;
+  $('nbLock').className = 'nbLock2 unlocked';
+  $('nbLock').textContent = '✅ Notebook verified — SIMULATE unlocked.';
+  $('simulateBtn').disabled = false;
+  showToast(acc > 80 ? '📓 Excellent prediction!' : acc > 50 ? '📓 Decent. Run unlocked.' : '📓 Check your calculations. Unlocked anyway.');
+}
+
+function resetNotebook(){
+  nbState.verified = false;
+  nbState.accuracy = 0;
+  $('nbResult').classList.add('hidden');
+  $('nbLock').className = 'nbLock2 locked';
+  $('nbLock').textContent = '🔒 Enter predictions to unlock SIMULATE.';
+  if($('predMassInput')) $('predMassInput').value = '';
+  if($('predMissInput')) $('predMissInput').value = '';
+  $('simulateBtn').disabled = true;
+}
+
+/* ===== CANVAS OVERLAYS: MOMENTUM VECTORS + GAUGE ===== */
+function drawMomentumVectors(ctx, g, p, w, h, animT){
+  if(animT < 0.01 || animT > 0.55) return;
+  const hitFrac = 0.46;
+  if(animT > hitFrac - 0.08 && animT < hitFrac + 0.06){
+    const ix = g.impact.x, iy = g.impact.y;
+    const profile = launchProfile();
+    const scale = Math.min(0.22, 40 / Math.max(p.dp / 1e6, 1));
+
+    // Impactor momentum vector (along launch direction)
+    const pLen = clamp((p.dp / 1e6) * scale, 10, 60);
+    ctx.strokeStyle = 'rgba(78,205,196,.9)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ix, iy);
+    ctx.lineTo(ix + g.ix * pLen, iy + g.iy * pLen);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(78,205,196,.9)';
+    ctx.beginPath();
+    ctx.moveTo(ix + g.ix * pLen - g.iy * 4, iy + g.iy * pLen + g.ix * 4);
+    ctx.lineTo(ix + g.ix * pLen + g.iy * 4, iy + g.iy * pLen - g.ix * 4);
+    ctx.lineTo(ix + g.ix * (pLen + 8), iy + g.iy * (pLen + 8));
+    ctx.fill();
+    ctx.fillStyle = 'rgba(78,205,196,.85)';
+    ctx.font = '11px ui-monospace, monospace';
+    ctx.fillText('Δp = ' + fmtNum(p.dp/1e6, 1) + ' MN·s', ix + g.ix*pLen + 10, iy + g.iy*pLen - 8);
+
+    // Resulting Δv vector on asteroid (transverse)
+    const dvLen = clamp(p.dvWorst * 800, 8, 50);
+    const sign = g.transverseSign;
+    ctx.strokeStyle = 'rgba(255,214,10,.9)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ix, iy);
+    ctx.lineTo(ix + g.nx * dvLen * sign, iy + g.ny * dvLen * sign);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,214,10,.85)';
+    ctx.fillText('Δv = ' + fmtMs(p.dvWorst), ix + g.nx*dvLen*sign + 8, iy + g.ny*dvLen*sign);
+  }
+}
+
+function drawDeflectionGauge(ctx, p, w, h){
+  const mission = state.mission;
+  if(!mission) return;
+  const bx = 14, by = h - 52, bw = 200, bh = 42;
+  ctx.fillStyle = 'rgba(0,0,0,.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx+8,by);ctx.lineTo(bx+bw-8,by);ctx.arcTo(bx+bw,by,bx+bw,by+8,8);
+  ctx.lineTo(bx+bw,by+bh-8);ctx.arcTo(bx+bw,by+bh,bx+bw-8,by+bh,8);
+  ctx.lineTo(bx+8,by+bh);ctx.arcTo(bx,by+bh,bx,by+bh-8,8);
+  ctx.lineTo(bx,by+8);ctx.arcTo(bx,by,bx+8,by,8);
+  ctx.closePath();ctx.fill();ctx.stroke();
+
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.fillText('Deflection gauge', bx+6, by+13);
+
+  const barY = by + 18, barH = 7, barW = bw - 12;
+  const safeKm = mission.safeKm;
+  const maxKm = Math.max(safeKm * 2, p.missWorstKm * 1.2, 1);
+  const worstFrac = clamp(p.missWorstKm / maxKm, 0, 1);
+  const nomFrac = clamp(p.missNomKm / maxKm, 0, 1);
+  const safeFrac = clamp(safeKm / maxKm, 0, 1);
+
+  // Background
+  ctx.fillStyle = 'rgba(255,255,255,.08)';
+  ctx.fillRect(bx+6, barY, barW, barH);
+  // Worst case bar
+  ctx.fillStyle = worstFrac * maxKm >= safeKm ? 'rgba(6,214,160,.7)' : 'rgba(255,89,100,.7)';
+  ctx.fillRect(bx+6, barY, barW * worstFrac, barH);
+  // Nominal overlay
+  ctx.fillStyle = 'rgba(255,214,10,.5)';
+  ctx.fillRect(bx+6, barY, barW * nomFrac, barH/2);
+  // Safe threshold marker
+  ctx.strokeStyle = 'rgba(255,89,100,.8)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bx+6 + barW*safeFrac, barY-2);
+  ctx.lineTo(bx+6 + barW*safeFrac, barY+barH+2);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.font = '9px ui-monospace, monospace';
+  ctx.fillText('worst=' + fmtNum(p.missWorstKm,0) + 'km  safe=' + fmtNum(safeKm,0) + 'km', bx+6, barY+barH+11);
+}
+
+function drawSafeZoneAnnotations(ctx, g, mission, w, h){
+  // Safe distance ring label
+  ctx.fillStyle = 'rgba(255,150,156,.65)';
+  ctx.font = '10px ui-monospace, monospace';
+  ctx.fillText('← safe: ' + fmtNum(mission.safeKm, 0) + ' km →', g.ex - 48, g.ey + g.safeR + 28);
+}
+
+/* ===== HOOK INTO EXISTING FUNCTIONS ===== */
+
+// Override togglePause to show quiz
+const _origTogglePause = togglePause;
+togglePause = function(force){
+  _origTogglePause(force);
+  if(state.paused) showPauseQuiz();
+  else hidePauseQuiz();
+};
+
+// Override startSimulation to check notebook
+const _origStartSim = startSimulation;
+startSimulation = function(){
+  if(!nbState.verified){
+    showToast('📓 Enter your predictions in the Notebook first!');
+    return;
+  }
+  _origStartSim();
+};
+
+// Override resetCurrent to also reset notebook
+const _origReset = resetCurrent;
+resetCurrent = function(){
+  _origReset();
+  resetNotebook();
+};
+
+// Override newMission to reset notebook
+const _origNewMission = newMission;
+newMission = function(resetAttempts){
+  _origNewMission(resetAttempts);
+  resetNotebook();
+};
+
+// Override draw to add new canvas overlays
+const _origDraw = draw;
+draw = function(){
+  _origDraw();
+  const c = $('gameCanvas');
+  const ctx2 = c.getContext('2d');
+  const w = c.getBoundingClientRect().width;
+  const h = c.getBoundingClientRect().height;
+  if(!state.mission) return;
+  const p = state.preview || currentPlan();
+  const g = sceneGeometry(p, w, h);
+  const revealGeometry = !missionTrack().hiddenApproach || state.geometryRevealed;
+  const animT = state.running || state.paused ? state.animationT : state.lastResult ? 1 : 0;
+
+  if(revealGeometry){
+    drawMomentumVectors(ctx2, g, p, w, h, animT);
+    drawSafeZoneAnnotations(ctx2, g, state.mission, w, h);
+  }
+  drawDeflectionGauge(ctx2, p, w, h);
+};
+
+// Override evaluatePlan to include notebook bonus
+const _origEvalPlan = evaluatePlan;
+evaluatePlan = function(){
+  const result = _origEvalPlan();
+  if(nbState.verified && nbState.accuracy > 0){
+    result.finalScore = Math.round(clamp(0.6 * result.finalScore + 0.4 * (0.7*result.attemptScore + 0.3*nbState.accuracy), 0, 100));
+  }
+  return result;
+};
+
+// Wire new buttons
+$('lateHitBtn').addEventListener('click', runLateHitDemo);
+$('slowBtn').addEventListener('click', toggleSlowMode);
+$('compareNbBtn').addEventListener('click', compareNotebook);
+
+// Also update preview on slider changes to reset notebook lock
+const _origUpdatePreview = updatePreview;
+updatePreview = function(){
+  _origUpdatePreview();
+  if(nbState.verified){
+    // Don't reset if already verified — user might just be exploring
+  }
+};
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
