@@ -26,7 +26,7 @@ Direct game links:
 - Mars Landing Window: https://physicsplay.github.io/Astrojourneys/Mars_Landing_Window.html
 - Mars EVA Traverse: https://physicsplay.github.io/Astrojourneys/Mars_EVA_Traverse.html
 - Habitat Blackout: https://physicsplay.github.io/Astrojourneys/Habitat_blackout.html
-- asteroid_deflection.html
+- Asteroid_deflection:  https://physicsplay.github.io/Astrojourneys/asteroid_deflection.html
 
 ## License
 
