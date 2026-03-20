@@ -1,6 +1,6 @@
 # Mission ATLAS — Astronomy-Themed Physics Games
 
-Mission ATLAS is a browser-based portfolio of upper-secondary physics games framed by **Big Ideas in Astronomy** and the **Astojourneys** project.  
+Mission ATLAS is a browser-based portfolio of upper-secondary physics games framed by **Big Ideas in Astronomy** and the **Astrojourneys** project.  
 Each mission turns a common student misconception into a playable decision problem: learners calculate, predict, test, fail safely, and try again.
 
 Current playable set in this repository:
