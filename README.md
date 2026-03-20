@@ -10,6 +10,7 @@ Current playable set in this repository:
 - `Mars_Landing_Window.html`
 - `Mars_EVA_Traverse.html`
 - `Habitat_blackout.html`
+- `asteroid_deflection.html`
 
 The landing page for GitHub hosting is:
 
