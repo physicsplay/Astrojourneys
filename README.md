@@ -26,6 +26,7 @@ Direct game links:
 - Mars Landing Window: https://physicsplay.github.io/Astrojourneys/Mars_Landing_Window.html
 - Mars EVA Traverse: https://physicsplay.github.io/Astrojourneys/Mars_EVA_Traverse.html
 - Habitat Blackout: https://physicsplay.github.io/Astrojourneys/Habitat_blackout.html
+- asteroid_deflection.html
 
 ## License
 
@@ -319,6 +320,7 @@ Best-fit areas in the current upper-secondary physics structure:
 ├── Mars_Landing_Window.html
 ├── Mars_EVA_Traverse.html
 └── Habitat_blackout.html
+└── asteroid_deflection.html
 ```
 
 ---
