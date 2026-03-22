@@ -1,0 +1,2056 @@
+
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission ATLAS #8 — Lunar Lava Tube Scout</title>
+<style>
+:root{
+  --bg:#060d18; --bg2:#0b1730; --panel:#101d33; --panel2:#132743; --ink:#eef6ff;
+  --muted:#a9bfdc; --line:rgba(255,255,255,.10); --cyan:#6ee7ff; --blue:#57a6ff;
+  --green:#6cf6b4; --amber:#ffd166; --red:#ff6b6b; --violet:#b38dff;
+  --shadow:0 18px 40px rgba(0,0,0,.35); --radius:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+background:
+radial-gradient(circle at 18% 12%, rgba(87,166,255,.15), transparent 18%),
+radial-gradient(circle at 86% 10%, rgba(179,141,255,.10), transparent 17%),
+linear-gradient(180deg,#040914,#081221 45%, #06101d);
+color:var(--ink)}
+body{overflow:auto}
+button,select,input{font:inherit}
+.hidden{display:none!important}
+.app{max-width:1520px; margin:0 auto; padding:14px}
+header.card{padding:16px 18px}
+.card{
+  background:linear-gradient(180deg, rgba(16,29,51,.96), rgba(18,36,63,.93));
+  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+}
+.topRow{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start}
+h1{margin:0; font-size:1.6rem}
+.sub{color:var(--muted); margin-top:6px; line-height:1.4}
+.pills{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.pill{padding:10px 14px; border-radius:999px; background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--ink)}
+.layout{display:grid; grid-template-columns:1.45fr .95fr; gap:14px; margin-top:14px}
+.leftCol, .rightCol{display:flex; flex-direction:column; gap:14px}
+.canvasHeader{padding:14px 16px 10px}
+.stageTitle{font-size:1.35rem; font-weight:800}
+.stageMeta{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+.stageChip{background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:999px; padding:8px 12px; color:var(--muted)}
+#gameCanvas{display:block; width:100%; height:auto; aspect-ratio:16/9; border-radius:0 0 var(--radius) var(--radius); touch-action:none}
+.panel{padding:16px}
+h3{margin:0 0 12px; font-size:1.05rem}
+.goalBox, .statusBox, .feedbackBox, .formulaBox, .scanLog{line-height:1.45}
+.goalLine{padding:10px 12px; background:rgba(255,255,255,.04); border-radius:16px; margin:8px 0}
+.goalLine strong{display:block; color:var(--muted); font-size:.93rem}
+.statsGrid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.stat{padding:12px; border-radius:16px; background:rgba(255,255,255,.04); text-align:center}
+.stat .k{display:block; color:var(--muted); font-size:.88rem}
+.stat .v{display:block; font-size:1.3rem; font-weight:800; margin-top:4px}
+.line{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; margin:10px 0}
+.readout{color:var(--amber); font-weight:800}
+.buttonRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+button, select, input[type=number]{
+  border:1px solid var(--line); border-radius:14px; background:#102241; color:var(--ink);
+  padding:12px 14px;
+}
+button{cursor:pointer; transition:transform .08s ease, filter .12s ease, opacity .12s ease}
+button:hover{filter:brightness(1.05)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.42; cursor:not-allowed}
+.primary{background:linear-gradient(180deg,#228bff,#0b69d9)}
+.success{background:linear-gradient(180deg,#2db97d,#128a5a)}
+.warn{background:linear-gradient(180deg,#f1b425,#cf8c00)}
+.danger{background:linear-gradient(180deg,#ff6f6f,#d54e4e)}
+.ghost{background:rgba(255,255,255,.04)}
+input[type=range]{width:100%; padding:0; background:transparent; border:none}
+.progressWrap{display:flex; gap:8px}
+.progressSeg{height:12px; flex:1; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid var(--line); overflow:hidden}
+.progressSeg .fill{height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--violet))}
+.logEntry{padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.04); margin-bottom:8px}
+.logEntry small{color:var(--muted)}
+.statusBar{
+  padding:12px 14px; border-radius:16px; background:rgba(110,231,255,.09); border:1px solid rgba(110,231,255,.15); 
+}
+.statusBar.warn{background:rgba(255,209,102,.10); border-color:rgba(255,209,102,.18)}
+.statusBar.bad{background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.18)}
+.statusBar.good{background:rgba(108,246,180,.10); border-color:rgba(108,246,180,.18)}
+.stageButtons{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+.stageBtn{padding:10px 14px; border-radius:999px; background:rgba(255,255,255,.04); border:1px solid var(--line)}
+.stageBtn.active{outline:2px solid var(--cyan)}
+.stageBtn.done{background:rgba(108,246,180,.10); color:var(--green)}
+.modal{
+ position:fixed; inset:0; background:rgba(3,8,16,.78); backdrop-filter:blur(8px); 
+ display:flex; align-items:center; justify-content:center; padding:18px; z-index:50;
+}
+.modalCard{
+  width:min(920px,100%); max-height:92vh; overflow:auto; padding:18px;
+  background:linear-gradient(180deg,rgba(10,18,34,.98),rgba(15,28,53,.96));
+  border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow);
+}
+.modalGrid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.modal .kbox{padding:14px; border-radius:18px; background:rgba(255,255,255,.04)}
+.bigClear{font-size:2rem; font-weight:900; letter-spacing:.02em}
+.mono{font-variant-numeric:tabular-nums}
+.accent{color:var(--amber)}
+.green{color:var(--green)}
+.red{color:var(--red)}
+.small{font-size:.92rem; color:var(--muted)}
+.walkStep{margin-bottom:12px; padding:12px; border-radius:16px; background:rgba(255,255,255,.04)}
+.footerRow{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
+#overlayText{
+  position:absolute; inset:auto 0 22%; text-align:center; font-size:3rem; font-weight:900; color:var(--amber);
+  text-shadow:0 0 18px rgba(255,209,102,.4); pointer-events:none; opacity:0; transition:opacity .25s ease;
+}
+.canvasWrap{position:relative}
+.toast{
+  position:fixed; bottom:18px; right:18px; padding:12px 14px; border-radius:16px;
+  background:rgba(7,18,34,.96); border:1px solid var(--line); box-shadow:var(--shadow); z-index:70;
+  max-width:420px;
+}
+@media (max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  .statsGrid{grid-template-columns:repeat(2,1fr)}
+  .modalGrid{grid-template-columns:1fr}
+}
+@keyframes confettiFall{
+  0%{transform:translateY(-10vh) rotate(0);opacity:.85}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:.2}
+}
+@keyframes rocketUp{
+  0%{transform:translateX(-50%) translateY(0) scale(1);opacity:1}
+  30%{transform:translateX(-50%) translateY(-10px) scale(1.1);opacity:1}
+  100%{transform:translateX(-50%) translateY(-120vh) scale(.3);opacity:0}
+}
+/* Crew comms */
+.crewComm{
+  position:fixed;left:14px;bottom:14px;z-index:40;width:min(380px,calc(100vw - 28px));
+  display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(8,18,34,.95),rgba(12,26,51,.90));
+  border:1px solid rgba(255,255,255,.11);box-shadow:0 14px 28px rgba(0,0,0,.38);
+  transform:translateY(120%);transition:transform .35s ease;
+}
+.crewComm.show{transform:translateY(0)}
+.crewAvatar{
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:0 0 42px;
+  font-weight:900;font-size:1.1rem;color:#07111f;
+}
+.crewName{font-weight:800;font-size:.88rem;margin-bottom:3px}
+.crewText{font-size:.86rem;line-height:1.38;color:var(--ink)}
+/* Event alert */
+.eventAlert{
+  margin:8px 0;padding:10px 12px;border-radius:14px;
+  background:rgba(255,183,3,.10);border:1px solid rgba(255,183,3,.22);
+  animation:alertPulse 1.2s ease-in-out 3;
+}
+@keyframes alertPulse{
+  0%,100%{box-shadow:none}
+  50%{box-shadow:0 0 16px rgba(255,183,3,.25)}
+}
+/* Canvas crosshair cursor for Stage 2 */
+.canvasClick{cursor:crosshair}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="card">
+    <div class="topRow">
+      <div>
+        <h1 id="titleText">Mission ATLAS #8 — Lunar Lava Tube Scout</h1>
+        <div class="sub" id="subText">EM radar κάτω από τη Σελήνη: βρες κρυμμένο βιότοπο ισορροπώντας διείσδυση και λεπτομέρεια.</div>
+      </div>
+      <div class="pills">
+        <div class="pill" id="bigIdeaPill">Big Idea #7 + #4</div>
+        <div class="pill" id="misPill">Misconception: η υψηλή f δεν είναι πάντα καλύτερη</div>
+        <div class="pill">
+          <div style="font-size:.84rem; color:var(--muted)">Language</div>
+          <select id="langSelect" style="padding:6px 10px; margin-top:6px">
+            <option value="el">Ελληνικά</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="pill">
+          <div style="font-size:.84rem; color:var(--muted)" id="difficultyLabel">Difficulty</div>
+          <select id="difficultySelect" style="padding:6px 10px; margin-top:6px">
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+        <button class="pill ghost" id="soundBtn">Sound ON</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="leftCol">
+      <div class="card">
+        <div class="canvasHeader">
+          <div class="stageTitle" id="stageTitle">Στάδιο 1 — Beacon Depth</div>
+          <div class="stageMeta">
+            <div class="stageChip" id="stageHook">Στόχος: βρες το θαμμένο beacon.</div>
+            <div class="stageChip" id="stagePass">Περνάς όταν: κάνεις σωστή σάρωση και πετυχαίνεις το βάθος.</div>
+          </div>
+          <div class="stageButtons">
+            <button class="stageBtn active" id="stageBtn1">1</button>
+            <button class="stageBtn" id="stageBtn2" disabled>2</button>
+            <button class="stageBtn" id="stageBtn3" disabled>3</button>
+          </div>
+        </div>
+        <div class="canvasWrap">
+          <canvas id="gameCanvas" width="1280" height="720"></canvas>
+          <div id="overlayText"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rightCol">
+      <div class="card panel">
+        <div class="statsGrid">
+          <div class="stat"><span class="k" id="batteryLabel">Μπαταρία</span><span class="v mono" id="batteryVal">100%</span></div>
+          <div class="stat"><span class="k" id="scoreLabel">Score</span><span class="v mono" id="scoreVal">100</span></div>
+          <div class="stat"><span class="k" id="attemptsLabel">Σαρώσεις</span><span class="v mono" id="attemptsVal">0</span></div>
+          <div class="stat"><span class="k" id="medalLabel">Μετάλλιο</span><span class="v" id="medalVal">🥇</span></div>
+        </div>
+        <div style="margin-top:14px">
+          <div class="small" id="missionProgressLabel">Mission progress</div>
+          <div class="progressWrap">
+            <div class="progressSeg"><div class="fill" id="fill1"></div></div>
+            <div class="progressSeg"><div class="fill" id="fill2"></div></div>
+            <div class="progressSeg"><div class="fill" id="fill3"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h3 id="goalTitle">Στόχος γύρου</h3>
+        <div class="goalBox">
+          <div class="goalLine"><strong id="doNowLabel">Τι κάνω τώρα</strong><span id="doNowText"></span></div>
+          <div class="goalLine"><strong id="passWhenLabel">Περνάω όταν</strong><span id="passWhenText"></span></div>
+          <div class="goalLine"><strong id="physicsWhyLabel">Γιατί αυτό είναι φυσική</strong><span id="physicsWhyText"></span></div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="statusBar" id="statusBar">Έτοιμο για νέα σάρωση.</div>
+        <div id="controlsArea"></div>
+        <div class="buttonRow">
+          <button id="scanBtn" class="primary">Σάρωση παλμού</button>
+          <button id="checkBtn" class="success" disabled>Έλεγχος γύρου</button>
+          <button id="hintBtn" class="warn">Hint (-5)</button>
+          <button id="resetBtn" class="danger">Reset γύρου</button>
+          <button id="walkBtn" class="ghost">Να το πάρει το ποτάμι</button>
+          <button id="nextBtn" class="ghost" disabled>Επόμενο στάδιο ▶</button>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h3 id="formulaTitle">Τύποι / Μοντέλο</h3>
+        <div class="formulaBox" id="formulaBox"></div>
+      </div>
+
+      <div class="card panel">
+        <h3 id="scanLogTitle">Mission Console</h3>
+        <div class="scanLog" id="scanLog"></div>
+      </div>
+
+      <div class="card panel">
+        <h3 id="feedbackTitle">Feedback</h3>
+        <div class="feedbackBox" id="feedbackBox"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="modal" id="introModal">
+  <div class="modalCard">
+    <div class="bigClear">Lunar Lava Tube Scout</div>
+    <p id="introText">Σαρώνεις κάτω από το σεληνιακό ρεγόλιθο για να βρεις σταθερό σωλήνα λάβας. Χαμηλή συχνότητα σημαίνει συνήθως βαθύτερη διείσδυση· υψηλή συχνότητα σημαίνει καλύτερη λεπτομέρεια.</p>
+    <div class="modalGrid">
+      <div class="kbox">
+        <strong id="introLearn">Σήμερα μαθαίνω</strong>
+        <div id="introLearnText">πώς παίζει το trade-off διείσδυσης–ανάλυσης σε ηλεκτρομαγνητική σάρωση.</div>
+      </div>
+      <div class="kbox">
+        <strong id="introWarn">Hard mode</strong>
+        <div id="introWarnText">false echoes και battery panic. Μην ερωτευτείς το πρώτο echo που θα δεις.</div>
+      </div>
+    </div>
+    <div class="footerRow">
+      <div class="small" id="introSmall">Flow: Pulse Scan → παρατηρείς αποτέλεσμα → Έλεγχος γύρου → Stage Clear.</div>
+      <button class="primary" id="startBtn">Έναρξη αποστολής</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="clearModal">
+  <div class="modalCard">
+    <div class="bigClear green" id="clearTitle">STAGE CLEAR</div>
+    <p id="clearBody"></p>
+    <div class="modalGrid">
+      <div class="kbox"><strong id="clearWhyTitle">Τι πέτυχες</strong><div id="clearWhy"></div></div>
+      <div class="kbox"><strong id="clearNextTitle">Επόμενο βήμα</strong><div id="clearNext"></div></div>
+    </div>
+    <div class="footerRow">
+      <div class="small" id="clearSmall">Το radar δεν χαρίζει αλήθεια· σου δίνει ίχνη. Εσύ τα ερμηνεύεις.</div>
+      <div>
+        <button class="ghost" id="clearCloseBtn">Μείνε εδώ</button>
+        <button class="primary" id="clearNextBtn">Πάμε στο επόμενο στάδιο</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="walkModal">
+  <div class="modalCard">
+    <div class="bigClear accent" id="walkTitle">Να το πάρει το ποτάμι</div>
+    <p id="walkIntro">Ορίστε η βήμα-βήμα στρατηγική για αυτή την παρτίδα.</p>
+    <div id="walkContent"></div>
+    <div class="footerRow">
+      <div class="small" id="walkSmall">Αφού τη δεις, μπορείς να ξεκινήσεις ξανά με νέα δεδομένα.</div>
+      <div>
+        <button class="ghost" id="walkCloseBtn">Κλείσιμο</button>
+        <button class="primary" id="replayBtn">Replay με νέα δεδομένα</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="endModal">
+  <div class="modalCard">
+    <div class="bigClear" id="endTitle">MISSION COMPLETE</div>
+    <p id="endBody"></p>
+    <div class="modalGrid">
+      <div class="kbox"><strong id="endTheoryTitle">Theory vs mission</strong><div id="endTheory"></div></div>
+      <div class="kbox"><strong id="endMisTitle">Misconception check</strong><div id="endMis"></div></div>
+    </div>
+    <div class="footerRow">
+      <div class="small" id="endSmall">Νέα παρτίδα = νέα δεδομένα, νέα false echoes, νέο σωστό site.</div>
+      <div>
+        <button class="ghost" id="endWalkBtn">Να το πάρει το ποτάμι</button>
+        <button class="primary" id="endReplayBtn">Νέα αποστολή</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<div class="crewComm" id="crewComm">
+  <div class="crewAvatar" id="crewAvatar" style="background:radial-gradient(circle at 30% 30%,#fff,#b5f5ff 36%,#4e82ff 100%)">K</div>
+  <div>
+    <div class="crewName" id="crewName">KIRA — Geologist</div>
+    <div class="crewText" id="crewText"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const I18N = {
+  el:{
+    title:"Mission ATLAS #8 — Lunar Lava Tube Scout",
+    sub:"EM radar κάτω από τη Σελήνη: βρες κρυμμένο βιότοπο ισορροπώντας διείσδυση και λεπτομέρεια.",
+    bigIdea:"Big Idea #7 + #4",
+    mis:"Misconception: η υψηλή f δεν είναι πάντα καλύτερη",
+    difficulty:"Difficulty",
+    battery:"Μπαταρία", score:"Score", scans:"Σαρώσεις", medal:"Μετάλλιο", progress:"Mission progress",
+    stage1:"Στάδιο 1 — Beacon Depth",
+    stage2:"Στάδιο 2 — Tube Opening",
+    stage3:"Στάδιο 3 — Habitat Choice",
+    hook1:"Στόχος: βρες το θαμμένο beacon.",
+    hook2:"Στόχος: χαρτογράφησε το άνοιγμα του σωλήνα.",
+    hook3:"Στόχος: διάλεξε το πιο σταθερό site για βάση.",
+    pass1:"Περνάς όταν: πετυχαίνεις βάθος ±2.5 m και έχεις πραγματικό echo.",
+    pass2:"Περνάς όταν: βρίσκεις αριστερό/δεξί άκρο μέσα στην ανοχή.",
+    pass3:"Περνάς όταν: διαλέγεις το σταθερό κενό site.",
+    goalTitle:"Στόχος γύρου", doNow:"Τι κάνω τώρα", passWhen:"Περνάω όταν", why:"Γιατί αυτό είναι φυσική",
+    doNow1:"Διάλεξε ζώνη και ισχύ, κάνε σάρωση, μετά δώσε εκτίμηση βάθους και πάτησε Έλεγχο γύρου.",
+    doNow2:"Διάλεξε ζώνη, κάνε sweep και μετά τοποθέτησε αριστερό/δεξί δείκτη για το άνοιγμα.",
+    doNow3:"Σκάναρε sites με LF/HF, σύγκρινε signatures και μετά διάλεξε το πιο σταθερό site.",
+    why1:"Χαμηλότερη συχνότητα διεισδύει βαθύτερα, αλλά συνήθως με χειρότερη λεπτομέρεια.",
+    why2:"Θες το καλύτερο band που φτάνει στην οροφή ώστε να χαρτογραφήσεις πιο καθαρά τα άκρα.",
+    why3:"Ένα site με κενό δεν αρκεί. Θέλεις και οροφή που φαίνεται σταθερή, όχι ρηγματωμένη.",
+    formula1:"Βάθος: d = v × t_return / 2\nv ≈ 100 m/μs στο σεληνιακό ρεγόλιθο\nt_return = χρόνος πήγαινε-έλα (εμφανίζεται μετά τη σάρωση)\n\nΔιείσδυση: f ↓ → λ ↑ → βαθύτερα\nΛεπτομέρεια: f ↑ → λ ↓ → πιο καθαρά αλλά πιο ρηχά",
+    formula2:"Το radargram δείχνει πού η ανάκλαση αλλάζει από «οροφή» σε «άνοιγμα» και πάλι σε «οροφή».",
+    formula3:"Συγκρίνεις signatures σε δύο μπάντες: LF για διείσδυση, HF για καθαρότητα/σταθερότητα οροφής.",
+    stageClear:"ΜΠΡΑΒΟ — Στάδιο καθαρό",
+    clearWhyTitle:"Τι πέτυχες", clearNextTitle:"Επόμενο βήμα",
+    walkTitle:"Να το πάρει το ποτάμι",
+    start:"Έναρξη αποστολής", soundOn:"Sound ON", soundOff:"Sound OFF",
+    scan:"Σάρωση παλμού", check:"Έλεγχος γύρου", hint:"Hint (-5)", reset:"Reset γύρου", walk:"Να το πάρει το ποτάμι", next:"Επόμενο στάδιο ▶",
+    scanLog:"Mission Console", feedback:"Feedback",
+    ready:"Έτοιμο για νέα σάρωση.",
+    scanComplete:"✅ Η σάρωση ολοκληρώθηκε. Τώρα πάτησε <strong>Έλεγχο γύρου</strong>.",
+    needScan:"Πρώτα κάνε <strong>Σάρωση παλμού</strong>.",
+    checking:"Έλεγχος γύρου…",
+    hardWarn:"Hard mode: false echoes και battery panic ενεργά.",
+    panic:"⚠️ Battery panic: αυξημένη κατανάλωση και παραπλανητικά echoes.",
+    scanBtnLbl:"Σάρωση παλμού",
+    checkBtnLbl:"Έλεγχος γύρου",
+    band:"Ζώνη σάρωσης",
+    power:"Ισχύς παλμού",
+    depthEstimate:"Εκτίμηση βάθους beacon",
+    leftMarker:"Αριστερό άκρο ανοίγματος",
+    rightMarker:"Δεξί άκρο ανοίγματος",
+    scanSite:"Site για σάρωση",
+    finalPick:"Τελική επιλογή site",
+    echoAcquired:"ECHO ACQUIRED",
+    noEcho:"NO ECHO",
+    falseEcho:"FALSE ECHO",
+    sweepReady:"SWEEP READY",
+    stablePick:"STABLE TARGET",
+    badPick:"UNSAFE TARGET",
+    tip1:"Θυμήσου: d = v × t / 2. Η ταχύτητα στο ρεγόλιθο είναι ~100 m/μs. Αν t = 0.44 μs, τότε d = 100 × 0.44 / 2 = 22 m.",
+    trapTitle:"🔒 Η κλασική φυσική λέει: «υψηλή συχνότητα = καλύτερα». Δοκίμασε!",
+    trapBody:"Ξεκινάς με HF (300 MHz) — τη «καλύτερη» μπάντα σύμφωνα με την κοινή λογική. Κάνε σάρωση και δες τι θα συμβεί.",
+    trapFail:"❌ Η HF δεν φτάνει αρκετά βαθιά! Η υψηλή συχνότητα εξασθενεί γρήγορα στο ρεγόλιθο. Χρειάζεσαι χαμηλότερη συχνότητα για βαθύτερη διείσδυση.",
+    trapUnlock:"🔓 Τώρα ξεκλειδώνονται οι χαμηλότερες μπάντες. Η φυσική λέει: f ↓ → λ ↑ → διείσδυση ↑ αλλά λεπτομέρεια ↓.",
+    returnTimeLabel:"⏱ Χρόνος επιστροφής παλμού",
+    returnTimeHint:"Υπολόγισε: d = v × t_return / 2, με v ≈ 100 m/μs στο σεληνιακό ρεγόλιθο.",
+    noScanYet:"Κάνε πρώτα σάρωση για να δεις τον χρόνο επιστροφής.",
+    typeDepth:"Πληκτρολόγησε την εκτίμησή σου σε m",
+    depthFormula:"📐 d = v × t / 2 | v ≈ 100 m/μs | t = χρόνος πήγαινε-έλα του παλμού",
+    missionDone:"Αποστολή ολοκληρώθηκε! Ο σωλήνας λάβας χαρτογραφήθηκε.",
+    tip2:"Μετά το sweep, βάλε δείκτες κοντά στα δύο σημεία όπου αρχίζει και τελειώνει το άνοιγμα.",
+    tip3:"Για βάση θες void + ήρεμη/σταθερή οροφή. Σύγκρινε LF και HF στο ίδιο site.",
+    s1success:"Πήρες πραγματικό echo και η εκτίμησή σου για το βάθος ήταν σωστή.",
+    s1bonus:"Μάλιστα χρησιμοποίησες και το υψηλότερο band που άντεχε να δώσει πραγματικό echo.",
+    s2success:"Χαρτογράφησες σωστά τα άκρα του ανοίγματος.",
+    s3success:"Διάλεξες το site με σταθερό κενό και πιο αξιόπιστη οροφή.",
+    next1:"Τώρα θα χαρτογραφήσεις το άνοιγμα του σωλήνα, όχι μόνο το βάθος του.",
+    next2:"Τώρα θα συγκρίνεις πολλαπλά sites για να βρεις το πιο ασφαλές.",
+    endBody:"Η αποστολή βρήκε σταθερό σωλήνα λάβας. Το πλήρωμα έχει υποψήφιο βιότοπο.",
+    endTheory:"LF σε βοηθά να φτάσεις βαθύτερα. HF σε βοηθά να δεις πιο καθαρά δομή και σταθερότητα, αλλά συνήθως όχι τόσο βαθιά.",
+    endMis:"Το «η μεγαλύτερη συχνότητα είναι πάντα καλύτερη» δεν ισχύει. Η σωστή μπάντα εξαρτάται από το τι θες να μετρήσεις και πόσο βαθιά πρέπει να φτάσεις.",
+    replay:"Replay με νέα δεδομένα", close:"Κλείσιμο", stay:"Μείνε εδώ", goNext:"Πάμε στο επόμενο στάδιο", newMission:"Νέα αποστολή",
+    introLearn:"Σήμερα μαθαίνω", introLearnText:"πώς ισορροπώ διείσδυση και λεπτομέρεια σε ηλεκτρομαγνητική σάρωση.",
+    introWarn:"Hard mode", introWarnText:"false echoes και battery panic. Μην ερωτευτείς το πρώτο echo που θα δεις.",
+    introSmall:"Flow: Pulse Scan → παρατηρείς αποτέλεσμα → Έλεγχος γύρου → Stage Clear.",
+    introText:"Σαρώνεις κάτω από το σεληνιακό ρεγόλιθο για να βρεις σταθερό σωλήνα λάβας. Χαμηλή συχνότητα σημαίνει συνήθως βαθύτερη διείσδυση· υψηλή συχνότητα σημαίνει καλύτερη λεπτομέρεια.",
+    walkIntro:"Ορίστε η βήμα-βήμα στρατηγική για αυτή την παρτίδα.",
+    walkSmall:"Αφού τη δεις, μπορείς να ξεκινήσεις ξανά με νέα δεδομένα.",
+    clearSmall:"Το radar δεν χαρίζει αλήθεια· σου δίνει ίχνη. Εσύ τα ερμηνεύεις.",
+    endSmall:"Νέα παρτίδα = νέα δεδομένα, νέα false echoes, νέο σωστό site."
+  },
+  en:{
+    title:"Mission ATLAS #8 — Lunar Lava Tube Scout",
+    sub:"EM radar under the Moon: find a hidden habitat by balancing penetration and detail.",
+    bigIdea:"Big Idea #7 + #4",
+    mis:"Misconception: high f is not always best",
+    difficulty:"Difficulty",
+    battery:"Battery", score:"Score", scans:"Scans", medal:"Medal", progress:"Mission progress",
+    stage1:"Stage 1 — Beacon Depth",
+    stage2:"Stage 2 — Tube Opening",
+    stage3:"Stage 3 — Habitat Choice",
+    hook1:"Goal: find the buried beacon.",
+    hook2:"Goal: map the opening of the lava tube.",
+    hook3:"Goal: pick the most stable habitat site.",
+    pass1:"You pass when: depth is within ±2.5 m and the echo is real.",
+    pass2:"You pass when: left/right edges are within tolerance.",
+    pass3:"You pass when: you choose the stable void site.",
+    goalTitle:"Round goal", doNow:"What to do now", passWhen:"You pass when", why:"Why this is physics",
+    doNow1:"Choose band and power, fire a scan, then enter a depth estimate and press Check Round.",
+    doNow2:"Choose band, fire a sweep, then place left/right markers for the opening.",
+    doNow3:"Scan sites with LF/HF, compare signatures, then pick the most stable site.",
+    why1:"Lower frequency tends to penetrate deeper, but usually with poorer detail.",
+    why2:"You want the best band that still reaches the roof so you can map the edges more clearly.",
+    why3:"A void is not enough. You also want a roof that looks stable, not fractured.",
+    formula1:"Depth: d = v × t_return / 2\nv ≈ 100 m/μs in lunar regolith\nt_return = round-trip time (shown after scan)\n\nPenetration: f ↓ → λ ↑ → deeper\nDetail: f ↑ → λ ↓ → sharper but shallower",
+    formula2:"The radargram shows where reflection changes from roof to opening and back to roof.",
+    formula3:"Compare signatures in two bands: LF for penetration, HF for roof clarity/stability.",
+    stageClear:"NICE — Stage clear",
+    clearWhyTitle:"What you achieved", clearNextTitle:"Next step",
+    walkTitle:"Spill the beans",
+    start:"Start mission", soundOn:"Sound ON", soundOff:"Sound OFF",
+    scan:"Pulse Scan", check:"Check Round", hint:"Hint (-5)", reset:"Reset round", walk:"Spill the beans", next:"Next stage ▶",
+    scanLog:"Mission Console", feedback:"Feedback",
+    ready:"Ready for a new scan.",
+    scanComplete:"✅ Scan complete. Now press <strong>Check Round</strong>.",
+    needScan:"Do a <strong>Pulse Scan</strong> first.",
+    checking:"Checking round…",
+    hardWarn:"Hard mode: false echoes and battery panic active.",
+    panic:"⚠️ Battery panic: increased drain and misleading echoes.",
+    scanBtnLbl:"Pulse Scan", checkBtnLbl:"Check Round",
+    band:"Scan band",
+    power:"Pulse power",
+    depthEstimate:"Beacon depth estimate",
+    leftMarker:"Opening left edge",
+    rightMarker:"Opening right edge",
+    scanSite:"Site to scan",
+    finalPick:"Final site choice",
+    echoAcquired:"ECHO ACQUIRED",
+    noEcho:"NO ECHO",
+    falseEcho:"FALSE ECHO",
+    sweepReady:"SWEEP READY",
+    stablePick:"STABLE TARGET",
+    badPick:"UNSAFE TARGET",
+    tip1:"Remember: d = v × t / 2. Wave speed in regolith is ~100 m/μs. If t = 0.44 μs, then d = 100 × 0.44 / 2 = 22 m.",
+    trapTitle:"🔒 Classical thinking says: \"higher frequency = better\". Try it!",
+    trapBody:"You start with HF (300 MHz) — the \"best\" band according to common sense. Fire a scan and see what happens.",
+    trapFail:"❌ HF cannot reach deep enough! High frequency attenuates quickly in regolith. You need a lower frequency for deeper penetration.",
+    trapUnlock:"🔓 Lower bands now unlocked. Physics says: f ↓ → λ ↑ → penetration ↑ but detail ↓.",
+    returnTimeLabel:"⏱ Pulse return time",
+    returnTimeHint:"Calculate: d = v × t_return / 2, where v ≈ 100 m/μs in lunar regolith.",
+    noScanYet:"Fire a scan first to see the return time.",
+    typeDepth:"Type your estimate in metres",
+    depthFormula:"📐 d = v × t / 2 | v ≈ 100 m/μs | t = round-trip pulse time",
+    missionDone:"Mission complete! The lava tube has been mapped.",
+    tip2:"After the sweep, place markers near the two points where the opening begins and ends.",
+    tip3:"A habitat needs both a void and a calm/stable roof. Compare LF and HF on the same site.",
+    s1success:"You acquired a real echo and your depth estimate was correct.",
+    s1bonus:"You also used the highest band that still produced a real echo.",
+    s2success:"You correctly mapped the opening edges.",
+    s3success:"You picked the site with the stable void and the most reliable roof.",
+    next1:"Next you will map the tube opening, not just its depth.",
+    next2:"Next you will compare multiple sites to find the safest one.",
+    endBody:"Mission complete. The probe found a stable lava tube candidate for the crew.",
+    endTheory:"LF helps you reach deeper. HF helps you see structure and roof stability more clearly, but usually not as deep.",
+    endMis:"“The highest frequency is always best” is wrong. The best band depends on what you want to measure and how deep you need to go.",
+    replay:"Replay with new data", close:"Close", stay:"Stay here", goNext:"Go to next stage", newMission:"New mission",
+    introLearn:"Today I learn", introLearnText:"how to balance penetration and detail in EM scanning.",
+    introWarn:"Hard mode", introWarnText:"false echoes and battery panic. Do not fall in love with the first echo you see.",
+    introSmall:"Flow: Pulse Scan → observe result → Check Round → Stage Clear.",
+    introText:"You scan beneath lunar regolith to find a stable lava tube. Lower frequency usually means deeper penetration; higher frequency means better detail.",
+    walkIntro:"Here is the step-by-step strategy for this run.",
+    walkSmall:"After you read it, you can restart with fresh mission data.",
+    clearSmall:"Radar does not hand you truth; it gives you clues. You interpret them.",
+    endSmall:"New run = new data, new false echoes, new correct site."
+  }
+};
+
+const BANDS = {
+  LF:{key:"LF", label:"LF • 40 MHz", freq:40, reach:42, bandCost:5, color:"#6ee7ff"},
+  MF:{key:"MF", label:"MF • 120 MHz", freq:120, reach:31, bandCost:7, color:"#ffd166"},
+  HF:{key:"HF", label:"HF • 300 MHz", freq:300, reach:23, bandCost:9, color:"#ff8ac7"}
+};
+
+// EM wave speed in lunar regolith ≈ 100 m/μs (real value ~0.1c through dry basalt/regolith)
+const V_REGOLITH = 100; // m/μs — two-way: d = V * t_return / 2
+
+const SITES = ["A","B","C"];
+
+const state = {
+  lang:"el",
+  difficulty:"normal",
+  sound:true,
+  stage:1,
+  phase:"idle", // idle, scanning, scanned, clear
+  battery:100,
+  score:100,
+  scans:0,
+  medal:"🥇",
+  runId:1,
+  data:null,
+  scanResult:null,
+  overlay:{text:"", until:0, color:"#ffd166"},
+  stageLogs:{1:[],2:[],3:[]},
+  stage3Memory:{A:{},B:{},C:{}},
+  selections:{
+    band:"HF", power:70, depthEstimate:0, leftEdge:30, rightEdge:68, scanSite:"A", finalPick:"A"
+  },
+  clear:{1:false,2:false,3:false},
+  hfTrapDone: false,
+  hfTrapAttempts: 0,
+  lastReturnTime: null  // μs — shown after scan, student calculates depth from this
+};
+
+const el = {};
+let audioCtx = null;
+let rafId = 0;
+let scanAnim = null;
+
+function q(id){ return document.getElementById(id); }
+function t(k){ return I18N[state.lang][k]; }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function irand(a,b){ return Math.floor(rand(a,b+1)); }
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+function fmt(x,d=1){ return new Intl.NumberFormat(state.lang==="el"?"el-GR":"en-US",{minimumFractionDigits:d,maximumFractionDigits:d}).format(x); }
+function now(){ return performance.now(); }
+
+function generateRun(){
+  const stableIndex = irand(0,2);
+  const fracturedIndex = (stableIndex+1)%3;
+  const solidIndex = (stableIndex+2)%3;
+  const stableSite = SITES[stableIndex];
+  const fracturedSite = SITES[fracturedIndex];
+  const solidSite = SITES[solidIndex];
+
+  const stage1 = {
+    beaconDepth: Math.round(rand(18,27)*10)/10
+  };
+  const stage2 = {
+    roofDepth: Math.round(rand(9,15)*10)/10,
+    leftEdge: irand(24,34),
+    rightEdge: irand(58,74)
+  };
+  const sites = {};
+  SITES.forEach(site => {
+    if(site===stableSite){
+      sites[site] = { type:"stable", depth: Math.round(rand(12,17)*10)/10, roofNoise:0.10, voidStrength:0.95, hfClarity:0.88 };
+    }else if(site===fracturedSite){
+      sites[site] = { type:"fractured", depth: Math.round(rand(12,18)*10)/10, roofNoise:0.56, voidStrength:0.82, hfClarity:0.35 };
+    }else{
+      sites[site] = { type:"solid", depth: Math.round(rand(7,13)*10)/10, roofNoise:0.22, voidStrength:0.10, hfClarity:0.22 };
+    }
+  });
+  return { stage1, stage2, stage3:{ stableSite, fracturedSite, solidSite, sites } };
+}
+
+function init(){
+  ["titleText","subText","bigIdeaPill","misPill","difficultyLabel","batteryLabel","scoreLabel","attemptsLabel","medalLabel",
+   "missionProgressLabel","stageTitle","stageHook","stagePass","goalTitle","doNowLabel","passWhenLabel","physicsWhyLabel",
+   "doNowText","passWhenText","physicsWhyText","scanBtn","checkBtn","hintBtn","resetBtn","walkBtn","nextBtn","formulaTitle",
+   "scanLogTitle","feedbackTitle","statusBar","gameCanvas","overlayText","introModal","startBtn","soundBtn","langSelect","difficultySelect",
+   "introText","introLearn","introLearnText","introWarn","introWarnText","introSmall","clearModal","clearTitle","clearBody","clearWhyTitle","clearNextTitle",
+   "clearWhy","clearNext","clearSmall","clearCloseBtn","clearNextBtn","walkModal","walkTitle","walkIntro","walkContent","walkSmall","walkCloseBtn","replayBtn",
+   "endModal","endTitle","endBody","endTheoryTitle","endTheory","endMisTitle","endMis","endSmall","endWalkBtn","endReplayBtn","controlsArea","scanLog","feedbackBox",
+   "batteryVal","scoreVal","attemptsVal","medalVal","fill1","fill2","fill3","stageBtn1","stageBtn2","stageBtn3","toast",
+   "crewComm","crewAvatar","crewName","crewText"
+  ].forEach(id=>el[id]=q(id));
+
+  el.startBtn.addEventListener('click', startMission);
+  el.langSelect.addEventListener('change', ()=>{ state.lang = el.langSelect.value; applyLanguage(); render(); });
+  el.difficultySelect.addEventListener('change', ()=>{ state.difficulty = el.difficultySelect.value; updateStatus(); });
+  el.soundBtn.addEventListener('click', ()=>{ state.sound=!state.sound; ensureAudio(); applyLanguage(); });
+  el.scanBtn.addEventListener('click', doScan);
+  el.checkBtn.addEventListener('click', doCheck);
+  el.hintBtn.addEventListener('click', giveHint);
+  el.resetBtn.addEventListener('click', resetStage);
+  el.walkBtn.addEventListener('click', openWalkthrough);
+  el.walkCloseBtn.addEventListener('click', ()=>toggleModal(el.walkModal,false));
+  el.replayBtn.addEventListener('click', ()=>{ toggleModal(el.walkModal,false); startNewRun(); });
+  el.clearCloseBtn.addEventListener('click', ()=>toggleModal(el.clearModal,false));
+  el.clearNextBtn.addEventListener('click', proceedAfterClear);
+  el.nextBtn.addEventListener('click', nextStageManual);
+  el.endWalkBtn.addEventListener('click', ()=>{ toggleModal(el.endModal,false); openWalkthrough(); });
+  el.endReplayBtn.addEventListener('click', ()=>{ toggleModal(el.endModal,false); startNewRun(); });
+  el.stageBtn1.addEventListener('click', ()=>goToStage(1));
+  el.stageBtn2.addEventListener('click', ()=>goToStage(2));
+  el.stageBtn3.addEventListener('click', ()=>goToStage(3));
+  window.addEventListener('keydown', (e)=>{
+    if(el.introModal.classList.contains('hidden')){
+      if(e.key===" " || e.key==="Enter"){ e.preventDefault(); if(!el.scanBtn.disabled) doScan(); else if(!el.checkBtn.disabled) doCheck(); }
+      if(e.key.toLowerCase()==="h"){ giveHint(); }
+      if(e.key.toLowerCase()==="r"){ resetStage(); }
+    }
+  });
+
+  applyLanguage();
+  initCanvasClick();
+  renderLoop();
+}
+
+function ensureAudio(){
+  if(!state.sound) return;
+  if(!audioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(Ctx) audioCtx = new Ctx();
+  }
+}
+function tone(freq=440, dur=.12, type="sine", vol=.05, slideTo=null){
+  if(!state.sound) return;
+  ensureAudio();
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const f = audioCtx.currentTime;
+  o.type = type;
+  o.frequency.setValueAtTime(freq, f);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(40,slideTo), f+dur);
+  g.gain.setValueAtTime(.0001, f);
+  g.gain.exponentialRampToValueAtTime(vol, f+.02);
+  g.gain.exponentialRampToValueAtTime(.0001, f+dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(f);
+  o.stop(f+dur+.04);
+}
+function sfxScan(){ tone(320,.06,"triangle",.06,520); setTimeout(()=>tone(520,.08,"triangle",.05,260),70); setTimeout(()=>tone(260,.1,"square",.04,180),150); }
+function sfxSuccess(){ tone(420,.08,"square",.08,620); setTimeout(()=>tone(620,.1,"triangle",.08,930),110); setTimeout(()=>tone(930,.14,"sine",.07,1240),220); }
+function sfxFail(){ tone(260,.1,"sawtooth",.07,180); setTimeout(()=>tone(180,.15,"sawtooth",.07,100),110); }
+function sfxHint(){ tone(680,.08,"triangle",.05,850); setTimeout(()=>tone(850,.08,"triangle",.05,1060),100); }
+function sfxPanic(){ tone(190,.08,"square",.07,210); setTimeout(()=>tone(190,.08,"square",.07,210),150); setTimeout(()=>tone(190,.08,"square",.07,210),300); }
+
+function applyLanguage(){
+  document.documentElement.lang = state.lang;
+  el.titleText.textContent = t("title");
+  el.subText.textContent = t("sub");
+  el.bigIdeaPill.textContent = t("bigIdea");
+  el.misPill.textContent = t("mis");
+  el.difficultyLabel.textContent = t("difficulty");
+  el.batteryLabel.textContent = t("battery");
+  el.scoreLabel.textContent = t("score");
+  el.attemptsLabel.textContent = t("scans");
+  el.medalLabel.textContent = t("medal");
+  el.missionProgressLabel.textContent = t("progress");
+  el.goalTitle.textContent = t("goalTitle");
+  el.doNowLabel.textContent = t("doNow");
+  el.passWhenLabel.textContent = t("passWhen");
+  el.physicsWhyLabel.textContent = t("why");
+  el.scanBtn.textContent = t("scan");
+  el.checkBtn.textContent = t("check");
+  el.hintBtn.textContent = t("hint");
+  el.resetBtn.textContent = t("reset");
+  el.walkBtn.textContent = t("walk");
+  el.nextBtn.textContent = t("next");
+  el.formulaTitle.textContent = t("formulaTitle");
+  el.scanLogTitle.textContent = t("scanLog");
+  el.feedbackTitle.textContent = t("feedback");
+  el.soundBtn.textContent = state.sound ? t("soundOn") : t("soundOff");
+  el.startBtn.textContent = t("start");
+  el.introText.textContent = t("introText");
+  el.introLearn.textContent = t("introLearn");
+  el.introLearnText.textContent = t("introLearnText");
+  el.introWarn.textContent = t("introWarn");
+  el.introWarnText.textContent = t("introWarnText");
+  el.introSmall.textContent = t("introSmall");
+  el.clearTitle.textContent = t("stageClear");
+  el.clearWhyTitle.textContent = t("clearWhyTitle");
+  el.clearNextTitle.textContent = t("clearNextTitle");
+  el.clearSmall.textContent = t("clearSmall");
+  el.clearCloseBtn.textContent = t("stay");
+  el.clearNextBtn.textContent = t("goNext");
+  el.walkTitle.textContent = t("walkTitle");
+  el.walkIntro.textContent = t("walkIntro");
+  el.walkSmall.textContent = t("walkSmall");
+  el.walkCloseBtn.textContent = t("close");
+  el.replayBtn.textContent = t("replay");
+  el.endTitle.textContent = "MISSION COMPLETE";
+  el.endBody.textContent = t("endBody");
+  el.endTheoryTitle.textContent = "Theory vs mission";
+  el.endTheory.textContent = t("endTheory");
+  el.endMisTitle.textContent = "Misconception check";
+  el.endMis.textContent = t("endMis");
+  el.endSmall.textContent = t("endSmall");
+  el.endWalkBtn.textContent = t("walk");
+  el.endReplayBtn.textContent = t("newMission");
+  updateStageText();
+  updateControls();
+  updateStatus();
+  updateButtons();
+}
+
+function startMission(){
+  ensureAudio();
+  toggleModal(el.introModal,false);
+  startNewRun();
+  crewMsg("start", "cyan");
+  startJokeTimer();
+}
+function startNewRun(){
+  state.data = generateRun();
+  state.runId += 1;
+  state.stage = 1;
+  state.phase = "idle";
+  state.battery = 100;
+  state.score = 100;
+  state.scans = 0;
+  state.clear = {1:false,2:false,3:false};
+  state.hfTrapDone = false;
+  state.hfTrapAttempts = 0;
+  state.lastReturnTime = null;
+  state.scanResult = null;
+  state.stageLogs = {1:[],2:[],3:[]};
+  state.stage3Memory = {A:{},B:{},C:{}};
+  state.selections = {band:"HF", power:70, depthEstimate: 0, leftEdge: state.data.stage2.leftEdge-6, rightEdge: state.data.stage2.rightEdge+6, scanSite:"A", finalPick:"A"};
+  updateStageText();
+  updateControls();
+  updateStatus(t("ready"), "info");
+  setFeedback("");
+  updateButtons();
+  render();
+}
+
+function updateStageText(){
+  if(!state.data) return;
+  const stageKey = state.stage===1?"stage1":state.stage===2?"stage2":"stage3";
+  el.stageTitle.textContent = t(stageKey);
+  el.stageHook.textContent = t("hook"+state.stage);
+  el.stagePass.textContent = t("pass"+state.stage);
+  el.doNowText.innerHTML = t("doNow"+state.stage);
+  el.passWhenText.textContent = t("pass"+state.stage).replace(/^.*?:\s*/,'');
+  el.physicsWhyText.textContent = t("why"+state.stage);
+  el.formulaBox.textContent = t("formula"+state.stage);
+  el.stageBtn1.textContent = "1";
+  el.stageBtn2.textContent = "2";
+  el.stageBtn3.textContent = "3";
+  [1,2,3].forEach(i=>{
+    const b = el["stageBtn"+i];
+    b.classList.toggle("active", state.stage===i);
+    b.classList.toggle("done", state.clear[i]);
+    b.disabled = !(i===1 || state.clear[i-1]);
+  });
+}
+
+function controlHTMLStage1(){
+  const trapActive = !state.hfTrapDone && state.stage===1;
+
+  // === SECTION 1: Band + Power (always visible) ===
+  const trapBanner = trapActive ? `
+    <div style="margin:8px 0;padding:12px 14px;border-radius:14px;background:rgba(255,139,199,.10);border:1px solid rgba(255,139,199,.22)">
+      <strong style="color:#ff8ac7;font-size:.95rem">${t("trapTitle")}</strong>
+      <div style="font-size:.90rem;margin-top:6px;line-height:1.4">${t("trapBody")}</div>
+    </div>` : "";
+
+  const bandOptions = trapActive
+    ? `<option value="HF" selected>HF • 300 MHz 🔒</option>`
+    : `<option value="LF">LF • 40 MHz</option>
+       <option value="MF">MF • 120 MHz</option>
+       <option value="HF">HF • 300 MHz</option>`;
+
+  let scanControls = `
+    ${trapBanner}
+    <div class="line"><label>${t("band")}</label><span class="readout">${BANDS[state.selections.band].label}</span></div>
+    <select id="bandSelect">${bandOptions}</select>
+    <div class="line"><label>${t("power")}</label><span class="readout mono" id="powerRead">${Math.round(state.selections.power)}%</span></div>
+    <input id="powerRange" type="range" min="35" max="100" step="1" value="${Math.round(state.selections.power)}">
+  `;
+
+  // === SECTION 2: Calculation zone — ONLY after real echo ===
+  const hasRealEcho = state.lastReturnTime !== null;
+
+  if(!hasRealEcho){
+    // Before any successful scan: prompt to scan first
+    scanControls += `
+      <div style="margin:14px 0 6px;padding:14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.10);text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:6px">📡</div>
+        <div style="color:var(--muted);font-size:.90rem;line-height:1.4">${t("noScanYet")}</div>
+        <div style="margin-top:8px;font-size:.82rem;color:var(--muted)">${t("depthFormula")}</div>
+      </div>
+    `;
+  } else {
+    // AFTER real echo: show return time + step-by-step + input
+    const tVal = fmt(state.lastReturnTime, 3);
+    const step1 = state.lang==="el"
+      ? `<strong>Βήμα 1:</strong> Διάβασε τον χρόνο επιστροφής → <strong style="color:var(--cyan);font-size:1.15rem">t = ${tVal} μs</strong>`
+      : `<strong>Step 1:</strong> Read the return time → <strong style="color:var(--cyan);font-size:1.15rem">t = ${tVal} μs</strong>`;
+    const step2 = state.lang==="el"
+      ? `<strong>Βήμα 2:</strong> Εφάρμοσε τον τύπο: <span style="color:var(--amber)">d = v × t / 2 = 100 × ${tVal} / 2 = ???</span>`
+      : `<strong>Step 2:</strong> Apply the formula: <span style="color:var(--amber)">d = v × t / 2 = 100 × ${tVal} / 2 = ???</span>`;
+    const step3 = state.lang==="el"
+      ? `<strong>Βήμα 3:</strong> Γράψε το αποτέλεσμα σε m:`
+      : `<strong>Step 3:</strong> Type your answer in metres:`;
+    const vExplain = state.lang==="el"
+      ? `v ≈ 100 m/μs = ταχύτητα ΗΜ κύματος στο σεληνιακό ρεγόλιθο`
+      : `v ≈ 100 m/μs = EM wave speed in lunar regolith`;
+
+    scanControls += `
+      <div style="margin:14px 0 6px;padding:14px;border-radius:16px;background:rgba(110,231,255,.08);border:1px solid rgba(110,231,255,.20)">
+        <div style="font-size:.82rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;font-weight:800">
+          ${state.lang==="el" ? "⏱ Δεδομένα σάρωσης + Υπολογισμός" : "⏱ Scan data + Calculation"}
+        </div>
+        <div style="margin:8px 0;line-height:1.5;font-size:.92rem">${step1}</div>
+        <div style="margin:4px 0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);font-size:.82rem;color:var(--muted)">${vExplain}</div>
+        <div style="margin:8px 0;line-height:1.5;font-size:.92rem">${step2}</div>
+        <div style="margin:10px 0 6px;line-height:1.5;font-size:.92rem">${step3}</div>
+        <input id="depthInput" type="number" min="5" max="50" step="0.1"
+          value="${state.selections.depthEstimate > 0 ? state.selections.depthEstimate : ""}"
+          placeholder="${t("typeDepth")}"
+          style="width:100%;padding:14px;font-size:1.15rem;font-weight:800;border-radius:14px;background:#0b1a33;color:var(--amber);border:2px solid rgba(255,209,102,.35);text-align:center">
+      </div>
+    `;
+  }
+
+  return scanControls;
+}
+function controlHTMLStage2(){
+  const hasSweep = state.scanResult && state.scanResult.stage===2 && state.scanResult.type==="real";
+
+  let html = `
+    <div class="line"><label>${t("band")}</label><span class="readout">${BANDS[state.selections.band].label}</span></div>
+    <select id="bandSelect">
+      <option value="LF">LF • 40 MHz</option>
+      <option value="MF">MF • 120 MHz</option>
+      <option value="HF">HF • 300 MHz</option>
+    </select>
+    <div class="line"><label>${t("power")}</label><span class="readout mono" id="powerRead">${Math.round(state.selections.power)}%</span></div>
+    <input id="powerRange" type="range" min="35" max="100" step="1" value="${Math.round(state.selections.power)}">
+  `;
+
+  if(!hasSweep){
+    const prompt = state.lang==="el"
+      ? "Κάνε σάρωση πρώτα. Μετά θα εμφανιστούν οι δείκτες για να σημαδέψεις τα άκρα του ανοίγματος."
+      : "Fire a scan first. Then markers will appear so you can mark the opening edges.";
+    html += `
+      <div style="margin:14px 0;padding:14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.10);text-align:center">
+        <div style="font-size:1.3rem;margin-bottom:6px">🔍</div>
+        <div style="color:var(--muted);font-size:.90rem;line-height:1.4">${prompt}</div>
+      </div>`;
+  } else {
+    const instruct = state.lang==="el"
+      ? "📍 Κοίτα το radargram στον καμβά. Βρες πού αρχίζει και πού τελειώνει το άνοιγμα (κενό) και τοποθέτησε τους δείκτες L/R. Μετά πάτα Έλεγχο γύρου."
+      : "📍 Look at the radargram on the canvas. Find where the opening (void) starts and ends, and place the L/R markers. Then press Check Round.";
+    html += `
+      <div style="margin:10px 0;padding:10px 12px;border-radius:14px;background:rgba(110,231,255,.08);border:1px solid rgba(110,231,255,.18)">
+        <div style="font-size:.88rem;line-height:1.45;color:var(--ink)">${instruct}</div>
+      </div>
+      <div class="line"><label>◀ ${t("leftMarker")}</label><span class="readout mono" id="leftRead">${Math.round(state.selections.leftEdge)}</span></div>
+      <input id="leftRange" type="range" min="10" max="55" step="1" value="${Math.round(state.selections.leftEdge)}" style="accent-color:#6ee7ff">
+      <div class="line"><label>${t("rightMarker")} ▶</label><span class="readout mono" id="rightRead">${Math.round(state.selections.rightEdge)}</span></div>
+      <input id="rightRange" type="range" min="45" max="90" step="1" value="${Math.round(state.selections.rightEdge)}" style="accent-color:#6ee7ff">
+    `;
+  }
+  return html;
+}
+function controlHTMLStage3(){
+  return `
+    <div class="line"><label>${t("scanSite")}</label><span class="readout">${state.selections.scanSite}</span></div>
+    <select id="scanSiteSelect">
+      <option value="A">Site A</option>
+      <option value="B">Site B</option>
+      <option value="C">Site C</option>
+    </select>
+    <div class="line"><label>${t("band")}</label><span class="readout">${BANDS[state.selections.band].label}</span></div>
+    <select id="bandSelect">
+      <option value="LF">LF • 40 MHz</option>
+      <option value="MF">MF • 120 MHz</option>
+      <option value="HF">HF • 300 MHz</option>
+    </select>
+    <div class="line"><label>${t("power")}</label><span class="readout mono" id="powerRead">${Math.round(state.selections.power)}%</span></div>
+    <input id="powerRange" type="range" min="35" max="100" step="1" value="${Math.round(state.selections.power)}">
+    <div class="line"><label>${t("finalPick")}</label><span class="readout">${state.selections.finalPick}</span></div>
+    <select id="finalPickSelect">
+      <option value="A">Site A</option>
+      <option value="B">Site B</option>
+      <option value="C">Site C</option>
+    </select>
+  `;
+}
+
+function updateControls(){
+  if(!state.data) return;
+  if(state.stage===1) el.controlsArea.innerHTML = controlHTMLStage1();
+  else if(state.stage===2) el.controlsArea.innerHTML = controlHTMLStage2();
+  else el.controlsArea.innerHTML = controlHTMLStage3();
+
+  const bandSelect = q("bandSelect");
+  const powerRange = q("powerRange");
+  if(bandSelect){
+    bandSelect.value = state.selections.band;
+    // During HF trap in Stage 1, force HF
+    if(!state.hfTrapDone && state.stage===1){
+      bandSelect.value = "HF";
+      state.selections.band = "HF";
+      bandSelect.disabled = true;
+    } else {
+      bandSelect.disabled = false;
+    }
+    bandSelect.addEventListener('change', ()=>{ state.selections.band = bandSelect.value; updateControls(); updateStatus(); render(); });
+  }
+  if(powerRange){
+    powerRange.addEventListener('input', ()=>{ state.selections.power = Number(powerRange.value); updateControls(); updateStatus(); render(); });
+  }
+  if(state.stage===1){
+    const depthInput = q("depthInput");
+    if(depthInput){
+      depthInput.addEventListener('input', ()=>{
+        const val = Number(depthInput.value);
+        if(val > 0) state.selections.depthEstimate = val;
+        const dr = q("depthRead");
+        if(dr) dr.textContent = val > 0 ? fmt(val,1)+" m" : "?";
+        render();
+      });
+    }
+  }else if(state.stage===2){
+    const leftRange = q("leftRange"), rightRange = q("rightRange");
+    if(leftRange) leftRange.addEventListener('input', ()=>{ state.selections.leftEdge = Number(leftRange.value); const lr=q("leftRead"); if(lr) lr.textContent = Math.round(state.selections.leftEdge); render(); });
+    if(rightRange) rightRange.addEventListener('input', ()=>{ state.selections.rightEdge = Number(rightRange.value); const rr=q("rightRead"); if(rr) rr.textContent = Math.round(state.selections.rightEdge); render(); });
+  }else{
+    const scanSiteSelect = q("scanSiteSelect"), finalPickSelect = q("finalPickSelect");
+    scanSiteSelect.value = state.selections.scanSite;
+    finalPickSelect.value = state.selections.finalPick;
+    scanSiteSelect.addEventListener('change', ()=>{ state.selections.scanSite = scanSiteSelect.value; updateControls(); render(); });
+    finalPickSelect.addEventListener('change', ()=>{ state.selections.finalPick = finalPickSelect.value; updateControls(); render(); });
+  }
+}
+
+function medalFor(score){
+  if(score>=90) return "🥇";
+  if(score>=75) return "🥈";
+  if(score>=60) return "🥉";
+  return "💔";
+}
+
+function updateStats(){
+  state.medal = medalFor(state.score);
+  el.batteryVal.textContent = Math.max(0,Math.round(state.battery))+"%";
+  el.scoreVal.textContent = Math.round(state.score);
+  el.attemptsVal.textContent = state.scans;
+  el.medalVal.textContent = state.medal;
+  el.fill1.style.width = state.clear[1] ? "100%" : "0";
+  el.fill2.style.width = state.clear[2] ? "100%" : "0";
+  el.fill3.style.width = state.clear[3] ? "100%" : "0";
+}
+function updateStatus(msg, kind="info"){
+  el.statusBar.innerHTML = msg || (state.difficulty==="hard" ? t("hardWarn") : t("ready"));
+  el.statusBar.className = "statusBar" + (kind==="warn" ? " warn" : kind==="bad" ? " bad" : kind==="good" ? " good" : "");
+  updateStats();
+}
+function setFeedback(html){
+  el.feedbackBox.innerHTML = html || '<span class="small">—</span>';
+}
+function pushLog(html){
+  state.stageLogs[state.stage].unshift(html);
+  el.scanLog.innerHTML = state.stageLogs[state.stage].slice(0,6).map(x=>`<div class="logEntry">${x}</div>`).join("") || '<span class="small">—</span>';
+}
+function showOverlay(text, color="#ffd166", ms=1200){
+  state.overlay = { text, color, until: now() + ms };
+  el.overlayText.textContent = text;
+  el.overlayText.style.color = color;
+  el.overlayText.style.opacity = "1";
+  setTimeout(()=>{ if(now() > state.overlay.until - 30) el.overlayText.style.opacity = "0"; }, ms);
+}
+function toast(msg){
+  el.toast.innerHTML = msg;
+  el.toast.classList.remove("hidden");
+  setTimeout(()=>el.toast.classList.add("hidden"), 2800);
+}
+
+function getPowerFactor(){
+  return 0.55 + state.selections.power/100 * 0.65; // 0.78 to 1.20-ish
+}
+function bandReach(){
+  return BANDS[state.selections.band].reach * getPowerFactor();
+}
+function scanCost(){
+  let c = 5 + BANDS[state.selections.band].bandCost + state.selections.power/18;
+  if(state.difficulty==="hard") c += 2;
+  if(state.battery<25) c *= 1.35;
+  return c;
+}
+function highestBandThatReaches(depth){
+  const pf = getPowerFactor();
+  const order = ["HF","MF","LF"];
+  return order.find(k => BANDS[k].reach * pf >= depth) || null;
+}
+
+function updateButtons(){
+  el.scanBtn.disabled = state.phase==="scanning" || state.clear[state.stage];
+  el.checkBtn.disabled = !(state.phase==="scanned");
+  el.nextBtn.disabled = !state.clear[state.stage] || state.stage===3;
+}
+function resetStage(){
+  state.phase = "idle";
+  state.scanResult = null;
+  state.lastReturnTime = null;
+  if(state.stage===1) state.selections.depthEstimate = 0;
+  if(state.stage===2){
+    state.selections.leftEdge = state.data.stage2.leftEdge-6;
+    state.selections.rightEdge = state.data.stage2.rightEdge+6;
+  }
+  updateControls();
+  updateButtons();
+  updateStatus(t("ready"), "info");
+  render();
+}
+
+function doScan(){
+  if(state.phase==="scanning") return;
+  if(state.battery<=0){
+    updateStatus("Battery empty. Open walkthrough or start a new mission.", "bad");
+    sfxFail();
+    return;
+  }
+  state.phase = "scanning";
+  state.scanResult = null;
+  state.scans += 1;
+  const cost = scanCost();
+  state.battery = Math.max(0, state.battery - cost);
+  state.score = Math.max(0, state.score - 1);
+  if(state.difficulty==="hard" && state.battery < 25){ sfxPanic(); updateStatus(t("panic"), "warn"); }
+  else updateStatus("Scanning…", "warn");
+  updateButtons();
+  sfxScan();
+  maybeRandomEvent();
+  if(state.battery < 25 && state.battery > 0) setTimeout(()=> crewMsg("lowBattery", "red"), 600);
+  scanAnim = { start: now(), duration: 1200 };
+  setTimeout(finishScan, 1220);
+}
+
+function finishScan(){
+  let result;
+  if(state.stage===1){
+    const depth = state.data.stage1.beaconDepth;
+    const reach = bandReach();
+    const band = state.selections.band;
+
+    // === HF TRAP: first scan with HF fails (can't reach deep enough) ===
+    if(!state.hfTrapDone && band === "HF"){
+      state.hfTrapAttempts += 1;
+      state.lastReturnTime = null;
+      // HF always fails for typical beacon depths (18-27m vs HF reach ~23m at high power)
+      if(reach < depth || state.hfTrapAttempts <= 1){
+        result = {stage:1, type:"none", realDepth:depth, reach, band,
+          message: t("trapFail")};
+        showOverlay(t("noEcho"), "#ff6b6b");
+        pushLog(`<small>${state.scans}.</small> HF scan: NO ECHO. Reach ${fmt(reach,1)} m — beacon is deeper.`);
+        // After first HF failure: unlock lower bands
+        if(state.hfTrapAttempts >= 1){
+          state.hfTrapDone = true;
+          result.message += "<br><br>" + t("trapUnlock");
+          showOverlay("🔓 LF/MF", "#6cf6b4", 2000);
+          tone(196,.1,"sawtooth",.06,130);
+          setTimeout(()=>{ tone(330,.1,"triangle",.06); setTimeout(()=>tone(440,.12,"triangle",.06), 120); }, 200);
+          toast("🔓 " + t("trapUnlock"));
+          setTimeout(()=> crewMsg("hfTrap", "amber"), 1500);
+        }
+        // Don't count trap attempts against score
+        state.score = Math.min(100, state.score + 1);
+      }
+    } else {
+      // === NORMAL SCAN (after trap done or non-HF band) ===
+      const realEcho = reach >= depth;
+      const falseEcho = !realEcho && state.difficulty==="hard" && Math.random() < 0.38;
+      if(realEcho){
+        // Calculate return time: t = 2d/v, add noise based on band
+        const noiseT = band==="HF" ? rand(-0.008,0.008) : band==="MF" ? rand(-0.015,0.015) : rand(-0.025,0.025);
+        const tReturn = (2 * depth / V_REGOLITH) + noiseT;
+        state.lastReturnTime = Math.round(tReturn * 1000) / 1000; // 3 decimal places in μs
+        const measuredDepth = V_REGOLITH * state.lastReturnTime / 2;
+        result = {stage:1, type:"real", measured:measuredDepth, tReturn:state.lastReturnTime, realDepth:depth, reach, band,
+          message:`<strong>${band}</strong> echo! Return time: <strong>${fmt(state.lastReturnTime,3)} μs</strong>. Now calculate the depth.`};
+        showOverlay(t("echoAcquired"), "#6cf6b4");
+        pushLog(`<small>${state.scans}.</small> ${band}: echo returned in <strong>${fmt(state.lastReturnTime,3)} μs</strong>. Reach ${fmt(reach,1)} m.`);
+        setTimeout(()=> crewMsg("firstEcho", "green"), 800);
+      }else if(falseEcho){
+        const fakeT = (2 * depth * 0.65 / V_REGOLITH) + rand(-0.02,0.02);
+        state.lastReturnTime = Math.round(fakeT * 1000) / 1000;
+        result = {stage:1, type:"false", measured: V_REGOLITH * state.lastReturnTime / 2, tReturn:state.lastReturnTime, realDepth:depth, reach, band,
+          message:`<strong>Suspicious echo</strong> at <strong>${fmt(state.lastReturnTime,3)} μs</strong>. Reach ${fmt(reach,1)} m may not be enough — is this real?`};
+        showOverlay(t("falseEcho"), "#ff6b6b");
+        pushLog(`<small>${state.scans}.</small> ${band}: suspicious trace at <strong>${fmt(state.lastReturnTime,3)} μs</strong>. Ghost?`);
+        setTimeout(()=> crewMsg("falseEcho", "red"), 1000);
+      }else{
+        state.lastReturnTime = null;
+        result = {stage:1, type:"none", realDepth:depth, reach, band,
+          message:`No usable echo. Reach <strong>${fmt(reach,1)} m</strong> not enough. Try lower frequency or more power.`};
+        showOverlay(t("noEcho"), "#ff6b6b");
+        pushLog(`<small>${state.scans}.</small> ${band}: no echo. Reach <strong>${fmt(reach,1)} m</strong>.`);
+      }
+    }
+  }else if(state.stage===2){
+    const band = state.selections.band;
+    const reach = bandReach();
+    const d = state.data.stage2;
+    const realSweep = reach >= d.roofDepth;
+    const falseSweep = !realSweep && state.difficulty==="hard" && Math.random() < 0.35;
+    if(realSweep){
+      const sweepMsg = state.lang==="el"
+        ? `Η σάρωση δείχνει ξεκάθαρο άνοιγμα στο radargram. Κοίτα τον καμβά — πού αρχίζει και πού τελειώνει; Τοποθέτησε τους δείκτες L/R.`
+        : `The sweep shows a clear opening in the radargram. Look at the canvas — where does it start and end? Place the L/R markers.`;
+      result = {stage:2, type:"real", left:d.leftEdge + irand(-1,1), right:d.rightEdge + irand(-1,1), roofDepth:d.roofDepth, reach, band,
+        message: sweepMsg};
+      showOverlay(t("sweepReady"), "#6cf6b4");
+      const logMsg = state.lang==="el"
+        ? `Sweep ολοκληρώθηκε. Κοίτα τον καμβά για το άνοιγμα.`
+        : `Sweep complete. Check the canvas for the opening.`;
+      pushLog(`<small>${state.scans}.</small> ${band}: ${logMsg}`);
+    }else if(falseSweep){
+      const left = d.leftEdge + irand(-10,6), right = d.rightEdge + irand(-8,10);
+      result = {stage:2, type:"false", left, right, roofDepth:d.roofDepth, reach, band,
+        message:`Ghost sweep: ambiguous opening from <strong>${left}</strong> to <strong>${right}</strong>. Reach may be insufficient.`};
+      showOverlay(t("falseEcho"), "#ff6b6b");
+      pushLog(`<small>${state.scans}.</small> Ghost sweep produced an unreliable outline.`);
+    }else{
+      result = {stage:2, type:"none", roofDepth:d.roofDepth, reach, band, message:`Sweep too shallow. Reach <strong>${fmt(reach,1)} m</strong> did not map the roof cleanly.`};
+      showOverlay(t("noEcho"), "#ff6b6b");
+      pushLog(`<small>${state.scans}.</small> Sweep too shallow: no clean opening trace.`);
+    }
+  }else{
+    const site = state.selections.scanSite;
+    const bandKey = state.selections.band;
+    const info = state.data.stage3.sites[site];
+    const reachOk = bandReach() >= info.depth;
+    const falseEcho = state.difficulty==="hard" && !reachOk && Math.random() < 0.33;
+    let summary = "";
+    let kind = "unclear";
+    if(info.type==="stable"){
+      if(bandKey==="LF"){
+        summary = reachOk ? "Deep void detected with low noise." : "Weak return; try more power or a lower-loss choice.";
+        kind = reachOk ? "stableVoid" : "unclear";
+      }else if(bandKey==="HF"){
+        summary = reachOk ? "Roof edges look smooth and coherent." : "HF too shallow here; try LF first.";
+        kind = reachOk ? "stableRoof" : "unclear";
+      }else{
+        summary = reachOk ? "Void visible with medium clarity." : "Borderline reach.";
+        kind = reachOk ? "stableMid" : "unclear";
+      }
+    }else if(info.type==="fractured"){
+      if(bandKey==="LF"){
+        summary = reachOk ? "Void-like return exists, but roof noise is high." : "Weak return and clutter.";
+        kind = reachOk ? "noisyVoid" : "unclear";
+      }else if(bandKey==="HF"){
+        summary = reachOk ? "Roof looks broken / fragmented." : "HF too shallow or scattered.";
+        kind = reachOk ? "brokenRoof" : "unclear";
+      }else{
+        summary = reachOk ? "Mixed signature, unstable roof likely." : "Borderline and noisy.";
+        kind = reachOk ? "mixedRisk" : "unclear";
+      }
+    }else{
+      if(bandKey==="LF"){
+        summary = reachOk ? "Mostly solid basalt, no strong void signature." : "Weak shallow return only.";
+        kind = reachOk ? "solid" : "unclear";
+      }else if(bandKey==="HF"){
+        summary = reachOk ? "Shallow surface clutter only; no clean deep cavity." : "HF too shallow.";
+        kind = reachOk ? "surfaceClutter" : "unclear";
+      }else{
+        summary = reachOk ? "No convincing cavity pattern." : "Unclear weak return.";
+        kind = reachOk ? "solid" : "unclear";
+      }
+    }
+    if(falseEcho){
+      summary = "False echo: one pulse suggested a cavity, but the trace is inconsistent.";
+      kind = "false";
+    }
+    result = {stage:3, site, band:bandKey, info, reachOk, falseEcho, kind, message:summary};
+    state.stage3Memory[site][bandKey] = result;
+    const siteLabel = `Site ${site}`;
+    pushLog(`<small>${state.scans}.</small> ${siteLabel} / ${bandKey}: ${summary}`);
+    showOverlay(site===state.data.stage3.stableSite && !falseEcho ? t("stablePick") : t("sweepReady"), site===state.data.stage3.stableSite ? "#6cf6b4" : "#ffd166");
+  }
+  state.scanResult = result;
+  state.phase = "scanned";
+  updateControls();  // re-render controls so depth input/time appears
+  updateButtons();
+  updateStatus(t("scanComplete"), "good");
+  setFeedback(result.message);
+  render();
+}
+
+function doCheck(){
+  if(state.phase!=="scanned"){
+    updateStatus(t("needScan"), "bad");
+    toast(t("needScan"));
+    sfxFail();
+    return;
+  }
+  updateStatus(t("checking"), "warn");
+  const pass = state.stage===1 ? checkStage1() : state.stage===2 ? checkStage2() : checkStage3();
+  if(pass){
+    state.clear[state.stage] = true;
+    state.phase = "clear";
+    updateButtons();
+    sfxSuccess();
+    if(state.stage<3) q("stageBtn"+(state.stage+1)).disabled = false;
+    openClearModal();
+  }else{
+    state.phase = "idle";
+    updateButtons();
+    sfxFail();
+  }
+  updateStats();
+  render();
+}
+
+function checkStage1(){
+  const res = state.scanResult;
+  const tol = state.difficulty==="hard" ? 2.0 : 2.5;
+  if(res.type!=="real"){
+    setFeedback(`❌ Δεν έχεις πραγματικό echo. ${res.message}`);
+    updateStatus("Αυτό το echo δεν είναι αρκετά αξιόπιστο για να περάσεις το στάδιο.", "bad");
+    state.score = Math.max(0, state.score - 7);
+    return false;
+  }
+  const err = Math.abs(state.selections.depthEstimate - state.data.stage1.beaconDepth);
+  const bestBand = highestBandThatReaches(state.data.stage1.beaconDepth);
+  const bonus = bestBand===state.selections.band;
+  if(err <= tol){
+    state.score = Math.min(100, state.score + (bonus ? 5 : 3));
+    setFeedback(`✅ ${t("s1success")}<br><strong>Depth error:</strong> ${fmt(err,1)} m.${bonus ? "<br>⭐ "+t("s1bonus") : ""}`);
+    updateStatus("Round clear. Άνοιξε το Stage Clear και συνέχισε.", "good");
+    setTimeout(()=> crewMsg("stage1Clear", "green"), 600);
+    return true;
+  }
+  setFeedback(`❌ Πραγματικό echo βρήκες, αλλά η εκτίμηση βάθους είναι εκτός ανοχής.<br><strong>Depth error:</strong> ${fmt(err,1)} m.`);
+  updateStatus("Σωστό σήμα, λάθος βάθος. Ρύθμισε ξανά την εκτίμηση και κάνε νέο scan/check.", "bad");
+  state.score = Math.max(0, state.score - 4);
+  setTimeout(()=> crewMsg("wrongDepth", "red"), 500);
+  return false;
+}
+function checkStage2(){
+  const res = state.scanResult, d = state.data.stage2;
+  const tol = state.difficulty==="hard" ? 3 : 4;
+  if(res.type!=="real"){
+    setFeedback(`❌ Δεν έχεις καθαρό sweep. ${res.message}`);
+    updateStatus("Το άνοιγμα δεν χαρτογραφήθηκε καθαρά. Θέλεις band που να φτάνει στην οροφή.", "bad");
+    state.score = Math.max(0, state.score - 7);
+    return false;
+  }
+  const le = Math.abs(state.selections.leftEdge - d.leftEdge);
+  const re = Math.abs(state.selections.rightEdge - d.rightEdge);
+  if(state.selections.leftEdge >= state.selections.rightEdge){
+    setFeedback("❌ Το αριστερό άκρο πρέπει να είναι αριστερότερα από το δεξί.");
+    updateStatus("Διόρθωσε τους δείκτες και ξαναδοκίμασε.", "bad");
+    return false;
+  }
+  if(le<=tol && re<=tol){
+    const bestBand = highestBandThatReaches(d.roofDepth);
+    const bonus = bestBand===state.selections.band;
+    state.score = Math.min(100, state.score + (bonus ? 6 : 4));
+    setFeedback(`✅ ${t("s2success")}<br><strong>Σφάλματα:</strong> αριστερό ${le} / δεξί ${re}.${bonus ? "<br>⭐ Χρησιμοποίησες και το πιο λεπτομερές band που έφτανε." : ""}`);
+    updateStatus("Round clear. Άνοιξε το επόμενο στάδιο.", "good");
+    setTimeout(()=> crewMsg("stage2Clear", "green"), 600);
+    return true;
+  }
+  setFeedback(`❌ Οι δείκτες δεν έπεσαν σωστά.<br><strong>Σφάλματα:</strong> αριστερό ${le} / δεξί ${re}.`);
+  updateStatus("Δες πού αρχίζει και πού τελειώνει το άνοιγμα στο radargram και ξαναβάλε δείκτες.", "bad");
+  state.score = Math.max(0, state.score - 4);
+  setTimeout(()=> crewMsg("stage2Hint", "amber"), 500);
+  return false;
+}
+function checkStage3(){
+  const site = state.selections.finalPick;
+  const memory = state.stage3Memory[site];
+  const stable = state.data.stage3.stableSite;
+  if(!memory || Object.keys(memory).length===0){
+    setFeedback("❌ Δεν έχεις σαρώσει ακόμη το site που διάλεξες.");
+    updateStatus("Σκάναρε πρώτα το site που θες να διαλέξεις.", "bad");
+    return false;
+  }
+  if(site===stable){
+    const bonus = !!(memory.LF && memory.HF);
+    state.score = Math.min(100, state.score + (bonus ? 8 : 5));
+    setFeedback(`✅ ${t("s3success")} ${bonus ? "<br>⭐ Το επιβεβαίωσες και με LF + HF." : ""}`);
+    updateStatus("Mission complete. Το site είναι αξιόπιστο.", "good");
+    setTimeout(()=> crewMsg("goodSite", "green"), 600);
+    return true;
+  }
+  const info = state.data.stage3.sites[site];
+  let why = info.type==="fractured"
+    ? "Το site έχει κενό, αλλά η οροφή δείχνει ασταθής/ρηγματωμένη."
+    : "Το site μοιάζει κυρίως συμπαγές, χωρίς πειστικό βαθύ κενό.";
+  setFeedback(`❌ Λάθος site. ${why}`);
+  updateStatus("Θέλεις όχι μόνο κενό, αλλά και σταθερή οροφή. Σύγκρινε ξανά LF και HF.", "bad");
+  state.score = Math.max(0, state.score - 6);
+  setTimeout(()=> crewMsg("badSite", "red"), 500);
+  return false;
+}
+
+function openClearModal(){
+  el.clearBody.textContent = state.stage===1 ? t("s1success") : state.stage===2 ? t("s2success") : t("s3success");
+  el.clearWhy.innerHTML = state.stage===1
+    ? `${t("s1success")}<br><span class="small">Το beacon depth για αυτή την παρτίδα ήταν περίπου <strong>${fmt(state.data.stage1.beaconDepth,1)} m</strong>.</span>`
+    : state.stage===2
+      ? `${t("s2success")}<br><span class="small">Το πραγματικό άνοιγμα ήταν από <strong>${state.data.stage2.leftEdge}</strong> έως <strong>${state.data.stage2.rightEdge}</strong>.</span>`
+      : `${t("s3success")}<br><span class="small">Το σωστό site ήταν το <strong>${state.data.stage3.stableSite}</strong>.</span>`;
+  el.clearNext.textContent = state.stage===1 ? t("next1") : state.stage===2 ? t("next2") : t("endBody");
+  toggleModal(el.clearModal,true);
+}
+
+function proceedAfterClear(){
+  toggleModal(el.clearModal,false);
+  if(state.stage===3){
+    openEndModal();
+  }else{
+    goToStage(state.stage+1);
+  }
+}
+function nextStageManual(){ if(state.clear[state.stage] && state.stage<3) goToStage(state.stage+1); }
+function goToStage(n){
+  if(n>1 && !state.clear[n-1]) return;
+  state.stage = n;
+  state.phase = "idle";
+  state.scanResult = null;
+  state.lastReturnTime = null;
+  // Crosshair cursor for Stage 2 click-to-place
+  el.gameCanvas.classList.toggle("canvasClick", n===2);
+  updateStageText();
+  updateControls();
+  updateButtons();
+  updateStatus(t("ready"), "info");
+  setFeedback("");
+  render();
+}
+function openEndModal(){
+  // === VICTORY CELEBRATION ===
+  // Confetti
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden";
+  overlay.id = "victoryConfetti";
+  document.body.appendChild(overlay);
+  const colors = ["#ffd166","#6cf6b4","#6ee7ff","#ff8ac7","#ff6b6b","#b38dff","#fff"];
+  for(let i=0;i<70;i++){
+    const p = document.createElement("div");
+    p.style.cssText = `position:absolute;top:-15px;left:${Math.random()*100}%;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[i%colors.length]};border-radius:${Math.random()>.5?"50%":"2px"};animation:confettiFall ${2+Math.random()*3}s ${Math.random()*2}s linear forwards;opacity:.85`;
+    overlay.appendChild(p);
+  }
+  setTimeout(()=>{ const c=document.getElementById("victoryConfetti"); if(c) c.remove(); }, 6000);
+
+  // Rocket emoji
+  const rocket = document.createElement("div");
+  rocket.textContent = "🚀";
+  rocket.style.cssText = "position:fixed;bottom:30%;left:50%;transform:translateX(-50%);font-size:3.5rem;z-index:61;pointer-events:none;animation:rocketUp 2.5s ease-in forwards";
+  document.body.appendChild(rocket);
+  setTimeout(()=>rocket.remove(), 3000);
+
+  // Victory sound
+  tone(262,.12,"triangle",.07);
+  setTimeout(()=>tone(330,.12,"triangle",.07), 140);
+  setTimeout(()=>tone(392,.12,"triangle",.07), 280);
+  setTimeout(()=>tone(523,.25,"triangle",.06), 420);
+  setTimeout(()=>{tone(523,.4,"triangle",.04);tone(659,.4,"triangle",.03);tone(784,.4,"triangle",.025);}, 700);
+
+  // Show overlay flash
+  showOverlay(t("missionDone") || "MISSION COMPLETE", "#6cf6b4", 3000);
+
+  // Open modal with delay
+  setTimeout(()=> toggleModal(el.endModal,true), 1500);
+}
+function toggleModal(node,show){ node.classList.toggle("hidden", !show); }
+
+function giveHint(){
+  state.score = Math.max(0, state.score - 5);
+  updateStats();
+  const msg = state.stage===1 ? t("tip1") : state.stage===2 ? t("tip2") : t("tip3");
+  setFeedback(`💡 ${msg}`);
+  updateStatus("Hint delivered. Χρησιμοποίησέ το και δοκίμασε ξανά.", "warn");
+  toast(`💡 ${msg}`);
+  sfxHint();
+}
+function openWalkthrough(){
+  const d = state.data;
+  const best1 = highestBandThatReaches(d.stage1.beaconDepth) || "LF";
+  const pf = getPowerFactor();
+  const stable = d.stage3.stableSite;
+  let s1 = `
+    <div class="walkStep"><strong>1. Beacon Depth</strong><br>
+    Σε αυτή την παρτίδα το beacon είναι περίπου στα <strong>${fmt(d.stage1.beaconDepth,1)} m</strong>.<br>
+    • Κάνε scan με band που δίνει πραγματικό echo. Με τυπική ισχύ γύρω στο 70%, το πιο χρήσιμο υψηλό band που φτάνει είναι συνήθως <strong>${best1}</strong>.<br>
+    • Αν δεις <strong>NO ECHO</strong>, η διείσδυση δεν έφτασε. Κατέβα σε χαμηλότερη μπάντα ή ανέβασε ισχύ.<br>
+    • Δώσε depth estimate κοντά στα <strong>${fmt(d.stage1.beaconDepth,1)} m</strong> και πάτησε <strong>${t("check")}</strong>.
+    </div>`;
+  let s2 = `
+    <div class="walkStep"><strong>2. Tube Opening</strong><br>
+    Το πραγματικό άνοιγμα είναι από περίπου <strong>${d.stage2.leftEdge}</strong> έως <strong>${d.stage2.rightEdge}</strong>.<br>
+    • Θες band που να φτάνει στην οροφή, η οποία είναι σε βάθος περίπου <strong>${fmt(d.stage2.roofDepth,1)} m</strong>.<br>
+    • Κάνε sweep, μετά βάλε τον αριστερό δείκτη κοντά στο <strong>${d.stage2.leftEdge}</strong> και τον δεξί κοντά στο <strong>${d.stage2.rightEdge}</strong>.<br>
+    • Πάτησε <strong>${t("check")}</strong>.
+    </div>`;
+  let s3 = `
+    <div class="walkStep"><strong>3. Habitat Choice</strong><br>
+    Το σταθερό site αυτής της παρτίδας είναι το <strong>${stable}</strong>.<br>
+    • Σκάναρε το ίδιο site με <strong>LF</strong> και μετά με <strong>HF</strong>.<br>
+    • Αν το LF δείχνει βαθύ κενό και το HF ήρεμη/συνεκτική οροφή, αυτό είναι καλό σημάδι.<br>
+    • Διάλεξε τελικά το <strong>Site ${stable}</strong> και πάτησε <strong>${t("check")}</strong>.
+    </div>`;
+  if(state.difficulty==="hard"){
+    s3 += `<div class="walkStep"><strong>Hard mode note</strong><br>
+      Τα false echoes είναι πιο πιθανά όταν το band δεν φτάνει αρκετά βαθιά. Μην εμπιστευτείς ένα μόνο περίεργο ίχνος. Επιβεβαίωσε με δεύτερο band και πρόσεξε τη μπαταρία όταν πέσει κάτω από 25%.
+      </div>`;
+  }
+  el.walkContent.innerHTML = s1+s2+s3;
+  toggleModal(el.walkModal,true);
+}
+
+// ======== CREW COMMS SYSTEM ========
+const CREW = {
+  el: {
+    start: ["Πλήρωμα online. Ας βρούμε αυτόν τον σωλήνα.", "Η κεραία είναι έτοιμη. Θυμήσου: χαμηλή f = βαθιά, υψηλή f = καθαρά."],
+    hfTrap: ["Χμμ, η HF δεν φτάνει; Σαν να ψάχνεις κλειδιά κάτω από φανάρι επειδή εκεί βλέπεις...", "Δοκίμασε κάτι πιο… βαθύ. Κυριολεκτικά."],
+    firstEcho: ["ΝΑΙ! Echo! Τώρα κάνε τη μαθηματική σου. d = v × t / 2. Θυμήσου, δεν είναι Google — είσαι εσύ.", "Ωραίο σήμα. Τώρα πόσο βαθιά είναι; Μην μαντεύεις — υπολόγισε."],
+    wrongDepth: ["Κοντά, αλλά ξαναδές τον υπολογισμό. Η φυσική δεν κάνει στρογγυλοποιήσεις χάρη.", "Λάθος βάθος. Μήπως ξέχασες το /2 στον τύπο; Πήγαινε-έλα, θυμήσου."],
+    stage1Clear: ["Ωραία δουλειά! Τώρα ξέρουμε ΠΟΥ είναι. Αλλά πόσο μεγάλος είναι;", "Beacon εντοπίστηκε. Τώρα χρειαζόμαστε χάρτη ολόκληρου του σωλήνα."],
+    stage2Hint: ["Κοίτα τον καμβά προσεκτικά. Πού ακριβώς αρχίζει το σκοτάδι;", "Η οροφή φαίνεται ξεκάθαρα. Τα άκρα του κενού — εκεί πρέπει να σημαδέψεις."],
+    stage2Clear: ["Τέλεια! Τώρα ξέρουμε το σχήμα. Αλλά είναι ασφαλής; Ή θα μας πέσει στο κεφάλι;"],
+    badSite: ["Αυτό το site δεν μοιάζει σωστό. Κοίτα ξανά τις κυματομορφές.", "Θα μένατε σε σπίτι με ρωγμές στην οροφή; Ούτε εγώ."],
+    goodSite: ["ΤΕΛΕΙΑ! Αυτός ο σωλήνας είναι σταθερός. Μπορούμε να χτίσουμε βάση!"],
+    lowBattery: ["⚡ Μπαταρία χαμηλά! Κάθε σάρωση μετράει πλέον.", "Εξοικονόμησε ενέργεια. Σκέψου ΠΡΙΝ σαρώσεις."],
+    falseEcho: ["Πρόσεξε — αυτό μοιάζει με ψεύτικο σήμα. Μην το εμπιστευτείς αμέσως.", "Ghost echo; Κάνε ακόμα μία σάρωση με διαφορετική μπάντα."],
+    jokes: [
+      "Ξέρεις γιατί τα ηλεκτρομαγνητικά κύματα δεν πληρώνουν ενοίκιο; Γιατί πάντα περνάνε μέσα...",
+      "Ο Ερμής τη Σελήνη: «Εσύ τουλάχιστον έχεις κάποιον που σε βλέπει κάθε βράδυ.»",
+      "Fun fact: ένας σωλήνας λάβας στη Σελήνη μπορεί να χωρέσει ολόκληρη πόλη. Χωρίς κυκλοφοριακό.",
+      "Η HF στη Σελήνη είναι σαν να φωνάζεις σε βαμβάκι: ωραίος ήχος, μηδέν βάθος.",
+      "Ο Newton θα ζήλευε. Εμείς κάνουμε φυσική ΣΤΗ ΣΕΛΗΝΗ."
+    ]
+  },
+  en: {
+    start: ["Crew online. Let's find this tube.", "Antenna is ready. Remember: low f = deep, high f = sharp."],
+    hfTrap: ["Hmm, HF can't reach? Like looking for keys under the lamppost because that's where the light is…", "Try something more… deep. Literally."],
+    firstEcho: ["YES! Echo! Now do the maths. d = v × t / 2. No Google here — it's you.", "Nice signal. So how deep is it? Don't guess — calculate."],
+    wrongDepth: ["Close, but recheck your maths. Physics doesn't round off for you.", "Wrong depth. Did you forget the /2 in the formula? Round trip, remember."],
+    stage1Clear: ["Nice work! Now we know WHERE it is. But how big is it?", "Beacon found. Now we need a map of the whole tube."],
+    stage2Hint: ["Look at the canvas carefully. Where exactly does the darkness begin?", "The roof is clear. The void edges — that's where you need to mark."],
+    stage2Clear: ["Perfect! Now we know the shape. But is it safe? Or will it collapse on us?"],
+    badSite: ["This site doesn't look right. Check those waveforms again.", "Would you live in a house with cracks in the ceiling? Me neither."],
+    goodSite: ["PERFECT! This tube is stable. We can build a base here!"],
+    lowBattery: ["⚡ Battery low! Every scan counts now.", "Save energy. Think BEFORE you scan."],
+    falseEcho: ["Careful — that looks like a false signal. Don't trust it right away.", "Ghost echo? Do another scan with a different band."],
+    jokes: [
+      "Why don't EM waves pay rent? Because they always pass through…",
+      "Mercury to the Moon: 'At least YOU have someone who looks at you every night.'",
+      "Fun fact: a lunar lava tube could fit an entire city. No traffic jams.",
+      "HF on the Moon is like yelling into cotton: great sound, zero depth.",
+      "Newton would be jealous. We're doing physics ON THE MOON."
+    ]
+  }
+};
+
+let crewTimer = null;
+function crewSay(msgArray, tone="cyan"){
+  const msg = msgArray[Math.floor(Math.random()*msgArray.length)];
+  const comm = q("crewComm");
+  const avatar = q("crewAvatar");
+  q("crewText").textContent = msg;
+  avatar.style.background = tone==="green" ? "radial-gradient(circle at 30% 30%,#fff,#b5ffd5 36%,#2db97d 100%)"
+    : tone==="red" ? "radial-gradient(circle at 30% 30%,#fff,#ffc5c5 36%,#d54e4e 100%)"
+    : tone==="amber" ? "radial-gradient(circle at 30% 30%,#fff,#ffe8a8 36%,#cf8c00 100%)"
+    : "radial-gradient(circle at 30% 30%,#fff,#b5f5ff 36%,#4e82ff 100%)";
+  comm.classList.add("show");
+  clearTimeout(crewTimer);
+  crewTimer = setTimeout(()=> comm.classList.remove("show"), 6000);
+}
+function crewMsg(key, tone){
+  const msgs = CREW[state.lang] || CREW.en;
+  if(msgs[key]) crewSay(msgs[key], tone);
+}
+function crewJoke(){
+  const msgs = CREW[state.lang] || CREW.en;
+  crewSay(msgs.jokes, "amber");
+}
+
+// ======== CANVAS CLICK-TO-PLACE (Stage 2) ========
+function initCanvasClick(){
+  const canvas = el.gameCanvas;
+  canvas.addEventListener("pointerdown", onCanvasClick);
+}
+function onCanvasClick(e){
+  if(state.stage !== 2) return;
+  if(!state.scanResult || state.scanResult.type !== "real") return;
+  // Convert click x to position value (0-100 scale)
+  const rect = el.gameCanvas.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const canvasX = clickX / rect.width * el.gameCanvas.width;
+  // tubeX maps 0-100 to pixel range 120..1160
+  const pos = clamp(Math.round((canvasX - 120) / 1040 * 100), 0, 100);
+
+  // Place nearest marker (L or R based on which is closer)
+  const distL = Math.abs(pos - state.selections.leftEdge);
+  const distR = Math.abs(pos - state.selections.rightEdge);
+  if(pos < (state.selections.leftEdge + state.selections.rightEdge)/2){
+    state.selections.leftEdge = clamp(pos, 10, 55);
+  } else {
+    state.selections.rightEdge = clamp(pos, 45, 90);
+  }
+  tone(500 + pos*4, .06, "sine", .04);
+  updateControls();
+  render();
+}
+
+// ======== RANDOM EVENTS ========
+function maybeRandomEvent(){
+  if(Math.random() > 0.30) return; // 30% chance per scan
+  const events = state.lang==="el" ? [
+    {msg:"⚡ Μικρο-σεισμός! Ο ρεγόλιθος μετακινήθηκε ελαφρά. Η επόμενη σάρωση μπορεί να έχει μικρή μετατόπιση.", type:"warn"},
+    {msg:"📡 Ηλιακή παρεμβολή — στατικός θόρυβος στο σήμα. Η ποιότητα της σάρωσης μειώθηκε ελαφρά.", type:"warn"},
+    {msg:"🔋 Η μπαταρία ανέκαμψε ελαφρά από τα ηλιακά panels! +3%", type:"good", effect:"battery"},
+    {msg:"🛰️ Ο δορυφόρος relay πέρασε. Σύντομη ενίσχυση σήματος!", type:"good"},
+  ] : [
+    {msg:"⚡ Micro-quake! Regolith shifted slightly. Next scan may have a small offset.", type:"warn"},
+    {msg:"📡 Solar interference — static noise in the signal. Scan quality slightly reduced.", type:"warn"},
+    {msg:"🔋 Battery recovered slightly from solar panels! +3%", type:"good", effect:"battery"},
+    {msg:"🛰️ Relay satellite overhead. Brief signal boost!", type:"good"},
+  ];
+  const ev = events[Math.floor(Math.random()*events.length)];
+  if(ev.effect==="battery") state.battery = Math.min(100, state.battery + 3);
+  pushLog(`<div class="eventAlert"><small>EVENT:</small> ${ev.msg}</div>`);
+  if(ev.type==="warn") tone(180,.12,"sawtooth",.05,140);
+  else tone(600,.08,"triangle",.05,800);
+}
+
+// ======== JOKE TIMER ========
+let jokeInterval = null;
+function startJokeTimer(){
+  jokeInterval = setInterval(()=>{
+    if(state.phase!=="clear" && state.battery > 0) crewJoke();
+  }, 25000 + Math.random()*15000);
+}
+function stopJokeTimer(){
+  clearInterval(jokeInterval);
+}
+
+function renderLoop(){
+  render();
+  rafId = requestAnimationFrame(renderLoop);
+}
+
+function render(){
+  const c = el.gameCanvas, ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0,0,w,h);
+
+  // sky
+  const g = ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,"#081a34"); g.addColorStop(.58,"#081224"); g.addColorStop(1,"#0a0f17");
+  ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+
+  // animated stars (twinkle)
+  const t2 = performance.now() * 0.001;
+  for(let i=0;i<120;i++){
+    const sx = (i*97)%w, sy = (i*53)%220 + (i%5)*2;
+    const twinkle = 0.4 + 0.6 * Math.abs(Math.sin(t2 * (0.3 + (i%7)*0.15) + i*1.7));
+    const r = (i%4===0?3:1.8);
+    ctx.fillStyle = i%11===0 ? `rgba(255,209,102,${twinkle})` : `rgba(255,255,255,${twinkle*0.8})`;
+    ctx.beginPath(); ctx.arc(sx,sy,r,0,Math.PI*2); ctx.fill();
+    // Cross sparkle on brightest stars
+    if(i%13===0 && twinkle > 0.7){
+      ctx.strokeStyle = `rgba(255,255,255,${twinkle*0.3})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(sx-6,sy); ctx.lineTo(sx+6,sy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx,sy-6); ctx.lineTo(sx,sy+6); ctx.stroke();
+    }
+  }
+  // moon
+  ctx.fillStyle = "#e7e8ee";
+  ctx.beginPath(); ctx.arc(w*0.83, 110, 105, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "rgba(180,184,195,.45)";
+  [[-25,-18,28],[26,12,20],[0,40,12]].forEach(([dx,dy,r])=>{ ctx.beginPath(); ctx.arc(w*0.83+dx,110+dy,r,0,Math.PI*2); ctx.fill(); });
+
+  // ground with subtle terrain texture
+  ctx.fillStyle = "#bfc2cc";
+  ctx.beginPath();
+  ctx.moveTo(0,240);
+  ctx.bezierCurveTo(w*.28,225,w*.62,255,w,230);
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fill();
+  // Terrain layers
+  for(let ly=0; ly<4; ly++){
+    const layerY = 260 + ly*35;
+    const alpha = 0.04 + ly*0.02;
+    ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+    ctx.fillRect(0, layerY, w, 8 + ly*4);
+  }
+
+  // craters with shadow
+  for(let i=0;i<10;i++){
+    const cx = (i*130+80)%w, cy = 430 + (i%5)*46;
+    const cr = 50+(i%3)*20, ch = 12+(i%4)*5;
+    ctx.fillStyle = "rgba(0,0,0,.06)";
+    ctx.beginPath(); ctx.ellipse(cx+4, cy+3, cr, ch, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.ellipse(cx, cy, cr, ch, 0, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // rover / antenna
+  ctx.fillStyle = "#e7eaf3";
+  ctx.fillRect(105,168,130,52);
+  ctx.fillRect(60,205,220,20);
+  // wheels
+  ctx.strokeStyle = "#f6f7fb"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(95,225); ctx.lineTo(73,285); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(245,225); ctx.lineTo(268,288); ctx.stroke();
+  ctx.fillStyle = "#d0d3dc";
+  ctx.beginPath(); ctx.arc(73,288,14,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(268,291,14,0,Math.PI*2); ctx.fill();
+  // antenna mast
+  ctx.strokeStyle = "#f4c857"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(171,168); ctx.lineTo(171,96); ctx.stroke();
+  // antenna dish with animated glow
+  const antennaGlow = 0.5 + 0.5 * Math.sin(t2 * 2.5);
+  ctx.beginPath(); ctx.arc(171,92,22,0,Math.PI*2);
+  ctx.strokeStyle = `rgba(244,200,87,${0.4 + antennaGlow * 0.4})`; ctx.lineWidth = 7; ctx.stroke();
+  // Glow ring when recently scanned
+  if(scanAnim || (state.scanResult && state.phase==="scanned")){
+    ctx.strokeStyle = `rgba(110,231,255,${0.15 + antennaGlow * 0.15})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(171,92, 32 + antennaGlow*6, 0, Math.PI*2); ctx.stroke();
+  }
+  // Solar panel on rover
+  ctx.fillStyle = "rgba(60,80,140,.7)";
+  ctx.fillRect(115, 155, 110, 14);
+  ctx.strokeStyle = "rgba(255,255,255,.12)"; ctx.lineWidth = 1;
+  for(let i=0;i<6;i++) { ctx.beginPath(); ctx.moveTo(115+i*22,155); ctx.lineTo(115+i*22,169); ctx.stroke(); }
+
+  // stage specific subterranean visuals
+  drawSubsurface(ctx,w,h);
+  drawScanAnimation(ctx,w,h);
+  updateStats();
+}
+
+function drawSubsurface(ctx,w,h){
+  const topY = 258;
+  ctx.save();
+  if(state.stage===1){
+    const depthY = topY + depthToPx(state.data.stage1.beaconDepth);
+    ctx.strokeStyle = "rgba(110,231,255,.08)";
+    for(let i=0;i<6;i++){ const y=topY + i*62; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+    // Depth scale (right side)
+    ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.font = "600 14px sans-serif";
+    for(let d=5;d<=35;d+=5){
+      const y = topY + depthToPx(d);
+      ctx.fillText(d+" m", w-60, y+4);
+      ctx.strokeStyle = "rgba(255,255,255,.04)"; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w-70,y); ctx.stroke();
+    }
+
+    // Echo reflection line (shows WHERE the echo bounced, NOT the depth number)
+    if(state.scanResult && (state.scanResult.type==="real" || state.scanResult.type==="false")){
+      const y = topY + depthToPx(state.scanResult.measured);
+      ctx.strokeStyle = state.scanResult.type==="real" ? "rgba(108,246,180,.7)" : "rgba(255,107,107,.7)";
+      ctx.lineWidth = 3; ctx.setLineDash([14,10]); ctx.beginPath(); ctx.moveTo(100,y); ctx.lineTo(w-80,y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = state.scanResult.type==="real" ? "rgba(108,246,180,.10)" : "rgba(255,107,107,.10)";
+      ctx.fillRect(100,y-10,w-180,20);
+      // Return time display ON canvas (the key data student needs)
+      if(state.lastReturnTime !== null){
+        ctx.fillStyle = state.scanResult.type==="real" ? "#6cf6b4" : "#ff6b6b";
+        ctx.font = "900 28px sans-serif";
+        ctx.fillText("t = " + fmt(state.lastReturnTime,3) + " μs", 400, y - 20);
+        ctx.font = "600 16px sans-serif"; ctx.fillStyle = "rgba(255,255,255,.55)";
+        ctx.fillText("d = v × t / 2 = ?", 400, y + 25);
+      }
+    }
+
+    // Hidden beacon (subtle glow, no depth label)
+    ctx.fillStyle = "rgba(255,209,102,.20)";
+    ctx.beginPath(); ctx.arc(w*0.55, depthY, 18, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,209,102,.15)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(w*0.55, depthY, 30, 0, Math.PI*2); ctx.stroke();
+
+    // Student's estimate marker (only if they entered a value > 0)
+    if(state.selections.depthEstimate > 0){
+      const ey = topY + depthToPx(state.selections.depthEstimate);
+      ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(w*0.82,ey); ctx.lineTo(w*0.95,ey); ctx.stroke();
+      ctx.fillStyle = "#ffd166"; ctx.font = "700 20px sans-serif";
+      ctx.fillText(fmt(state.selections.depthEstimate,1)+" m", w*0.68, ey-8);
+      ctx.font = "600 13px sans-serif"; ctx.fillStyle = "rgba(255,209,102,.6)";
+      ctx.fillText("your estimate ↑", w*0.72, ey+18);
+    }
+  }else if(state.stage===2){
+    const d = state.data.stage2;
+    const roofY = topY + depthToPx(d.roofDepth);
+    const left = tubeX(d.leftEdge), right = tubeX(d.rightEdge);
+    const hasSweep = state.scanResult && state.scanResult.stage===2 && state.scanResult.type==="real";
+    const hasFail = state.scanResult && state.scanResult.stage===2 && state.scanResult.type!=="real";
+
+    // Depth grid lines
+    ctx.strokeStyle = "rgba(110,231,255,.10)";
+    ctx.lineWidth = 1;
+    for(let i=0;i<6;i++){ const y=topY + i*60; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+    // Horizontal position scale (bottom ruler, 0-100)
+    ctx.fillStyle = "rgba(255,255,255,.20)"; ctx.font = "600 13px sans-serif";
+    for(let v=0;v<=100;v+=10){
+      const x = tubeX(v);
+      ctx.fillText(v, x-8, h-8);
+      ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x,topY); ctx.lineTo(x,h-22); ctx.stroke();
+    }
+
+    if(!hasSweep && !hasFail){
+      // BEFORE scan: show solid rock, no void visible
+      ctx.fillStyle = "#8d919b";
+      ctx.fillRect(0,roofY,w,14);
+      ctx.fillStyle = "rgba(255,255,255,.40)"; ctx.font = "700 22px sans-serif";
+      ctx.textAlign = "center";
+      const scanPrompt = state.lang==="el" ? "📡 Κάνε σάρωση για να αποκαλυφθεί η δομή" : "📡 Fire a scan to reveal the structure";
+      ctx.fillText(scanPrompt, w/2, roofY + 80);
+      ctx.textAlign = "left";
+    } else if(hasSweep) {
+      // AFTER successful scan: show void visually
+      // Roof layer (solid rock)
+      ctx.fillStyle = "#8d919b";
+      ctx.fillRect(0,roofY,w,14);
+      // Clear the opening
+      ctx.clearRect(left-2, roofY-3, right-left+4, 20);
+      // Void space (darker, with subtle glow at edges)
+      ctx.fillStyle = "rgba(40,60,100,.55)";
+      ctx.fillRect(left, roofY+2, right-left, 160);
+      // Glowing edges to make them visible
+      ctx.strokeStyle = "rgba(110,231,255,.55)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(left, roofY-8); ctx.lineTo(left, roofY+160); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(right, roofY-8); ctx.lineTo(right, roofY+160); ctx.stroke();
+      // Roof echo line
+      ctx.strokeStyle = "rgba(108,246,180,.6)"; ctx.lineWidth = 2;
+      ctx.setLineDash([8,6]);
+      ctx.beginPath(); ctx.moveTo(120,roofY+7); ctx.lineTo(left-4,roofY+7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(right+4,roofY+7); ctx.lineTo(w-60,roofY+7); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Scan line glow
+      ctx.fillStyle = "rgba(110,231,255,.06)";
+      ctx.fillRect(120, roofY-20, w-180, 40);
+
+      // Label for the void (no numbers!)
+      ctx.fillStyle = "rgba(110,231,255,.75)"; ctx.font = "700 16px sans-serif";
+      ctx.textAlign = "center";
+      const voidLabel = state.lang==="el" ? "← ΑΝΟΙΓΜΑ →" : "← OPENING →";
+      ctx.fillText(voidLabel, (left+right)/2, roofY + 90);
+      const placeLabel = state.lang==="el" ? "Τοποθέτησε τους δείκτες L / R στα άκρα" : "Place L / R markers at the edges";
+      ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.font = "600 14px sans-serif";
+      ctx.fillText(placeLabel, (left+right)/2, roofY + 115);
+      ctx.textAlign = "left";
+
+      // Player markers (only AFTER scan)
+      const pL = tubeX(state.selections.leftEdge), pR = tubeX(state.selections.rightEdge);
+      // Left marker
+      ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(pL, topY+20); ctx.lineTo(pL, h-30); ctx.stroke();
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath(); ctx.moveTo(pL-10,topY+14); ctx.lineTo(pL+10,topY+14); ctx.lineTo(pL,topY+28); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#08111f"; ctx.font = "900 14px sans-serif"; ctx.fillText("L", pL-5, topY+24);
+      // Right marker
+      ctx.strokeStyle = "#ffd166"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(pR, topY+20); ctx.lineTo(pR, h-30); ctx.stroke();
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath(); ctx.moveTo(pR-10,topY+14); ctx.lineTo(pR+10,topY+14); ctx.lineTo(pR,topY+28); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#08111f"; ctx.font = "900 14px sans-serif"; ctx.fillText("R", pR-5, topY+24);
+
+      // Position readout under markers
+      ctx.fillStyle = "#ffd166"; ctx.font = "700 14px sans-serif";
+      ctx.fillText(Math.round(state.selections.leftEdge), pL-8, h-32);
+      ctx.fillText(Math.round(state.selections.rightEdge), pR-8, h-32);
+    } else {
+      // Failed scan: show static/noise
+      ctx.fillStyle = "#8d919b";
+      ctx.fillRect(0,roofY,w,14);
+      ctx.fillStyle = "rgba(255,107,107,.35)"; ctx.font = "700 20px sans-serif";
+      ctx.textAlign = "center";
+      const failLabel = state.lang==="el" ? "❌ Η σάρωση δεν ήταν αρκετά βαθιά" : "❌ Scan did not reach deep enough";
+      ctx.fillText(failLabel, w/2, roofY+80);
+      ctx.textAlign = "left";
+    }
+  }else{
+    const y = 460;
+    SITES.forEach((site, i)=>{
+      const x = 250 + i*300;
+      const mem = state.stage3Memory[site];
+      ctx.fillStyle = "rgba(16,29,51,.85)";
+      roundRect(ctx, x-105, 310, 210, 230, 24, true, false);
+      ctx.strokeStyle = site===state.selections.scanSite ? "#6ee7ff" : site===state.selections.finalPick ? "#ffd166" : "rgba(255,255,255,.12)";
+      ctx.lineWidth = 4; roundRect(ctx, x-105, 310, 210, 230, 24, false, true);
+      ctx.fillStyle = "#eef6ff"; ctx.font = "700 28px sans-serif"; ctx.fillText("Site "+site, x-42, 350);
+      drawSiteMini(ctx, x, 395, mem && mem.LF ? mem.LF.kind : null, "LF");
+      drawSiteMini(ctx, x, 470, mem && mem.HF ? mem.HF.kind : null, "HF");
+    });
+  }
+  ctx.restore();
+}
+function drawSiteMini(ctx, x, y, kind, label){
+  const cardW = 156, cardH = 62;
+  ctx.save();
+  // Card background
+  ctx.fillStyle = "rgba(10,18,34,.85)";
+  roundRect(ctx, x-cardW/2, y-cardH/2, cardW, cardH, 14, true, false);
+  ctx.strokeStyle = kind && kind!=="unclear" ? "rgba(255,255,255,.20)" : "rgba(255,255,255,.08)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, x-cardW/2, y-cardH/2, cardW, cardH, 14, false, true);
+
+  // Band label
+  ctx.fillStyle = label==="LF" ? "#6ee7ff" : label==="HF" ? "#ff8ac7" : "#ffd166";
+  ctx.font = "800 13px sans-serif";
+  ctx.fillText(label, x - cardW/2 + 10, y - cardH/2 + 16);
+
+  if(!kind || kind==="unclear"){
+    // Not scanned yet: question mark
+    ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.font = "700 22px sans-serif";
+    ctx.fillText("?", x + 20, y + 8);
+    ctx.restore();
+    return;
+  }
+
+  // Draw a mini "radar waveform" — the shape tells the story
+  const waveX = x - cardW/2 + 42;
+  const waveW = cardW - 52;
+  const waveY = y;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  if(kind==="stableVoid" || kind==="stableMid"){
+    // Clean, deep U-shaped dip = clear void
+    ctx.strokeStyle = "rgba(108,246,180,.85)";
+    for(let i=0; i<=waveW; i++){
+      const t = i/waveW;
+      const dip = -Math.exp(-Math.pow((t-0.5)*4, 2)) * 22;
+      const py = waveY + dip;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(108,246,180,.65)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("void ✓", x + 30, y + 22);
+
+  } else if(kind==="stableRoof"){
+    // Smooth flat line = stable roof
+    ctx.strokeStyle = "rgba(108,246,180,.85)";
+    for(let i=0; i<=waveW; i++){
+      const t = i/waveW;
+      const py = waveY - 4 + Math.sin(t*6)*1.5;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(108,246,180,.65)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("smooth ✓", x + 24, y + 22);
+
+  } else if(kind==="noisyVoid"){
+    // Dip exists but with heavy noise
+    ctx.strokeStyle = "rgba(255,183,3,.80)";
+    for(let i=0; i<=waveW; i++){
+      const t = i/waveW;
+      const dip = -Math.exp(-Math.pow((t-0.5)*4, 2)) * 18;
+      const noise = (Math.sin(i*1.7)*4 + Math.sin(i*3.1)*3) * (0.3 + 0.7*Math.abs(t-0.5));
+      const py = waveY + dip + noise;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,183,3,.65)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("noisy", x + 34, y + 22);
+
+  } else if(kind==="brokenRoof"){
+    // Jagged, fragmented line = fractured
+    ctx.strokeStyle = "rgba(255,107,107,.80)";
+    for(let i=0; i<=waveW; i++){
+      const noise = Math.sin(i*2.3)*6 + Math.sin(i*5.7)*4 + Math.sin(i*0.7)*3;
+      const py = waveY + noise;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,107,107,.65)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("broken ⚠", x + 24, y + 22);
+
+  } else if(kind==="mixedRisk"){
+    // Noisy with some dip
+    ctx.strokeStyle = "rgba(255,183,3,.75)";
+    for(let i=0; i<=waveW; i++){
+      const t = i/waveW;
+      const dip = -Math.exp(-Math.pow((t-0.45)*3.5, 2)) * 12;
+      const noise = Math.sin(i*2.8)*5 + Math.sin(i*4.3)*3;
+      const py = waveY + dip + noise;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,183,3,.55)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("risky", x + 36, y + 22);
+
+  } else if(kind==="solid" || kind==="surfaceClutter"){
+    // Nearly flat, no void signature
+    ctx.strokeStyle = "rgba(155,180,209,.60)";
+    for(let i=0; i<=waveW; i++){
+      const py = waveY + Math.sin(i*0.8)*2 + Math.sin(i*2.2)*1;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(155,180,209,.50)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("solid", x + 36, y + 22);
+
+  } else if(kind==="false"){
+    // One spike then nothing — misleading
+    ctx.strokeStyle = "rgba(255,107,107,.70)";
+    for(let i=0; i<=waveW; i++){
+      const t = i/waveW;
+      const spike = t > 0.25 && t < 0.35 ? -14 : 0;
+      const noise = Math.sin(i*3.5)*2;
+      const py = waveY + spike + noise;
+      if(i===0) ctx.moveTo(waveX+i, py); else ctx.lineTo(waveX+i, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,107,107,.55)"; ctx.font = "600 11px sans-serif";
+    ctx.fillText("ghost?", x + 32, y + 22);
+  }
+  ctx.restore();
+}
+function drawScanAnimation(ctx,w,h){
+  if(!scanAnim) return;
+  const progress = clamp((now()-scanAnim.start)/scanAnim.duration,0,1);
+  if(progress>=1){
+    scanAnim = null;
+    return;
+  }
+  const sourceX = 171, sourceY = 92;
+  const groundY = 258;
+  const maxDepth = h - 30;
+  const bandColor = BANDS[state.selections.band].color;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  // Phase 1 (0-0.5): pulse goes DOWN through ground
+  // Phase 2 (0.5-1): echo comes BACK UP (if echo expected)
+  const goingDown = progress < 0.55;
+  const pulseProgress = goingDown ? progress / 0.55 : (progress - 0.55) / 0.45;
+
+  if(goingDown){
+    const pulseY = groundY + pulseProgress * (maxDepth - groundY);
+    // Wavefront expanding downward
+    const frontW = 80 + pulseProgress * 200;
+    const alpha = 0.5 - pulseProgress * 0.3;
+
+    // Pulse wavefront
+    ctx.strokeStyle = bandColor;
+    ctx.lineWidth = 4;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(sourceX - frontW/2, pulseY);
+    ctx.quadraticCurveTo(sourceX, pulseY + 20, sourceX + frontW/2, pulseY);
+    ctx.stroke();
+
+    // Trailing waves
+    for(let i=1; i<=3; i++){
+      const trailY = pulseY - i*28;
+      if(trailY < groundY) continue;
+      const trailW = frontW - i*30;
+      ctx.globalAlpha = alpha * (1 - i*0.25);
+      ctx.lineWidth = 3 - i*0.5;
+      ctx.beginPath();
+      ctx.moveTo(sourceX - trailW/2, trailY);
+      ctx.quadraticCurveTo(sourceX, trailY + 12, sourceX + trailW/2, trailY);
+      ctx.stroke();
+    }
+
+    // Vertical beam from antenna
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(sourceX, sourceY + 30); ctx.lineTo(sourceX, pulseY - 10); ctx.stroke();
+
+    // Ground penetration glow
+    ctx.fillStyle = bandColor.replace(")", ",.08)").replace("rgb","rgba").replace("#","");
+    if(bandColor.startsWith("#")){
+      ctx.fillStyle = `rgba(110,231,255,${0.06 * (1-pulseProgress)})`;
+    }
+    ctx.fillRect(sourceX - frontW/2, groundY, frontW, pulseY - groundY);
+  } else {
+    // Echo returning — rings coming back up
+    const echoY = maxDepth - pulseProgress * (maxDepth - groundY - 40);
+    const echoW = 60 + (1-pulseProgress) * 120;
+    ctx.globalAlpha = 0.3 + pulseProgress * 0.4;
+    ctx.strokeStyle = "#6cf6b4";
+    ctx.lineWidth = 3;
+    for(let i=0; i<3; i++){
+      const ry = echoY - i*22;
+      const rw = echoW - i*20;
+      ctx.globalAlpha = (0.4 + pulseProgress*0.3) * (1-i*0.25);
+      ctx.beginPath();
+      ctx.moveTo(sourceX - rw/2, ry);
+      ctx.quadraticCurveTo(sourceX, ry - 14, sourceX + rw/2, ry);
+      ctx.stroke();
+    }
+  }
+
+  // Antenna glow during scan
+  ctx.globalAlpha = 0.4 + 0.3 * Math.sin(progress * Math.PI * 8);
+  const antennaGlow = ctx.createRadialGradient(sourceX, sourceY, 0, sourceX, sourceY, 50);
+  antennaGlow.addColorStop(0, bandColor);
+  antennaGlow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = antennaGlow;
+  ctx.beginPath(); ctx.arc(sourceX, sourceY, 50, 0, Math.PI*2); ctx.fill();
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+function depthToPx(d){
+  return d * 12.5;
+}
+function tubeX(v){
+  return 120 + v/100 * 1040;
+}
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r);
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
