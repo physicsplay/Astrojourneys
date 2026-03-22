@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>Mission ATLAS #09 — Comet Lander: Rosetta's Philae</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#030510;--panel:rgba(10,14,30,.92);--line:rgba(255,255,255,.11);--text:#eef3ff;--muted:#b0c0dd;
+  --gold:#ffd166;--cyan:#6be0ff;--red:#ff7070;--green:#7ce38b;--purple:#b08cff;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--ui:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif}
+html,body{min-height:100%;margin:0;background:linear-gradient(180deg,#020510,#0a0820,#0e0818);color:var(--text);font-family:var(--ui);overflow-x:hidden}
+button,input,select{font:inherit;color:var(--text)}button{cursor:pointer}
+
+/* INTRO */
+#introScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:radial-gradient(ellipse at 30% 20%,rgba(107,224,255,.07),transparent 50%),radial-gradient(ellipse at 70% 30%,rgba(176,140,255,.06),transparent 50%),linear-gradient(180deg,#020510,#0a0820,#100818)}
+.icard{width:min(1060px,96vw);border-radius:28px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(800px 400px at 50% 0%,rgba(176,140,255,.08),transparent 55%),var(--panel);box-shadow:0 30px 80px rgba(0,0,0,.6);padding:24px}
+.itag{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--purple);margin-bottom:6px}
+.ititle{font-size:clamp(1.5rem,4vw,2.4rem);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-bottom:14px}
+.ititle span{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.igrid{display:grid;grid-template-columns:1.25fr .85fr;gap:14px}
+@media(max-width:860px){.igrid{grid-template-columns:1fr}}
+.iblock{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:8px}
+.iblock h3{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.idialogue{line-height:1.6;color:rgba(235,240,255,.92);font-size:.9rem}
+.idialogue .who{font-weight:800;color:#d4c0ff}
+.idialogue .em{color:var(--gold);font-weight:700}
+.idialogue .par{color:var(--cyan);font-family:var(--mono)}
+.ihero{color:rgba(240,244,255,.88);line-height:1.5;font-size:.9rem;margin-top:8px}
+.imini{font-size:.82rem;color:var(--muted);line-height:1.4}
+.iformula{font-family:var(--mono);font-size:.78rem;white-space:pre-line;color:rgba(200,210,230,.85);line-height:1.45}
+.ibtn{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:.84rem;transition:.15s}
+.ibtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.ibtn.active{background:rgba(176,140,255,.14);border-color:rgba(176,140,255,.5)}
+.ibtn.go{background:linear-gradient(135deg,#b08cff,#7c6cff);color:#fff;border-color:rgba(176,140,255,.5);font-weight:800;font-size:1rem;padding:14px 24px;width:100%;text-align:center;margin-top:10px}
+.bgroup{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+kbd{font-family:var(--mono);font-size:.74rem;padding:2px 5px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+
+/* GAME */
+#gameScreen{display:none;min-height:100vh}
+.gl{display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto 1fr auto;min-height:100vh}
+@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto 50vh auto auto}}
+.topbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 12px;border-bottom:1px solid var(--line);background:rgba(8,12,26,.92);backdrop-filter:blur(8px)}
+.tbt{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.85rem}
+.tbs{display:flex;gap:5px;flex-wrap:wrap}
+.ts{min-width:68px;padding:4px 8px;border-radius:10px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.ts .v{font-family:var(--mono);font-size:.88rem;font-weight:700}.ts .k{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tbl{display:flex;gap:4px}.tbl button{padding:4px 7px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.74rem}.tbl button.active{background:rgba(107,224,255,.12);border-color:rgba(107,224,255,.4)}
+.cw{position:relative;overflow:hidden}.cw canvas{display:block;width:100%;height:100%}
+/* Radio overlay */
+.radio{position:absolute;top:10px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:999px;background:rgba(0,0,0,.7);border:1px solid rgba(176,140,255,.3);font-family:var(--mono);font-size:.82rem;color:#d4c0ff;z-index:3;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;max-width:90%;text-align:center}
+.radio.on{opacity:1}
+/* Countdown */
+.countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:4;font-size:clamp(4rem,10vw,8rem);font-weight:900;font-family:var(--mono);color:var(--gold);text-shadow:0 0 40px rgba(255,209,102,.5)}
+.countdown.on{display:flex}
+.side{border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(8,12,26,.85),rgba(8,12,26,.65));overflow-y:auto;padding:8px}
+@media(max-width:1020px){.side{border-left:none;border-top:1px solid var(--line)}}
+.sc{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:9px;margin-bottom:6px}
+.sc h3{margin:0 0 5px;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(240,244,255,.85);font-family:var(--mono)}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-top:1px dashed rgba(255,255,255,.05)}.sr:first-of-type{border-top:none}
+.sr .k{font-size:.78rem;color:var(--muted)}.sr .v{font-family:var(--mono);font-size:.82rem}
+.sm{font-size:.78rem;color:var(--muted);line-height:1.35}
+.good{color:var(--green)!important}.warn{color:var(--gold)!important}.bad{color:var(--red)!important}
+label{display:flex;justify-content:space-between;font-size:.8rem;color:rgba(220,230,255,.8)}
+input[type=range]{width:100%;accent-color:#b08cff;margin:3px 0}
+.bg{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.sb{border:none;border-radius:9px;padding:7px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:.78rem;transition:.12s}
+.sb:hover{transform:translateY(-1px)}.sb.pri{background:linear-gradient(135deg,#b08cff,#7c6cff);color:#fff;border-color:rgba(176,140,255,.5);font-weight:700}
+.sb.hint{background:rgba(107,224,255,.08);border-color:rgba(107,224,255,.25)}.sb.danger{background:rgba(255,112,112,.08);border-color:rgba(255,112,112,.25)}
+.sb.full{grid-column:1/-1}
+.spdrow{display:flex;gap:3px;margin-top:5px}.spdrow .sb{flex:1;padding:5px;font-size:.68rem;text-align:center}
+.spdrow .sb.active{background:rgba(176,140,255,.16);border-color:rgba(176,140,255,.4)}
+.pi{width:72px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:4px 6px;font-family:var(--mono);font-size:.8rem;text-align:right}
+.pi:focus{outline:none;border-color:rgba(176,140,255,.5)}
+.pr{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:2px 0}
+.pb{margin-top:6px;padding:7px;border-radius:10px;background:rgba(176,140,255,.05);border:1px solid rgba(176,140,255,.12)}
+.pb .pt{font-size:.68rem;font-family:var(--mono);color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.lcbox{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05);border-radius:9px;padding:4px;margin-top:4px}
+.lcbox canvas{width:100%;height:60px;display:block;border-radius:4px}
+.lcl{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--mono);display:flex;justify-content:space-between}.lcl .lv{color:var(--cyan);font-weight:700}
+.pill{display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);font-size:.64rem;color:var(--muted);font-family:var(--mono);margin:1px}
+.sformula{font-family:var(--mono);font-size:.76rem;white-space:pre-line;color:rgba(220,230,255,.85);line-height:1.38}
+.foot{grid-column:1/-1;border-top:1px solid var(--line);background:rgba(8,12,26,.88);display:flex;justify-content:space-between;padding:5px 12px;font-size:.68rem;color:var(--muted)}
+/* Achievements */
+.ach{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.ach span{padding:3px 8px;border-radius:999px;font-size:.66rem;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--muted);font-family:var(--mono)}
+.ach span.earned{border-color:rgba(255,209,102,.4);background:rgba(255,209,102,.1);color:var(--gold)}
+
+/* END MODAL */
+.ov{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(2,3,8,.82);padding:16px}
+.ov.open{display:flex}
+.emod{width:min(920px,94vw);max-height:92vh;overflow:auto;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(700px 400px at 50% 0%,rgba(176,140,255,.07),transparent 55%),var(--panel);box-shadow:0 24px 60px rgba(0,0,0,.5);padding:18px}
+.emod h2{margin:0 0 6px}.egrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}@media(max-width:700px){.egrid{grid-template-columns:1fr}}
+.medal{font-size:1.1rem;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.etbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.etbl th,.etbl td{padding:5px;border-top:1px dashed rgba(255,255,255,.06);text-align:left}.etbl tr:first-child th,.etbl tr:first-child td{border-top:none}.etbl th{color:var(--muted);font-weight:600}
+.cbox{border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.12);padding:7px;margin-top:10px}
+.legend{display:flex;gap:8px;font-size:.68rem;color:var(--muted);margin-top:3px}.legend i{display:inline-block;width:10px;height:3px;border-radius:99px;vertical-align:middle;margin-right:3px}
+.trow{display:flex;gap:8px;margin-top:6px}
+.tbtn{border:none;border-radius:9px;padding:7px 12px;background:rgba(255,255,255,.05);border:1px solid var(--line);cursor:pointer;font-size:.82rem}
+.tbtn.correct{background:rgba(124,227,139,.12);border-color:rgba(124,227,139,.4)}.tbtn.wrong{background:rgba(255,112,112,.12);border-color:rgba(255,112,112,.4)}
+textarea{width:100%;min-height:50px;border-radius:9px;padding:7px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);resize:vertical;font-size:.8rem}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(120%);padding:10px 20px;border-radius:999px;background:rgba(10,14,28,.95);border:1px solid rgba(176,140,255,.35);color:#d4c0ff;font-weight:700;font-size:.84rem;z-index:30;transition:transform .3s;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@keyframes shake{0%,100%{transform:translate(0)}15%{transform:translate(-3px,2px)}30%{transform:translate(3px,-2px)}45%{transform:translate(-2px,1px)}}
+.shaking{animation:shake .35s ease}
+@keyframes confetti-fall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:25;overflow:hidden}
+.confetti span{position:absolute;top:-10px;width:8px;height:8px;border-radius:2px;animation:confetti-fall 2.5s ease-out forwards}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="introScreen">
+<div class="icard">
+  <div class="itag">MISSION ATLAS / GAME 09</div>
+  <div class="ititle">☄️ COMET LANDER: <span>Rosetta's Philae</span></div>
+  <div class="igrid">
+    <div>
+      <div class="iblock"><div class="idialogue" id="xDial"></div><div class="ihero" id="xHero"></div></div>
+      <div class="g2">
+        <div class="iblock"><h3>Learning target</h3><div class="imini" id="xLrn"></div></div>
+        <div class="iblock"><h3>Big Idea</h3><div class="imini" id="xBig"></div></div>
+        <div class="iblock"><h3>Model</h3><div class="imini" id="xMod"></div></div>
+        <div class="iblock"><h3>Misconception</h3><div class="imini" id="xMis"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="iblock"><h3>Mission setup</h3><div class="imini" id="xSet"></div>
+        <h3 style="margin-top:8px">Language</h3>
+        <div class="bgroup" id="iLangs"><button class="ibtn active" data-lang="en">EN 🇬🇧</button><button class="ibtn" data-lang="el">EL 🇬🇷</button><button class="ibtn" data-lang="it">IT 🇮🇹</button></div>
+        <h3 style="margin-top:8px">Difficulty</h3>
+        <div class="bgroup" id="iDiffs"><button class="ibtn active" data-diff="easy" id="dE">Easy</button><button class="ibtn" data-diff="medium" id="dM">Medium</button><button class="ibtn" data-diff="hard" id="dH">Hard</button></div>
+      </div>
+      <div class="iblock"><h3>Key formulas</h3><div class="iformula" id="xForm"></div></div>
+      <div class="iblock"><h3>Controls</h3><div class="imini" id="xKeys"></div></div>
+      <button class="ibtn go" id="goBtn">🚀 Start mission</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen">
+<div class="gl">
+  <div class="topbar">
+    <div class="tbt"><span>☄️</span><strong>COMET LANDER</strong></div>
+    <div class="tbs">
+      <div class="ts"><div class="v" id="tsA">0</div><div class="k">Att</div></div>
+      <div class="ts"><div class="v" id="tsH">0</div><div class="k">Hints</div></div>
+      <div class="ts"><div class="v" id="tsS">100</div><div class="k">Score</div></div>
+    </div>
+    <div class="tbl" id="gLangs"><button data-lang="en">EN</button><button data-lang="el">EL</button><button data-lang="it">IT</button></div>
+  </div>
+
+  <div class="cw" id="stage">
+    <canvas id="C"></canvas>
+    <div class="radio" id="radio"></div>
+    <div class="countdown" id="cdBox"></div>
+  </div>
+
+  <aside class="side">
+    <div class="sc"><h3>Mission data</h3>
+      <div class="sr"><div class="k">Comet</div><div class="v">67P/C-G</div></div>
+      <div class="sr"><div class="k">g</div><div class="v">1.0×10⁻³ m/s²</div></div>
+      <div class="sr"><div class="k">Lander</div><div class="v">100 kg</div></div>
+      <div class="sr"><div class="k">Safe v</div><div class="v" id="vSafe"></div></div>
+      <div class="sr"><div class="k">Escape v</div><div class="v">~0.9 m/s</div></div>
+      <div class="sr"><div class="k">Status</div><div class="v" id="vStat">—</div></div>
+    </div>
+    <div class="sc"><h3>Live telemetry</h3>
+      <div class="sr"><div class="k">Altitude</div><div class="v" id="vAlt">—</div></div>
+      <div class="sr"><div class="k">Speed</div><div class="v" id="vVy">—</div></div>
+      <div class="sr"><div class="k">Time</div><div class="v" id="vTi">—</div></div>
+      <div class="sr"><div class="k">Eₖ</div><div class="v" id="vEk">—</div></div>
+      <div class="sr"><div class="k">🌍 Earth (same h)</div><div class="v bad" id="vEarth">—</div></div>
+      <div class="lcbox"><div class="lcl"><span>Altitude</span><span class="lv" id="lcAV">—</span></div><canvas id="lcAC" width="310" height="60"></canvas></div>
+      <div class="lcbox"><div class="lcl"><span>Speed</span><span class="lv" id="lcSV">—</span></div><canvas id="lcSC" width="310" height="60"></canvas></div>
+    </div>
+    <div class="sc"><h3>Decisions</h3>
+      <label><span>Release altitude</span><span id="slAV">1000 m</span></label>
+      <input type="range" id="slA" min="200" max="3000" step="10" value="1000"/>
+      <label style="margin-top:3px"><span>Push velocity</span><span id="slPV">0.15 m/s</span></label>
+      <input type="range" id="slP" min="0.01" max="0.80" step="0.01" value="0.15"/>
+      <div class="sm" id="ctrlH" style="margin-top:4px"></div>
+      <div class="pb">
+        <div class="pt">📝 Predict BEFORE release!</div>
+        <div class="pr"><div class="k">Landing time (s)</div><input class="pi" id="pT" placeholder="?" type="number" step="1"/></div>
+        <div class="pr"><div class="k">Landing speed (m/s)</div><input class="pi" id="pV" placeholder="?" type="number" step="0.01"/></div>
+      </div>
+      <div class="bg">
+        <button class="sb pri" id="bRun">🚀 Release</button>
+        <button class="sb" id="bPause">⏸ Pause</button>
+        <button class="sb danger" id="bReset">↺ Reset</button>
+        <button class="sb hint" id="bHint">💡 Hint (-5)</button>
+      </div>
+      <div class="spdrow"><button class="sb" data-s="1">1×</button><button class="sb active" data-s="50">50×</button><button class="sb" data-s="200">200×</button><button class="sb" data-s="1000">1000×</button></div>
+      <div class="sm" id="egg" style="margin-top:3px"></div>
+    </div>
+    <div class="sc"><h3>Physics</h3><div class="sformula" id="fTxt"></div><div class="sm" id="fFt" style="margin-top:3px"></div></div>
+    <div class="sc"><h3>Achievements</h3>
+      <div class="ach" id="achBox">
+        <span id="ach1">🎯 First landing</span>
+        <span id="ach2">🧮 Calculator</span>
+        <span id="ach3">🪶 Feather touch</span>
+        <span id="ach4">📐 Perfect prediction</span>
+        <span id="ach5">🏀 Bouncer</span>
+      </div>
+    </div>
+    <div class="sc"><h3>Mission log</h3><div class="sm" id="log">—</div>
+      <div style="margin-top:4px"><span class="pill" id="j1"></span><span class="pill" id="j2"></span><span class="pill" id="j3"></span></div></div>
+  </aside>
+
+  <div class="foot"><div id="fL"></div><div id="fR">67P: same F=ma, wildly different results</div></div>
+</div>
+</div>
+
+<!-- END -->
+<div class="ov" id="endScr">
+<div class="emod">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div><div class="itag">ATLAS / COMET DEBRIEF</div><h2 id="eTit"></h2></div>
+    <span class="medal" id="eMed"></span>
+  </div>
+  <div class="egrid">
+    <div class="iblock"><h3>Results</h3><table class="etbl"><tbody id="eRB"></tbody></table></div>
+    <div class="iblock"><h3>Analysis</h3><table class="etbl"><tbody id="eAB"></tbody></table></div>
+  </div>
+  <div class="iblock" style="margin-top:8px"><h3>Theory vs simulation</h3><div class="sm" id="eTh"></div></div>
+  <div class="cbox"><canvas id="eCh" width="840" height="180"></canvas>
+    <div class="legend"><span><i style="background:var(--cyan)"></i>Altitude</span><span><i style="background:var(--gold)"></i>Speed</span></div>
+  </div>
+  <div class="iblock" style="margin-top:8px"><h3>Misconception check</h3>
+    <div class="sm" id="eTrQ"></div>
+    <div class="trow"><button class="tbtn" id="trT">TRUE</button><button class="tbtn" id="trF">FALSE</button></div>
+    <div class="sm" id="trFb" style="margin-top:4px"></div>
+  </div>
+  <div class="iblock" style="margin-top:8px"><h3>Reflection</h3><textarea placeholder="What surprised you?"></textarea></div>
+  <div class="bgroup" style="margin-top:10px"><button class="ibtn go" id="bRetry" style="flex:1">↺ Retry</button><button class="ibtn" id="bNew" style="flex:1;padding:14px">🔄 New mission</button></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ===== WEB AUDIO ===== */
+let audioCtx;
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function beep(freq,dur,type='sine',vol=.12){
+  if(!audioCtx)return;try{
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;g.gain.value=vol;
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start();g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+  o.stop(audioCtx.currentTime+dur);}catch(e){}}
+function sndRelease(){beep(880,.15);setTimeout(()=>beep(1100,.12),100);setTimeout(()=>beep(1320,.1),200);}
+function sndBounce(){beep(220,.25,'triangle',.2);setTimeout(()=>beep(165,.2,'triangle',.15),100);}
+function sndLand(){beep(660,.1);setTimeout(()=>beep(880,.1),80);setTimeout(()=>beep(1100,.15),160);setTimeout(()=>beep(1320,.2),260);}
+function sndFail(){beep(330,.3,'sawtooth',.15);setTimeout(()=>beep(220,.4,'sawtooth',.1),200);}
+function sndCountdown(n){beep(n===0?1200:600,.12);}
+
+/* ===== PARTICLES ===== */
+let particles=[];
+function addParticles(x,y,count,color,spread,life){
+  for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*spread,vy:(Math.random()-.8)*spread,life:life+Math.random()*life*.5,maxLife:life,color,r:Math.random()*3+1});
+}
+function updateParticles(dt){particles=particles.filter(p=>{p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=.02;p.life-=dt*60;return p.life>0;});}
+function drawParticles(ctx){particles.forEach(p=>{ctx.globalAlpha=clamp(p.life/p.maxLife,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;}
+
+/* ===== CONFETTI ===== */
+function showConfetti(){
+  const d=document.createElement('div');d.className='confetti';document.body.appendChild(d);
+  const colors=['#ffd166','#6be0ff','#b08cff','#7ce38b','#ff7070','#ffaa44'];
+  for(let i=0;i<50;i++){const s=document.createElement('span');s.style.left=Math.random()*100+'%';s.style.background=colors[Math.floor(Math.random()*colors.length)];
+  s.style.animationDelay=Math.random()*1.5+'s';s.style.animationDuration=(2+Math.random()*1.5)+'s';d.appendChild(s);}
+  setTimeout(()=>d.remove(),4500);
+}
+
+/* ===== I18N ===== */
+const T={
+en:{
+dial:`<span class="who">FLIGHT DIRECTOR:</span> "Rosetta has reached comet <span class="em">67P</span>. Philae must separate and descend — but 67P's gravity is <span class="em">ten thousand times weaker</span> than Earth's."<br><br><span class="who">GUIDANCE AI:</span> "Free fall here takes <span class="em">hours, not seconds</span>. Touch down too fast → <span class="em">bounce into space</span>. That's what actually happened in 2014."<br><br><span class="who">YOU:</span> "I pick <span class="par">release altitude</span> and <span class="par">push velocity</span>, calculate the fall, then release?"<br><br><span class="who">AI:</span> "Correct. The comet rewards math. Not vibes. 🧠"`,
+hero:"November 2014: ESA's Rosetta achieved the first comet landing. Philae fell 7 hours, bounced twice when harpoons failed, drifted 2 hours. Your job: land safely using free-fall physics. The canvas shows BOTH your comet descent AND the same drop on Earth — side by side.",
+lrn:"Apply h = v₀t + ½gt² with g ≈ 10⁻³ m/s² to predict fall time and landing speed.",
+big:"#7.8: Comets are remnants of Solar System formation. #5.8: Spacecraft explore through physics.",
+mod:"1D vertical free fall. Constant g. No atmosphere. No rotation. SI units.",
+mis:'"Free fall = falling fast." On 67P, 1 km takes 24 min. On Earth, 14 seconds.',
+setup:"Choose altitude & push. PREDICT time & speed BEFORE releasing. Score = safe landing (50%) + prediction accuracy (30%) + no bounces (20%).",
+keys:"<kbd>Space</kbd> release · <kbd>P</kbd> pause · <kbd>R</kbd> reset · <kbd>H</kbd> hint",
+form:`h = v₀·t + ½·g·t²
+t = (−v₀ + √(v₀² + 2gh)) / g
+v = v₀ + g·t    Eₖ = ½mv²
+
+Earth (g=9.81), 1000m: t≈14s v≈140 m/s
+67P  (g=0.001), 1000m: t≈1414s v≈1.4 m/s`,
+fFt:"Same equation. Wildly different universe.",
+ctrl:"Escape v ≈ 0.9 m/s. Push too hard → lost in space forever.",
+h1:"💡 t = (−v₀ + √(v₀² + 2gh)) / g. Plug in your values!",h2:"💡 v = v₀ + gt. Is it < safe limit?",h3:"💡 On 67P, even 0.5 m/s can make you bounce.",
+j1:"Newton: same laws, different comet.",j2:"Real Philae bounced for 2 hours 😬",j3:"Escape v ≈ 0.9 m/s. Don't run.",
+egg:"🥚 0.67 m/s? Tribute to 67P!",
+ok:"✅ Soft landing on 67P!",bounce:"🏀 Bounce! Too fast.",lost:"💫 Escaped to space!",ready:"Ready. Predict, then release.",running:"Descending…",paused:"Paused — calculate!",
+th:"Same equation: h = v₀t + ½gt². If your prediction matched, your physics is correct.",
+trQ:'"An object falls equally fast near a comet and near Earth." True or false?',trT:"TRUE",trF:"FALSE",
+trOk:"✅ Correct! Free fall = local g × time. g on 67P is 10,000× weaker.",trBad:"❌ Nope! g = GM/R². Different body = different g = different fall speed.",
+easyL:"Easy",medL:"Medium",hardL:"Hard",go:"🚀 Start mission",
+mG:"🥇 GOLD",mS:"🥈 SILVER",mB:"🥉 BRONZE",mH:"💔 TRY AGAIN",
+radio:["Rosetta: Philae separation confirmed.","ESOC: Telemetry nominal.","Philae: I can feel the comet pulling me… slowly.","ESOC: Patience. It's a 7-hour fall.","Philae: This is the slowest free fall in history.","ESOC: That's what g = 0.001 m/s² looks like.","Philae: I can see the surface features now.","ESOC: Watch your approach speed.","Philae: Contact minus 2 minutes…","ESOC: Brace for touchdown."]
+},
+el:{
+dial:`<span class="who">ΔΙΕΥΘΥΝΤΗΣ:</span> "Ο Rosetta έφτασε τον <span class="em">67P</span>. Η Philae πρέπει να αποσπαστεί — βαρύτητα <span class="em">10.000× πιο αδύναμη</span> από τη Γη."<br><br><span class="who">AI:</span> "Η πτώση κρατάει <span class="em">ώρες</span>. Πολύ γρήγορα → <span class="em">αναπηδά στο διάστημα</span>."<br><br><span class="who">ΕΣΥ:</span> "Διαλέγω <span class="par">ύψος</span>, <span class="par">ώθηση</span>, υπολογίζω, αποδεσμεύω;"<br><br><span class="who">AI:</span> "Ο κομήτης ανταμείβει τα μαθηματικά. 🧠"`,
+hero:"Νοέμβριος 2014: Η Rosetta πέτυχε την πρώτη προσεδάφιση σε κομήτη. Η Philae έπεφτε 7 ώρες, αναπήδησε δύο φορές. Στον καμβά βλέπεις ΤΑΥΤΟΧΡΟΝΑ την πτώση στον κομήτη ΚΑΙ στη Γη — δίπλα δίπλα.",
+lrn:"Εφάρμοσε h = v₀t + ½gt² με g ≈ 10⁻³ m/s².",big:"#7.8 + #5.8: Κομήτες = απομεινάρια.",
+mod:"Κατακόρυφη πτώση 1D, σταθερό g, χωρίς ατμόσφαιρα, SI.",
+mis:"«Ελεύθερη πτώση = γρήγορα.» Στον 67P, 1 km = 24 λεπτά. Στη Γη, 14 δευτερόλεπτα.",
+setup:"Πρόβλεψε ΠΡΙΝ αποδεσμεύσεις! Σκορ = ασφαλής (50%) + πρόβλεψη (30%) + χωρίς bounce (20%).",
+keys:"<kbd>Space</kbd> αποδέσμευση · <kbd>P</kbd> παύση · <kbd>R</kbd> reset · <kbd>H</kbd> hint",
+form:`h = v₀·t + ½·g·t²\nt = (−v₀ + √(v₀²+2gh)) / g\nv = v₀ + g·t    Eₖ = ½mv²`,
+fFt:"Ίδιος τύπος, διαφορετικό σύμπαν.",ctrl:"v διαφυγής ≈ 0.9 m/s.",
+h1:"💡 t = (−v₀ + √(v₀² + 2gh)) / g",h2:"💡 v = v₀ + gt < κατώφλι;",h3:"💡 0.5 m/s μπορεί να σε κάνει να αναπηδήσεις.",
+j1:"Νεύτωνας: ίδιοι νόμοι.",j2:"Η Philae αναπήδησε 2 ώρες 😬",j3:"v διαφ. ≈ 0.9 m/s.",
+egg:"🥚 0.67 m/s; 67P tribute!",
+ok:"✅ Ήπια προσεδάφιση!",bounce:"🏀 Αναπήδηση!",lost:"💫 Χαμένη!",ready:"Πρόβλεψε, μετά αποδέσμευσε.",running:"Κάθοδος…",paused:"Υπολόγισε!",
+th:"Ίδιος τύπος. Η πρόβλεψη πρέπει να ταιριάζει.",
+trQ:"«Ένα σώμα πέφτει ίδια σε κομήτη και Γη.» Σωστό/Λάθος;",trT:"ΣΩΣΤΟ",trF:"ΛΑΘΟΣ",
+trOk:"✅ Σωστά! g(67P) ≈ 10⁻³ m/s².",trBad:"❌ g = GM/R². Διαφορετικό σώμα = διαφορετικό g.",
+easyL:"Εύκολο",medL:"Μεσαίο",hardL:"Δύσκολο",go:"🚀 Έναρξη",
+mG:"🥇 ΧΡΥΣΟ",mS:"🥈 ΑΣΗΜΙ",mB:"🥉 ΧΑΛΚΟΣ",mH:"💔 ΞΑΝΑ",
+radio:["Rosetta: Αποδέσμευση Philae.","ESOC: Τηλεμετρία κανονική.","Philae: Νιώθω τον κομήτη… αργά.","ESOC: Υπομονή. 7 ώρες πτώση.","Philae: Η πιο αργή ελεύθερη πτώση.","ESOC: g = 0.001 m/s².","Philae: Βλέπω την επιφάνεια.","ESOC: Πρόσεχε την ταχύτητα.","Philae: Επαφή σε 2 λεπτά…","ESOC: Ετοιμασία."]
+},
+it:{
+dial:`<span class="who">DIRETTORE:</span> "Rosetta ha raggiunto <span class="em">67P</span>. Gravità <span class="em">10.000×</span> più debole."<br><br><span class="who">AI:</span> "Caduta = <span class="em">ore</span>. Troppo veloce → <span class="em">rimbalzo</span>."<br><br><span class="who">TU:</span> "Scelgo <span class="par">quota</span>, <span class="par">spinta</span>, calcolo, rilascio?"<br><br><span class="who">AI:</span> "La cometa premia la matematica. 🧠"`,
+hero:"2014: Rosetta atterrò su 67P. Philae rimbalzò due volte. Il canvas mostra caduta su cometa E su Terra — fianco a fianco.",
+lrn:"h = v₀t + ½gt² con g ≈ 10⁻³.",big:"#7.8 + #5.8.",mod:"1D, g costante, SI.",
+mis:"\"Caduta libera = veloce.\" 67P: 1 km = 24 min.",
+setup:"Prevedi PRIMA di rilasciare.",keys:"<kbd>Space</kbd> rilascio · <kbd>P</kbd> pausa",
+form:`h = v₀·t + ½·g·t²\nt = (−v₀ + √(v₀²+2gh)) / g\nv = v₀ + g·t`,
+fFt:"Stessa equazione, altro universo.",ctrl:"v fuga ≈ 0.9 m/s.",
+h1:"💡 t = (−v₀+√(v₀²+2gh))/g",h2:"💡 v < soglia?",h3:"💡 0.5 m/s = troppo.",
+j1:"Newton: stesse leggi.",j2:"Philae rimbalzò 2h.",j3:"v fuga ≈ 0.9.",
+egg:"🥚 0.67? Omaggio!",
+ok:"✅ Atterraggio!",bounce:"🏀 Rimbalzo!",lost:"💫 Persa!",ready:"Prevedi, poi rilascia.",running:"Discesa…",paused:"Calcola!",
+th:"Stessa equazione.",trQ:"\"Caduta uguale su cometa e Terra.\" V/F?",trT:"VERO",trF:"FALSO",
+trOk:"✅ Corretto!",trBad:"❌ Dipende da g.",
+easyL:"Facile",medL:"Medio",hardL:"Difficile",go:"🚀 Inizia",
+mG:"🥇 ORO",mS:"🥈 ARGENTO",mB:"🥉 BRONZO",mH:"💔 RIPROVA",
+radio:["Rosetta: Separazione Philae.","ESOC: Telemetria ok.","Philae: Sento la cometa…","ESOC: Pazienza. 7 ore.","Philae: Caduta lentissima.","ESOC: g = 0.001.","Philae: Vedo la superficie.","ESOC: Attenzione alla velocità.","Philae: Contatto -2 min…","ESOC: Pronti."]
+}};
+
+let lang='en',diff='easy';
+const G=1e-3,ESC=.9,MASS=100,DT=.1;
+const DIFFS={easy:{sv:.70,pm:.80,am:3000,br:.45},medium:{sv:.45,pm:1,am:4000,br:.55},hard:{sv:.25,pm:1.3,am:5000,br:.65}};
+let phase='intro',veh=null,earthVeh=null,hist=[],lcA=[],lcS=[],att=0,hn=0,sc=100,spd=50,stars=[],trDone=false,lastR=null,raf=0;
+let radioIdx=0,radioTimer=0,achievements={a1:false,a2:false,a3:false,a4:false,a5:false};
+const LCM=250;
+function t(k){return T[lang]?.[k]??T.en[k]??k;}
+let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3500);}
+function theory(h,v0,g){if(g<=0)return{t:1e9,v:v0};const d=v0*v0+2*g*h;return d<0?{t:1e9,v:v0}:{t:(-v0+Math.sqrt(d))/g,v:v0+(-v0+Math.sqrt(d))/g*g};}
+
+/* RADIO */
+function showRadio(msg){$('radio').textContent='📡 '+msg;$('radio').classList.add('on');clearTimeout(radioTimer);radioTimer=setTimeout(()=>$('radio').classList.remove('on'),4000);}
+function tickRadio(){
+  if(phase!=='running'||!veh)return;
+  const msgs=t('radio');if(!msgs)return;
+  const progress=1-veh.y/parseFloat($('slA').value);
+  const idx=Math.floor(progress*msgs.length);
+  if(idx>radioIdx&&idx<msgs.length){radioIdx=idx;showRadio(msgs[idx]);beep(800,.05,'sine',.04);}
+}
+
+/* LANG & DIFF */
+function applyLang(){
+  $('xDial').innerHTML=t('dial');$('xHero').textContent=t('hero');
+  $('xLrn').textContent=t('lrn');$('xBig').textContent=t('big');$('xMod').textContent=t('mod');$('xMis').textContent=t('mis');
+  $('xSet').textContent=t('setup');$('xKeys').innerHTML=t('keys');$('xForm').textContent=t('form');$('goBtn').textContent=t('go');
+  $('dE').textContent=t('easyL');$('dM').textContent=t('medL');$('dH').textContent=t('hardL');
+  $('fTxt').textContent=t('form');$('fFt').textContent=t('fFt');$('ctrlH').textContent=t('ctrl');
+  $('j1').textContent=t('j1');$('j2').textContent=t('j2');$('j3').textContent=t('j3');
+  $('log').textContent=t('ready');$('eTrQ').textContent=t('trQ');$('trT').textContent=t('trT');$('trF').textContent=t('trF');$('eTh').textContent=t('th');
+  $$('#gLangs button,#iLangs .ibtn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  updUI();
+}
+function setLang(l){if(!T[l])return;lang=l;applyLang();}
+function setDiff(d){if(!DIFFS[d])return;diff=d;$$('#iDiffs .ibtn').forEach(b=>b.classList.toggle('active',b.dataset.diff===d));$('slP').max=DIFFS[d].pm;$('slA').max=DIFFS[d].am;updUI();}
+
+function updUI(){
+  $('vSafe').textContent='< '+DIFFS[diff].sv.toFixed(2)+' m/s';
+  $('slAV').textContent=$('slA').value+' m';$('slPV').textContent=parseFloat($('slP').value).toFixed(2)+' m/s';
+  $('tsA').textContent=att;$('tsH').textContent=hn;$('tsS').textContent=Math.round(sc);
+  if(veh&&phase!=='intro'){
+    $('vAlt').textContent=veh.y.toFixed(1)+' m';$('vVy').textContent=veh.vy.toFixed(4)+' m/s';
+    $('vTi').textContent=veh.t.toFixed(0)+'s ('+(veh.t/60).toFixed(1)+' min)';
+    $('vEk').textContent=(0.5*MASS*veh.vy*veh.vy).toFixed(4)+' J';
+    // Earth comparison
+    const eT=theory(parseFloat($('slA').value),parseFloat($('slP').value),9.81);
+    $('vEarth').textContent='Already crashed at t='+eT.t.toFixed(1)+'s, v='+eT.v.toFixed(0)+' m/s';
+  }
+  if(phase==='ended'&&veh){$('vStat').textContent=veh.landed?t('ok'):(veh.lost?t('lost'):t('bounce'));$('vStat').className='v '+(veh.landed?'good':'bad');}
+  else $('vStat').textContent=({ready:t('ready'),running:t('running'),paused:t('paused')})[phase]||'—';
+  $('egg').textContent=Math.abs(parseFloat($('slP').value)-.67)<.015?t('egg'):'';
+  // Achievements visual
+  ['ach1','ach2','ach3','ach4','ach5'].forEach(id=>{
+    $(id).classList.toggle('earned',achievements[id.replace('ach','a')]);
+  });
+}
+
+/* CANVAS */
+function resizeC(){const c=$('C'),b=c.parentElement.getBoundingClientRect();c.width=Math.max(400,Math.floor(b.width*devicePixelRatio));c.height=Math.max(280,Math.floor(b.height*devicePixelRatio));
+  stars=[];for(let i=0;i<180;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height*.7,r:Math.random()*1.6+.3,a:Math.random()*.4+.1,w:Math.random()*6});draw();}
+
+function draw(){
+  const c=$('C'),cx=c.getContext('2d'),W=c.width,H=c.height,now=Date.now()*.001;
+  cx.clearRect(0,0,W,H);
+  // BG
+  const bg=cx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#020510');bg.addColorStop(.55,'#0a0820');bg.addColorStop(1,'#1c0e12');cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  stars.forEach(s=>{cx.globalAlpha=s.a+.1*Math.sin(now*1.2+s.w);cx.fillStyle='#fff';cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();});cx.globalAlpha=1;
+
+  const MID=W*.6; // Comet gets 60%, Earth gets 40%
+  // Divider
+  cx.strokeStyle='rgba(255,255,255,.1)';cx.lineWidth=1;cx.setLineDash([4,6]);cx.beginPath();cx.moveTo(MID,0);cx.lineTo(MID,H);cx.stroke();cx.setLineDash([]);
+  // Labels
+  cx.fillStyle='rgba(176,140,255,.6)';cx.font=`bold ${12*devicePixelRatio}px var(--mono)`;cx.fillText('☄️ COMET 67P  (g = 0.001 m/s²)',14*devicePixelRatio,18*devicePixelRatio);
+  cx.fillStyle='rgba(107,224,255,.6)';cx.fillText('🌍 EARTH  (g = 9.81 m/s²)',MID+10*devicePixelRatio,18*devicePixelRatio);
+
+  // === LEFT: COMET ===
+  const gY=H*.83;
+  // Comet surface
+  cx.fillStyle='#28201a';cx.beginPath();cx.moveTo(0,gY);for(let x=0;x<=MID;x+=10)cx.lineTo(x,gY-5*Math.sin(x*.01)-3*Math.cos(x*.025+1));cx.lineTo(MID,H);cx.lineTo(0,H);cx.fill();
+  cx.fillStyle='#362a20';for(let i=0;i<5;i++){cx.beginPath();cx.ellipse(MID*(.1+i*.2),gY+5+i*2,18+i*6,3+i,.2*i,0,Math.PI*2);cx.fill();}
+  // Jets
+  for(let j=0;j<2;j++){const jx=MID*(.25+.5*j)+20*Math.sin(now*.4+j*2),jy=gY-5;const jg=cx.createLinearGradient(jx,jy,jx,jy-55);jg.addColorStop(0,'rgba(180,200,220,.08)');jg.addColorStop(1,'transparent');cx.fillStyle=jg;cx.beginPath();cx.moveTo(jx-5,jy);cx.lineTo(jx-12,jy-50);cx.lineTo(jx+12,jy-50);cx.lineTo(jx+5,jy);cx.fill();}
+  // Orbiter
+  cx.fillStyle='#bbb';cx.fillRect(MID*.35-5,H*.04,10,4);cx.fillStyle='rgba(80,120,200,.6)';cx.fillRect(MID*.35-16,H*.04+1,10,2);cx.fillRect(MID*.35+7,H*.04+1,10,2);
+  cx.fillStyle='rgba(255,255,255,.35)';cx.font=`${8*devicePixelRatio}px var(--mono)`;cx.fillText('Rosetta',MID*.35+20,H*.04+4);
+
+  // === RIGHT: EARTH ===
+  // Sky gradient
+  const eGY=H*.83;
+  const sky=cx.createLinearGradient(MID,H*.3,MID,eGY);sky.addColorStop(0,'rgba(60,120,220,.15)');sky.addColorStop(1,'rgba(60,140,100,.08)');cx.fillStyle=sky;cx.fillRect(MID,H*.3,W-MID,eGY-H*.3);
+  // Ground
+  cx.fillStyle='#1a3a1a';cx.fillRect(MID,eGY,W-MID,H-eGY);
+  cx.fillStyle='rgba(50,120,50,.3)';cx.beginPath();cx.moveTo(MID,eGY);for(let x=MID;x<=W;x+=15)cx.lineTo(x,eGY-2*Math.sin((x-MID)*.02));cx.lineTo(W,eGY+5);cx.lineTo(MID,eGY+5);cx.fill();
+
+  // === VEHICLES ===
+  if(veh){
+    const h0=parseFloat($('slA').value);
+    // COMET lander
+    const fr=clamp(veh.y/Math.max(h0*1.1,10),0,1);
+    const cY=gY-fr*(gY-H*.08),cX=MID*.4;
+    if(phase==='running'||phase==='paused'){cx.setLineDash([3,6]);cx.strokeStyle='rgba(107,224,255,.12)';cx.lineWidth=1;cx.beginPath();cx.moveTo(cX,cY+14);cx.lineTo(cX,gY);cx.stroke();cx.setLineDash([]);}
+    drawPhilae(cx,cX,cY,1);
+    // Labels
+    cx.fillStyle='rgba(200,215,255,.7)';cx.font=`${10*devicePixelRatio}px var(--mono)`;
+    cx.fillText('h='+veh.y.toFixed(1)+'m',cX+40,cY);cx.fillText('v='+veh.vy.toFixed(3)+' m/s',cX+40,cY+13*devicePixelRatio);
+    cx.fillStyle='rgba(255,209,102,.65)';cx.fillText('t='+(veh.t/60).toFixed(1)+' min',cX+40,cY+26*devicePixelRatio);
+    if(veh.bounces>0){cx.fillStyle='rgba(255,112,112,.8)';cx.fillText('Bounces: '+veh.bounces,cX+40,cY+39*devicePixelRatio);}
+
+    // EARTH lander
+    if(earthVeh){
+      const eFr=clamp(earthVeh.y/Math.max(h0*1.1,10),0,1);
+      const eY=eGY-eFr*(eGY-H*.08),eX=MID+(W-MID)*.4;
+      drawPhilae(cx,eX,eY,.8);
+      if(earthVeh.y<=0){
+        cx.fillStyle='rgba(255,112,112,.8)';cx.font=`bold ${12*devicePixelRatio}px var(--mono)`;
+        cx.fillText('💥 CRASHED',eX-30,eY-20);
+        cx.fillText('v = '+earthVeh.maxV.toFixed(0)+' m/s',eX-30,eY-6);
+        cx.fillText('t = '+earthVeh.t.toFixed(1)+' s',eX-30,eY+8);
+      } else {
+        cx.fillStyle='rgba(200,230,255,.6)';cx.font=`${9*devicePixelRatio}px var(--mono)`;
+        cx.fillText('h='+earthVeh.y.toFixed(0)+'m',eX+35,eY);cx.fillText('v='+earthVeh.vy.toFixed(0)+' m/s',eX+35,eY+12*devicePixelRatio);
+      }
+    }
+  }
+
+  // g comparison bar (bottom left)
+  cx.fillStyle='rgba(0,0,0,.3)';cx.fillRect(8*devicePixelRatio,H-42*devicePixelRatio,MID-16*devicePixelRatio,34*devicePixelRatio);
+  cx.fillStyle='rgba(255,255,255,.4)';cx.font=`${8*devicePixelRatio}px var(--mono)`;cx.fillText('g: Earth vs 67P',12*devicePixelRatio,H-32*devicePixelRatio);
+  const barW=MID-32*devicePixelRatio;
+  cx.fillStyle='rgba(107,224,255,.4)';cx.fillRect(12*devicePixelRatio,H-26*devicePixelRatio,barW,5*devicePixelRatio);
+  cx.fillStyle='rgba(176,140,255,.9)';cx.fillRect(12*devicePixelRatio,H-26*devicePixelRatio,Math.max(2,barW*G/9.81),5*devicePixelRatio);
+  cx.fillText('← 67P (invisible at this scale!)',12*devicePixelRatio,H-14*devicePixelRatio);
+
+  // Particles
+  drawParticles(cx);
+}
+
+function drawPhilae(cx,x,y,scale){
+  cx.save();cx.translate(x,y);cx.scale(scale,scale);
+  cx.fillStyle='#e8ddd0';cx.strokeStyle='#7a6a5a';cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(-12,-14);cx.lineTo(12,-14);cx.lineTo(16,6);cx.lineTo(-16,6);cx.closePath();cx.fill();cx.stroke();
+  cx.fillStyle='#bbb';cx.fillRect(-4,-18,8,4);cx.fillStyle='#888';cx.fillRect(-2,-22,4,4);
+  cx.strokeStyle='#aaa';cx.lineWidth=1.5;
+  [[-16,6,-22,18],[16,6,22,18],[-8,6,-10,20],[8,6,10,20]].forEach(([a,b,c,d])=>{cx.beginPath();cx.moveTo(a,b);cx.lineTo(c,d);cx.stroke();});
+  cx.fillStyle='rgba(50,70,150,.85)';cx.fillRect(-38,-10,18,8);cx.fillRect(20,-10,18,8);
+  cx.strokeStyle='rgba(90,120,200,.4)';cx.lineWidth=1;cx.strokeRect(-38,-10,18,8);cx.strokeRect(20,-10,18,8);
+  cx.restore();
+}
+
+/* LIVE CHARTS */
+function dlc(cId,data,col,lId,fn,mi){const c=$(cId);if(!c)return;const cx=c.getContext('2d'),W=c.width,H=c.height;cx.clearRect(0,0,W,H);
+  if(!data.length){$(lId).textContent='—';return;}const vs=data.map(fn),la=vs[vs.length-1];$(lId).textContent=la<10?la.toFixed(3):la.toFixed(1);
+  const mx=Math.max(mi,...vs)*1.1||1;const gr=cx.createLinearGradient(0,0,0,H);gr.addColorStop(0,col+'28');gr.addColorStop(1,col+'04');
+  cx.fillStyle=gr;cx.beginPath();cx.moveTo(0,H);vs.forEach((v,i)=>cx.lineTo((i/(LCM-1))*W,H-(v/mx)*(H-4)));cx.lineTo(((vs.length-1)/(LCM-1))*W,H);cx.fill();
+  cx.strokeStyle=col;cx.lineWidth=1.5;cx.beginPath();vs.forEach((v,i)=>{const x=(i/(LCM-1))*W,y=H-(v/mx)*(H-4);i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();}
+function updLC(){dlc('lcAC',lcA,'#6be0ff','lcAV',d=>d.y,100);dlc('lcSC',lcS,'#ffd166','lcSV',d=>d.v,.5);}
+
+/* PHYSICS */
+function step(dt){
+  if(!veh||phase!=='running')return;
+  veh.vy+=G*dt;veh.y-=veh.vy*dt;veh.t+=dt;
+  // Earth sim
+  if(earthVeh&&earthVeh.y>0){earthVeh.vy+=9.81*dt;earthVeh.y-=earthVeh.vy*dt;earthVeh.t+=dt;earthVeh.maxV=Math.max(earthVeh.maxV,earthVeh.vy);if(earthVeh.y<=0)earthVeh.y=0;}
+  // Record
+  if(hist.length===0||veh.t-hist[hist.length-1].t>.5)hist.push({t:veh.t,y:Math.max(0,veh.y),vy:veh.vy});
+  if(lcA.length===0||veh.t-(lcA[lcA.length-1]?.t||0)>1.5){lcA.push({t:veh.t,y:Math.max(0,veh.y)});lcS.push({t:veh.t,v:veh.vy});if(lcA.length>LCM)lcA.shift();if(lcS.length>LCM)lcS.shift();}
+  // Radio messages
+  tickRadio();
+  // Particles update
+  updateParticles(dt);
+  // Ground check
+  if(veh.y<=0){veh.y=0;const sv=DIFFS[diff].sv;
+    if(veh.vy>sv){veh.bounces++;
+      const c=$('C'),gY=c.height*.83,cX=c.width*.6*.4;
+      addParticles(cX,gY,15,'#ffaa44',4,30);
+      if(veh.vy>ESC){veh.lost=true;sndFail();finish();}
+      else{veh.vy*=-DIFFS[diff].br;veh.y=1.5;sndBounce();toast('🏀 Bounce!');showRadio('⚠️ BOUNCE DETECTED!');$('stage').classList.add('shaking');setTimeout(()=>$('stage').classList.remove('shaking'),400);}}
+    else{veh.landed=true;const c=$('C'),gY=c.height*.83,cX=c.width*.6*.4;addParticles(cX,gY,20,'#aaddaa',3,40);sndLand();finish();}}}
+
+function finish(){
+  phase='ended';const h0=+$('slA').value,v0=+$('slP').value,th=theory(h0,v0,G),pT=+$('pT').value||0,pV=+$('pV').value||0;
+  const tE=th.t>0?Math.abs(pT-th.t)/th.t:1,vE=th.v>0?Math.abs(pV-th.v)/th.v:1;
+  const ps=Math.max(0,30*(1-Math.min(1,(tE+vE)/2))),ls=veh.landed?50:(veh.bounces>0?10:0),bs=Math.max(0,20-veh.bounces*7);
+  const tot=Math.round(ps+ls+bs);sc=tot;$('tsS').textContent=tot;
+  // Achievements
+  if(veh.landed){achievements.a1=true;if(veh.vy<DIFFS[diff].sv*.5)achievements.a3=true;}
+  if(tE<.05&&vE<.05){achievements.a4=true;achievements.a2=true;}
+  if(veh.bounces>=3)achievements.a5=true;
+  if(veh.landed){toast('✅ '+t('ok'));showConfetti();$('stage').classList.add('shaking');setTimeout(()=>$('stage').classList.remove('shaking'),400);}
+  else{sndFail();toast(veh.lost?'💫 '+t('lost'):'🏀 '+t('bounce'));}
+  lastR={ok:veh.landed,lost:veh.lost,bn:veh.bounces,tv:Math.abs(veh.vy),time:veh.t,tot,ps,ls,bs,th,pT,pV,h0,v0,tE,vE};
+  popEnd();$('endScr').classList.add('open');updUI();
+}
+
+function popEnd(){const f=lastR;if(!f)return;$('eTit').textContent=f.lost?t('lost'):(f.ok?t('ok'):t('bounce'));
+  let m=t('mH');if(f.tot>=85)m=t('mG');else if(f.tot>=70)m=t('mS');else if(f.tot>=55)m=t('mB');$('eMed').textContent=m;
+  const rb=$('eRB'),ab=$('eAB');rb.innerHTML='';ab.innerHTML='';
+  const add=(tb,k,v,c='')=>{const tr=document.createElement('tr');tr.innerHTML=`<th>${k}</th><td class="${c}">${v}</td>`;tb.appendChild(tr);};
+  add(rb,'Score',f.tot+'/100',f.tot>=70?'good':f.tot>=55?'warn':'bad');
+  add(rb,'Touch v',f.tv.toFixed(4)+' m/s',f.ok?'good':'bad');
+  add(rb,'Time',f.time.toFixed(0)+'s ('+(f.time/60).toFixed(1)+' min)');
+  add(rb,'Bounces',''+f.bn,f.bn===0?'good':'warn');
+  add(rb,'Prediction',`t: ${(f.tE*100).toFixed(1)}% off, v: ${(f.vE*100).toFixed(1)}% off`,(f.tE<.1&&f.vE<.1)?'good':'bad');
+  add(ab,'Theory','t='+f.th.t.toFixed(1)+'s v='+f.th.v.toFixed(4)+' m/s');
+  const eT=theory(f.h0,f.v0,9.81);add(ab,'Earth same drop','t='+eT.t.toFixed(2)+'s v='+eT.v.toFixed(0)+' m/s → '+(f.th.t/eT.t).toFixed(0)+'× slower on 67P!');
+  add(ab,'Key insight','Free fall speed depends on local g. Same formula, wildly different result.');
+  // Chart
+  const cc=$('eCh'),ctx=cc.getContext('2d'),W=cc.width,H=cc.height;ctx.clearRect(0,0,W,H);
+  if(hist.length<2)return;const pad=26,mT=hist[hist.length-1].t||1,mY=Math.max(...hist.map(d=>d.y),10),mV=Math.max(...hist.map(d=>d.vy),.1);
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,3);ctx.lineTo(pad,H-pad);ctx.lineTo(W-3,H-pad);ctx.stroke();
+  ctx.strokeStyle='#6be0ff';ctx.lineWidth=2;ctx.beginPath();hist.forEach((d,i)=>{const x=pad+(W-pad-5)*(d.t/mT),y=H-pad-(H-pad-5)*(d.y/mY);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+  ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();hist.forEach((d,i)=>{const x=pad+(W-pad-5)*(d.t/mT),y=H-pad-(H-pad-5)*(d.vy/mV);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+}
+
+/* GAME FLOW */
+function startGame(){initAudio();$('introScreen').style.display='none';$('gameScreen').style.display='block';$('endScr').classList.remove('open');
+  phase='ready';att=0;hn=0;sc=100;trDone=false;radioIdx=0;$('trT').className='tbtn';$('trF').className='tbtn';$('trFb').textContent='';
+  resetV();applyLang();resizeC();loop();}
+
+function resetV(){
+  const h=+$('slA').value,v0=+$('slP').value;
+  veh={y:h,vy:v0,t:0,bounces:0,landed:false,lost:false};
+  earthVeh={y:h,vy:v0,t:0,maxV:v0};
+  hist=[];lcA=[];lcS=[];particles=[];radioIdx=0;phase='ready';updUI();draw();
+}
+
+function countdown(cb){
+  const box=$('cdBox');box.classList.add('on');let n=3;
+  box.textContent=n;sndCountdown(n);
+  const iv=setInterval(()=>{n--;if(n>0){box.textContent=n;sndCountdown(n);}
+    else if(n===0){box.textContent='🚀';sndCountdown(0);}
+    else{box.classList.remove('on');clearInterval(iv);cb();}
+  },600);
+}
+
+function release(){
+  if(phase!=='ready')return;
+  initAudio();
+  countdown(()=>{
+    const h=+$('slA').value,v0=+$('slP').value;
+    veh={y:h,vy:v0,t:0,bounces:0,landed:false,lost:false};
+    earthVeh={y:h,vy:v0,t:0,maxV:v0};
+    hist=[];lcA=[];lcS=[];particles=[];radioIdx=0;
+    phase='running';att++;$('tsA').textContent=att;$('log').textContent=t('running');
+    sndRelease();showRadio(t('radio')?.[0]||'Philae released!');updUI();
+  });
+}
+
+function useHint(){hn++;sc=Math.max(0,sc-5);$('tsH').textContent=hn;$('tsS').textContent=Math.round(sc);$('log').textContent=[t('h1'),t('h2'),t('h3')][(hn-1)%3];}
+
+let lcT=0;
+function loop(){cancelAnimationFrame(raf);const tick=()=>{if(phase==='running')for(let i=0;i<spd&&phase==='running';i++)step(DT);draw();updUI();lcT++;if(lcT%4===0)updLC();raf=requestAnimationFrame(tick);};tick();}
+
+/* EVENTS */
+function setup(){
+  $$('#iLangs .ibtn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+  $$('#iDiffs .ibtn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
+  $('goBtn').addEventListener('click',startGame);
+  $$('#gLangs button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+  $('bRun').addEventListener('click',release);
+  $('bPause').addEventListener('click',()=>{if(phase==='running'){phase='paused';$('log').textContent=t('paused');}else if(phase==='paused'){phase='running';$('log').textContent=t('running');}updUI();});
+  $('bReset').addEventListener('click',resetV);$('bHint').addEventListener('click',useHint);
+  $('slA').addEventListener('input',()=>{updUI();if(phase==='ready')resetV();});
+  $('slP').addEventListener('input',()=>{updUI();if(phase==='ready')resetV();});
+  $$('.spdrow .sb').forEach(b=>b.addEventListener('click',()=>{spd=parseInt(b.dataset.s);$$('.spdrow .sb').forEach(x=>x.classList.toggle('active',x.dataset.s==spd));}));
+  $('bRetry').addEventListener('click',()=>{$('endScr').classList.remove('open');resetV();});
+  $('bNew').addEventListener('click',startGame);
+  $('trT').addEventListener('click',()=>{if(trDone)return;trDone=true;$('trFb').textContent=t('trBad');$('trT').classList.add('wrong');$('trF').classList.add('correct');});
+  $('trF').addEventListener('click',()=>{if(trDone)return;trDone=true;$('trFb').textContent=t('trOk');$('trF').classList.add('correct');sc=Math.min(100,sc+3);$('tsS').textContent=Math.round(sc);toast('🧠 +3!');});
+  document.addEventListener('keydown',e=>{
+    if($('introScreen').style.display!=='none'){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();startGame();}return;}
+    if($('endScr').classList.contains('open'))return;
+    switch(e.code){case'Space':case'Enter':e.preventDefault();release();break;case'KeyP':$('bPause').click();break;case'KeyR':resetV();break;case'KeyH':useHint();break;}
+  });
+  window.addEventListener('resize',resizeC);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{setDiff('easy');setup();const bl=navigator.language?.slice(0,2);setLang(bl==='el'?'el':bl==='it'?'it':'en');});
+</script>
+</body>
+</html>
