@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>ATLAS // GALILEAN RESONANCE: Triple Signal</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#050816; --bg2:#0d1328; --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+  --text:#eef5ff; --muted:#aebbd7; --gold:#ffd34d; --cyan:#73e6ff; --green:#70f0ac; --red:#ff7485; --violet:#b78cff;
+  --r:18px; --shadow:0 20px 50px rgba(0,0,0,.42); --mono:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace; --ui:Inter,Segoe UI,Roboto,Arial,sans-serif;
+}
+html,body{height:100%;margin:0;background:
+ radial-gradient(1000px 700px at 80% 15%, rgba(128,92,255,.17), transparent 55%),
+ radial-gradient(900px 650px at 18% 82%, rgba(0,216,255,.12), transparent 52%),
+ var(--bg);
+ color:var(--text);font-family:var(--ui);overflow:hidden}
+button,input,select{font:inherit}
+.app{height:100vh;display:grid;grid-template-columns:minmax(0,1fr) 390px;grid-template-rows:auto 1fr auto}
+@media (max-width:1020px){.app{grid-template-columns:1fr;grid-template-rows:auto minmax(280px,45vh) auto auto}.side{border-left:none;border-top:1px solid var(--line)}body{overflow:auto}}
+header,footer{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:rgba(8,12,27,.86);backdrop-filter:blur(10px)}
+header{border-bottom:1px solid var(--line)}footer{border-top:1px solid var(--line);font-size:.83rem;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(255,211,77,.22),rgba(115,230,255,.22));border:1px solid var(--line)}
+.title strong{display:block;letter-spacing:.08em}
+.title span{display:block;color:var(--muted);font-size:.78rem}
+.topstats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{min-width:74px;padding:7px 10px;text-align:center;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.stat .v{font-family:var(--mono);font-size:1rem}
+.stat .k{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.stage{position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+.side{padding:12px;border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(11,15,33,.9),rgba(11,15,33,.78));overflow:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:.84rem;letter-spacing:.11em;text-transform:uppercase}
+.row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px dashed rgba(255,255,255,.08)}
+.row:first-child{border-top:none}
+.k{color:var(--muted);font-size:.86rem}
+.v{font-family:var(--mono)}
+.phaseBar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.phasePill{padding:8px 6px;text-align:center;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.74rem}
+.phasePill.active{background:rgba(115,230,255,.12);border-color:rgba(115,230,255,.34);color:#fff}
+.phasePill.done{background:rgba(112,240,172,.12);border-color:rgba(112,240,172,.34)}
+label{display:block;margin:10px 0 6px;font-size:.86rem}
+input[type=range],input[type=number],select{width:100%}
+input[type=number],select{padding:10px 11px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+input[type=range]{accent-color:#ffd34d}
+.readout{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:.78rem}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn{border:none;cursor:pointer;border-radius:14px;padding:11px 12px;font-weight:800;color:#0a1122;background:linear-gradient(135deg,var(--gold),#ffb000);box-shadow:var(--shadow)}
+.btn.alt{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--line);font-weight:600}
+.btn.hint{background:linear-gradient(135deg,#7cf0ff,#53c7ff)}
+.btn.danger{background:linear-gradient(135deg,#ff95a2,#ff6676)}
+.btn.full{grid-column:1/-1}
+.note{margin-top:8px;padding:9px 10px;border-radius:12px;background:rgba(115,230,255,.08);border:1px solid rgba(115,230,255,.18);font-size:.82rem;line-height:1.35}
+.note.warn{background:rgba(255,116,133,.09);border-color:rgba(255,116,133,.2)}
+.formula{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;font-family:var(--mono);font-size:.79rem;line-height:1.48;white-space:pre-line}
+.log{font-size:.82rem;color:#dce6ff;line-height:1.35}
+.hidden{display:none!important}
+.overlay{position:fixed;inset:0;background:rgba(3,6,15,.82);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal{width:min(1080px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,rgba(10,14,32,.97),rgba(10,14,32,.93));border:1px solid var(--line);border-radius:26px;padding:16px;box-shadow:var(--shadow)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:900px){.hero,.grid2{grid-template-columns:1fr}}
+.big{margin:0 0 8px;font-size:clamp(1.5rem,4vw,2.5rem);line-height:1.04}
+.tagline{font-size:1rem;line-height:1.42;color:#dce8ff}
+.mission{padding:12px;border-radius:18px;background:radial-gradient(420px 220px at 90% 8%, rgba(255,211,77,.12), transparent 60%), rgba(255,255,255,.04);border:1px solid var(--line)}
+.mission ul{margin:8px 0 0 18px;padding:0}
+.mission li{margin-bottom:6px;line-height:1.34}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:.75rem}
+.medal{font-size:2.6rem}
+.reflect{width:100%;min-height:74px;border-radius:12px;padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+.choiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;text-align:center;font-weight:600}
+.choice.active{border-color:rgba(255,211,77,.6);background:rgba(255,211,77,.12)}
+.kbd{display:inline-block;padding:2px 7px;border:1px solid rgba(255,255,255,.2);border-bottom-width:3px;border-radius:8px;background:rgba(255,255,255,.06);font-family:var(--mono);font-size:.8rem}
+.good{color:var(--green)} .bad{color:var(--red)} .gold{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">🪐</div>
+      <div class="title">
+        <strong id="hdrTitle"></strong>
+        <span id="hdrSub"></span>
+      </div>
+    </div>
+    <div class="topstats">
+      <div class="stat"><div class="v" id="attemptsTop">0</div><div class="k" id="attemptsTopLabel"></div></div>
+      <div class="stat"><div class="v" id="scoreTop">100</div><div class="k" id="scoreTopLabel"></div></div>
+      <div class="stat"><div class="v" id="timerTop">0.0 s</div><div class="k" id="timerTopLabel"></div></div>
+      <div class="stat"><div class="v" id="statusTop">LIVE</div><div class="k" id="statusTopLabel"></div></div>
+    </div>
+  </header>
+
+  <main class="stage"><canvas id="scene"></canvas></main>
+
+  <aside class="side">
+    <div class="card">
+      <h3 id="phaseHeader"></h3>
+      <div class="phaseBar">
+        <div class="phasePill active" id="p1"></div>
+        <div class="phasePill" id="p2"></div>
+        <div class="phasePill" id="p3"></div>
+      </div>
+      <div class="row"><div class="k" id="moonKey"></div><div class="v" id="moonVal"></div></div>
+      <div class="row"><div class="k" id="difficultyKey"></div><div class="v" id="difficultyVal"></div></div>
+      <div class="row"><div class="k" id="bestKey"></div><div class="v" id="bestVal">—</div></div>
+      <div class="row"><div class="k" id="liveKey"></div><div class="v" id="liveVal">—</div></div>
+      <div class="note" id="feedback"></div>
+    </div>
+
+    <div class="card" id="phase1Panel">
+      <h3 id="phase1Title"></h3>
+      <label for="ampSlider" id="ampLbl"></label>
+      <input id="ampSlider" type="range" min="40" max="220" step="1" value="110"/>
+      <div class="readout"><span id="ampLow"></span><strong id="ampRead"></strong><span id="ampHigh"></span></div>
+      <label for="periodSlider" id="periodLbl"></label>
+      <input id="periodSlider" type="range" min="4.0" max="18.0" step="0.1" value="9.0"/>
+      <div class="readout"><span id="periodLow"></span><strong id="periodRead"></strong><span id="periodHigh"></span></div>
+      <div class="btns">
+        <button class="btn" id="analyzeBtn"></button>
+        <button class="btn alt" id="pauseBtn"></button>
+        <button class="btn hint" id="hintBtn"></button>
+        <button class="btn alt" id="unlockBtn"></button>
+      </div>
+      <div class="note" id="phase1Note"></div>
+    </div>
+
+    <div class="card hidden" id="phase2Panel">
+      <h3 id="phase2Title"></h3>
+      <label for="vmaxInput" id="vmaxLbl"></label>
+      <input id="vmaxInput" type="number" step="0.1" inputmode="decimal"/>
+      <label for="amaxInput" id="amaxLbl"></label>
+      <input id="amaxInput" type="number" step="0.1" inputmode="decimal"/>
+      <div class="btns">
+        <button class="btn" id="computeBtn"></button>
+        <button class="btn hint" id="hint2Btn"></button>
+        <button class="btn alt full" id="toPhase3Btn"></button>
+      </div>
+      <div class="note" id="phase2Note"></div>
+    </div>
+
+    <div class="card hidden" id="phase3Panel">
+      <h3 id="phase3Title"></h3>
+      <div class="row"><div class="k" id="pairKey"></div><div class="v" id="pairVal">—</div></div>
+      <label for="ratioInput" id="ratioLbl"></label>
+      <input id="ratioInput" type="number" step="0.01" inputmode="decimal"/>
+      <label id="speedChoiceLbl"></label>
+      <div class="choiceGrid">
+        <button class="choice" id="choiceA"></button>
+        <button class="choice" id="choiceB"></button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="compareBtn"></button>
+        <button class="btn hint" id="hint3Btn"></button>
+        <button class="btn danger" id="finishBtn"></button>
+      </div>
+      <div class="note" id="phase3Note"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="formulaTitle"></h3>
+      <div class="formula" id="formulaBox"></div>
+      <div class="note warn" id="assumptionNote"></div>
+    </div>
+
+    <div class="card">
+      <h3 id="logTitle"></h3>
+      <div class="log" id="logBox"></div>
+      <div class="note warn" id="misconceptionBox"></div>
+    </div>
+  </aside>
+
+  <footer>
+    <div id="controlsText"></div>
+    <div id="bigIdeaText"></div>
+  </footer>
+</div>
+
+<div class="overlay" id="intro">
+  <div class="modal">
+    <div class="hero">
+      <div class="mission">
+        <div class="pill" id="introPill"></div>
+        <h1 class="big" id="introTitle"></h1>
+        <p class="tagline" id="introTagline"></p>
+        <div class="grid2">
+          <div class="card"><h3 id="learnH"></h3><p class="log" id="learnP"></p></div>
+          <div class="card"><h3 id="hookH"></h3><p class="log" id="hookP"></p></div>
+          <div class="card"><h3 id="serveH"></h3><p class="log" id="serveP"></p></div>
+          <div class="card"><h3 id="breakH"></h3><p class="log" id="breakP"></p></div>
+        </div>
+      </div>
+      <div class="mission">
+        <h3 id="briefH"></h3>
+        <ul id="briefList"></ul>
+        <div class="grid2">
+          <div>
+            <label for="difficultySelect" id="difficultySelectLbl"></label>
+            <select id="difficultySelect">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+          <div>
+            <label for="moonSelect" id="moonSelectLbl"></label>
+            <select id="moonSelect">
+              <option value="random" selected>Random Galilean moon</option>
+              <option value="Io">Io</option>
+              <option value="Europa">Europa</option>
+              <option value="Ganymede">Ganymede</option>
+              <option value="Callisto">Callisto</option>
+            </select>
+          </div>
+        </div>
+        <div class="card"><h3 id="scoreH"></h3><p class="log" id="scoreP"></p></div>
+        <div class="card"><h3 id="jokesH"></h3><p class="log" id="jokesP"></p></div>
+        <button class="btn full" id="startBtn"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="modal">
+    <div class="grid2">
+      <div class="mission">
+        <div class="medal" id="medal">🥇</div>
+        <h2 id="endTitle"></h2>
+        <div class="row"><div class="k" id="sumMoonKey"></div><div class="v" id="sumMoonVal"></div></div>
+        <div class="row"><div class="k" id="sumAttemptsKey"></div><div class="v" id="sumAttemptsVal"></div></div>
+        <div class="row"><div class="k" id="sumScoreKey"></div><div class="v" id="sumScoreVal"></div></div>
+        <div class="row"><div class="k" id="sumP1Key"></div><div class="v" id="sumP1Val"></div></div>
+        <div class="row"><div class="k" id="sumP2Key"></div><div class="v" id="sumP2Val"></div></div>
+        <div class="row"><div class="k" id="sumP3Key"></div><div class="v" id="sumP3Val"></div></div>
+      </div>
+      <div class="mission">
+        <h3 id="analysisH"></h3>
+        <p class="log" id="analysisP"></p>
+        <h3 id="checkH"></h3>
+        <p class="log" id="checkP"></p>
+        <h3 id="reflectH"></h3>
+        <textarea class="reflect" id="reflect" placeholder="What did you learn? What would you change on the next run?"></textarea>
+        <div class="btns">
+          <button class="btn" id="retryBtn"></button>
+          <button class="btn alt" id="reviewBtn"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+window.addEventListener("load", init);
+
+function init(){
+  const I18N = {
+    en: {
+      title: "ATLAS // GALILEAN RESONANCE",
+      subtitle: "Triple Signal • SHM • Velocity/Acceleration • Galileo Mode",
+      headerAttempts: "Attempts",
+      headerScore: "Score",
+      headerTime: "Time",
+      headerStatus: "Status",
+      phaseHeader: "Mission Progress",
+      phase1Pill: "1. SIGNAL LOCK",
+      phase2Pill: "2. COMPUTE BURST",
+      phase3Pill: "3. GALILEO MODE",
+      moonKey: "Moon target",
+      difficultyKey: "Difficulty",
+      bestKey: "Best fit so far",
+      liveKey: "Live phase result",
+      phase1Title: "Phase 1 — Signal Lock",
+      ampLbl: "Amplitude A (detector pixels)",
+      ampLow: "tight swing",
+      ampHigh: "wide swing",
+      periodLbl: "Period T (seconds)",
+      periodLow: "fast rhythm",
+      periodHigh: "slow rhythm",
+      analyzeBtn: "Analyze Fit",
+      pauseBtn: "Pause",
+      resumeBtn: "Resume",
+      hintBtn: "Hint (-6)",
+      unlockBtn: "Continue",
+      phase1Note: "Win by understanding the graph, not by slider chaos. Gold dots are observed data. The white line is your model.",
+      phase2Title: "Phase 2 — Compute Burst",
+      vmaxLbl: "Enter v_max (px/s)",
+      amaxLbl: "Enter a_max (px/s²)",
+      computeBtn: "Transmit Values",
+      hint2Btn: "Hint (-6)",
+      toPhase3Btn: "Open Galileo Mode",
+      phase2Note: "Use your best-fit A and T. This phase turns the graph into motion quantities.",
+      phase3Title: "Phase 3 — Galileo Mode",
+      pairKey: "Moon pair",
+      ratioLbl: "Enter period ratio T_B / T_A",
+      speedChoiceLbl: "Which moon has the larger maximum speed?",
+      compareBtn: "Compare",
+      hint3Btn: "Hint (-6)",
+      finishBtn: "Finish Mission",
+      formulaTitle: "Always-On Physics",
+      formulaText:
+`Phase 1: x(t) = A cos(ωt + φ)
+ω = 2π / T
+
+Phase 2:
+v_max = ωA = 2πA / T
+a_max = ω²A = 4π²A / T²
+
+Phase 3:
+Period ratio = T_B / T_A
+Compare speeds with v_max = 2πA / T
+
+Detector metric:
+RMS error % = 100 · RMS(model - data) / A_true`,
+      assumptionNote: "Model assumptions: one-axis projected motion, ideal SHM, fixed phase, tiny detector noise. We ignore orbital eccentricity, changing inclination, and full 3D orbital dynamics.",
+      logTitle: "Mission Log",
+      misconceptionBox: "Misconception target: periodic motion does not mean constant speed. In SHM the object is fastest at x = 0 and momentarily stops at x = ±A.",
+      controlsText: "Controls: <span class='kbd'>Space</span>/<span class='kbd'>Enter</span> analyze • <span class='kbd'>P</span> pause • <span class='kbd'>R</span> reset • <span class='kbd'>H</span> hint",
+      bigIdeaText: "Big Idea #4 + #7 + #1 hook: astronomy uses observations and models; giant planets have many moons; Galileo’s telescope revealed Jupiter’s largest moons.",
+      introPill: "ATLAS candidate mission • English-only v1",
+      introTitle: "GALILEAN RESONANCE: Triple Signal",
+      introTagline: "An ATLAS-style mission for upper-secondary students: lock the motion signal of a Galilean moon, compute its maximum speed and acceleration, then survive Galileo Mode by comparing two moons like a telescope analyst under pressure.",
+      learnH: "Learning Target",
+      learnP: "Today I learn how simple harmonic motion is modeled with x = A cos(ωt + φ), how period controls angular frequency, and how to compute v_max and a_max from A and T.",
+      hookH: "Big Idea Hook",
+      hookP: "This mission uses Big Idea #4 (astronomy studies celestial objects through observations and models), #7 (we live in a Solar System with planets and moons), and #1 because Galileo studied Jupiter’s large moons with a telescope.",
+      serveH: "Sub-Ideas Served",
+      serveP: "4.4 astronomy uses observations and models; giant planets can have many natural satellites; Galileo’s observations changed how humans understood the Solar System.",
+      breakH: "Misconception to Break",
+      breakP: "‘Periodic motion means constant speed.’ Mission consequence says no: if you think that, you will fail the compute phase.",
+      briefH: "Mission Brief",
+      briefItems: [
+        "Phase 1: fit the observed detector signal by changing only A and T.",
+        "Phase 2: use the model to calculate v_max and a_max.",
+        "Phase 3: compare two moons and decide which one is dynamically faster.",
+        "Hints cost points. Attempt spam also costs points.",
+        "The correct physics model is the only reliable way to win."
+      ],
+      difficultySelectLbl: "Difficulty",
+      moonSelectLbl: "Primary moon",
+      scoreH: "Scoring",
+      scoreP: "Score combines efficiency and correctness. Attempts hurt, hints hurt, large errors hurt more. Medals: 🥇 elite analysis, 🥈 strong science, 🥉 workable fit, 💔 more telescope chaos required.",
+      jokesH: "Science jokes, because Jupiter demanded drama",
+      jokesP: "1) Do not guess the waveform. Galileo hates vibes. 2) Io is basically a volcano with orbital paperwork. 3) If your fit looks random, congratulations: you have invented terrible lab method.",
+      startBtn: "Start Mission",
+      endTitle: "Mission Debrief",
+      sumMoonKey: "Primary moon",
+      sumAttemptsKey: "Total attempts",
+      sumScoreKey: "Final score",
+      sumP1Key: "Phase 1 best RMS",
+      sumP2Key: "Phase 2 result",
+      sumP3Key: "Phase 3 result",
+      analysisH: "Theory vs Mission Data",
+      checkH: "Misconception Check",
+      reflectH: "Mini Reflection",
+      retryBtn: "Retry",
+      reviewBtn: "Keep Reviewing",
+      endAnalysis: "The mission used projected moon motion as a simplified SHM model. Matching the graph required you to coordinate amplitude and period, not just one of them. Then the same fitted values drove v_max = 2πA/T and a_max = 4π²A/T², showing that a graph is not decoration: it encodes dynamics.",
+      endCheck: "If you still think periodic motion means constant speed, look again. In SHM the object lingers at the edges, races through the center, and changes acceleration direction with position.",
+      statuses: {live:"LIVE", paused:"PAUSED", done:"DONE"},
+      phase1Unlock: "You may continue when your fit is under 12%, but the better your fit, the easier the later phases become.",
+      completeText: "complete",
+      moons: {
+        Io:{A:88,T:6.1,color:"#ffd34d",lore:"Io: volcanic chaos, excellent rhythm."},
+        Europa:{A:116,T:8.5,color:"#8ad7ff",lore:"Europa: icy shell, suspiciously elegant telemetry."},
+        Ganymede:{A:151,T:12.2,color:"#b9c7ff",lore:"Ganymede: giant moon, giant detector swing."},
+        Callisto:{A:183,T:15.1,color:"#d9c2aa",lore:"Callisto: ancient crater world, slow majestic beat."}
+      }
+    }
+  };
+
+  const S = I18N.en;
+  const $ = q => document.querySelector(q);
+  const canvas = $("#scene");
+  const ctx = canvas.getContext("2d");
+  const intro = $("#intro");
+  const end = $("#end");
+
+  const el = {
+    hdrTitle: $("#hdrTitle"), hdrSub: $("#hdrSub"),
+    attemptsTopLabel: $("#attemptsTopLabel"), scoreTopLabel: $("#scoreTopLabel"), timerTopLabel: $("#timerTopLabel"), statusTopLabel: $("#statusTopLabel"),
+    attemptsTop: $("#attemptsTop"), scoreTop: $("#scoreTop"), timerTop: $("#timerTop"), statusTop: $("#statusTop"),
+    phaseHeader: $("#phaseHeader"), p1: $("#p1"), p2: $("#p2"), p3: $("#p3"),
+    moonKey: $("#moonKey"), moonVal: $("#moonVal"), difficultyKey: $("#difficultyKey"), difficultyVal: $("#difficultyVal"),
+    bestKey: $("#bestKey"), bestVal: $("#bestVal"), liveKey: $("#liveKey"), liveVal: $("#liveVal"), feedback: $("#feedback"),
+    phase1Panel: $("#phase1Panel"), phase2Panel: $("#phase2Panel"), phase3Panel: $("#phase3Panel"),
+    phase1Title: $("#phase1Title"), ampLbl: $("#ampLbl"), ampLow: $("#ampLow"), ampRead: $("#ampRead"), ampHigh: $("#ampHigh"),
+    periodLbl: $("#periodLbl"), periodLow: $("#periodLow"), periodRead: $("#periodRead"), periodHigh: $("#periodHigh"),
+    ampSlider: $("#ampSlider"), periodSlider: $("#periodSlider"),
+    analyzeBtn: $("#analyzeBtn"), pauseBtn: $("#pauseBtn"), hintBtn: $("#hintBtn"), unlockBtn: $("#unlockBtn"), phase1Note: $("#phase1Note"),
+    phase2Title: $("#phase2Title"), vmaxLbl: $("#vmaxLbl"), amaxLbl: $("#amaxLbl"), vmaxInput: $("#vmaxInput"), amaxInput: $("#amaxInput"),
+    computeBtn: $("#computeBtn"), hint2Btn: $("#hint2Btn"), toPhase3Btn: $("#toPhase3Btn"), phase2Note: $("#phase2Note"),
+    phase3Title: $("#phase3Title"), pairKey: $("#pairKey"), pairVal: $("#pairVal"), ratioLbl: $("#ratioLbl"), ratioInput: $("#ratioInput"),
+    speedChoiceLbl: $("#speedChoiceLbl"), choiceA: $("#choiceA"), choiceB: $("#choiceB"), compareBtn: $("#compareBtn"), hint3Btn: $("#hint3Btn"), finishBtn: $("#finishBtn"), phase3Note: $("#phase3Note"),
+    formulaTitle: $("#formulaTitle"), formulaBox: $("#formulaBox"), assumptionNote: $("#assumptionNote"),
+    logTitle: $("#logTitle"), logBox: $("#logBox"), misconceptionBox: $("#misconceptionBox"),
+    controlsText: $("#controlsText"), bigIdeaText: $("#bigIdeaText"),
+    introPill: $("#introPill"), introTitle: $("#introTitle"), introTagline: $("#introTagline"),
+    learnH: $("#learnH"), learnP: $("#learnP"), hookH: $("#hookH"), hookP: $("#hookP"), serveH: $("#serveH"), serveP: $("#serveP"),
+    breakH: $("#breakH"), breakP: $("#breakP"), briefH: $("#briefH"), briefList: $("#briefList"),
+    difficultySelectLbl: $("#difficultySelectLbl"), moonSelectLbl: $("#moonSelectLbl"), difficultySelect: $("#difficultySelect"), moonSelect: $("#moonSelect"),
+    scoreH: $("#scoreH"), scoreP: $("#scoreP"), jokesH: $("#jokesH"), jokesP: $("#jokesP"), startBtn: $("#startBtn"),
+    endTitle: $("#endTitle"), medal: $("#medal"), sumMoonKey: $("#sumMoonKey"), sumMoonVal: $("#sumMoonVal"),
+    sumAttemptsKey: $("#sumAttemptsKey"), sumAttemptsVal: $("#sumAttemptsVal"), sumScoreKey: $("#sumScoreKey"), sumScoreVal: $("#sumScoreVal"),
+    sumP1Key: $("#sumP1Key"), sumP1Val: $("#sumP1Val"), sumP2Key: $("#sumP2Key"), sumP2Val: $("#sumP2Val"), sumP3Key: $("#sumP3Key"), sumP3Val: $("#sumP3Val"),
+    analysisH: $("#analysisH"), analysisP: $("#analysisP"), checkH: $("#checkH"), checkP: $("#checkP"), reflectH: $("#reflectH"), retryBtn: $("#retryBtn"), reviewBtn: $("#reviewBtn")
+  };
+
+  const st = {
+    running:false, paused:false, ended:false, phase:1,
+    startClock:0, elapsed:0, t:0, attempts:0, score:100, hints:0,
+    difficulty:"medium", moon:"Io", trueA:100, trueT:8.0, phaseShift:0,
+    playerA:110, playerT:9.0, currentError:null, bestError:Infinity,
+    phase1Complete:false, phase2Complete:false, phase3Complete:false,
+    bestFitA:null, bestFitT:null, phase2Error:null, phase3Error:null,
+    log:[], choiceSpeed:null,
+    obsTimes:[], obsValues:[],
+    pairA:"Io", pairB:"Europa", pairTrueRatio:1.0, pairFaster:"Io",
+    noise:1.5
+  };
+
+  function setStaticText(){
+    el.hdrTitle.textContent = S.title;
+    el.hdrSub.textContent = S.subtitle;
+    el.attemptsTopLabel.textContent = S.headerAttempts;
+    el.scoreTopLabel.textContent = S.headerScore;
+    el.timerTopLabel.textContent = S.headerTime;
+    el.statusTopLabel.textContent = S.headerStatus;
+    el.phaseHeader.textContent = S.phaseHeader;
+    el.p1.textContent = S.phase1Pill;
+    el.p2.textContent = S.phase2Pill;
+    el.p3.textContent = S.phase3Pill;
+    el.moonKey.textContent = S.moonKey;
+    el.difficultyKey.textContent = S.difficultyKey;
+    el.bestKey.textContent = S.bestKey;
+    el.liveKey.textContent = S.liveKey;
+    el.phase1Title.textContent = S.phase1Title;
+    el.ampLbl.textContent = S.ampLbl;
+    el.ampLow.textContent = S.ampLow;
+    el.ampHigh.textContent = S.ampHigh;
+    el.periodLbl.textContent = S.periodLbl;
+    el.periodLow.textContent = S.periodLow;
+    el.periodHigh.textContent = S.periodHigh;
+    el.analyzeBtn.textContent = S.analyzeBtn;
+    el.pauseBtn.textContent = S.pauseBtn;
+    el.hintBtn.textContent = S.hintBtn;
+    el.unlockBtn.textContent = S.unlockBtn;
+    el.phase1Note.textContent = S.phase1Note;
+    el.phase2Title.textContent = S.phase2Title;
+    el.vmaxLbl.textContent = S.vmaxLbl;
+    el.amaxLbl.textContent = S.amaxLbl;
+    el.computeBtn.textContent = S.computeBtn;
+    el.hint2Btn.textContent = S.hint2Btn;
+    el.toPhase3Btn.textContent = S.toPhase3Btn;
+    el.phase2Note.textContent = S.phase2Note;
+    el.phase3Title.textContent = S.phase3Title;
+    el.pairKey.textContent = S.pairKey;
+    el.ratioLbl.textContent = S.ratioLbl;
+    el.speedChoiceLbl.textContent = S.speedChoiceLbl;
+    el.compareBtn.textContent = S.compareBtn;
+    el.hint3Btn.textContent = S.hint3Btn;
+    el.finishBtn.textContent = S.finishBtn;
+    el.formulaTitle.textContent = S.formulaTitle;
+    el.formulaBox.textContent = S.formulaText;
+    el.assumptionNote.textContent = S.assumptionNote;
+    el.logTitle.textContent = S.logTitle;
+    el.misconceptionBox.textContent = S.misconceptionBox;
+    el.controlsText.innerHTML = S.controlsText;
+    el.bigIdeaText.textContent = S.bigIdeaText;
+    el.introPill.textContent = S.introPill;
+    el.introTitle.textContent = S.introTitle;
+    el.introTagline.textContent = S.introTagline;
+    el.learnH.textContent = S.learnH; el.learnP.textContent = S.learnP;
+    el.hookH.textContent = S.hookH; el.hookP.textContent = S.hookP;
+    el.serveH.textContent = S.serveH; el.serveP.textContent = S.serveP;
+    el.breakH.textContent = S.breakH; el.breakP.textContent = S.breakP;
+    el.briefH.textContent = S.briefH;
+    el.briefList.innerHTML = S.briefItems.map(x=>"<li>"+x+"</li>").join("");
+    el.difficultySelectLbl.textContent = S.difficultySelectLbl;
+    el.moonSelectLbl.textContent = S.moonSelectLbl;
+    el.scoreH.textContent = S.scoreH; el.scoreP.textContent = S.scoreP;
+    el.jokesH.textContent = S.jokesH; el.jokesP.textContent = S.jokesP;
+    el.startBtn.textContent = S.startBtn;
+    el.endTitle.textContent = S.endTitle;
+    el.sumMoonKey.textContent = S.sumMoonKey;
+    el.sumAttemptsKey.textContent = S.sumAttemptsKey;
+    el.sumScoreKey.textContent = S.sumScoreKey;
+    el.sumP1Key.textContent = S.sumP1Key;
+    el.sumP2Key.textContent = S.sumP2Key;
+    el.sumP3Key.textContent = S.sumP3Key;
+    el.analysisH.textContent = S.analysisH; el.analysisP.textContent = S.endAnalysis;
+    el.checkH.textContent = S.checkH; el.checkP.textContent = S.endCheck;
+    el.reflectH.textContent = S.reflectH;
+    el.retryBtn.textContent = S.retryBtn; el.reviewBtn.textContent = S.reviewBtn;
+  }
+
+  function bind(){
+    el.startBtn.addEventListener("click", startMission);
+    el.retryBtn.addEventListener("click", ()=>{ end.classList.add("hidden"); resetMission(); startMission(); });
+    el.reviewBtn.addEventListener("click", ()=> end.classList.add("hidden"));
+    el.analyzeBtn.addEventListener("click", analyzeFit);
+    el.pauseBtn.addEventListener("click", togglePause);
+    el.hintBtn.addEventListener("click", ()=>giveHint(1));
+    el.unlockBtn.addEventListener("click", tryAdvanceToPhase2);
+    el.computeBtn.addEventListener("click", checkPhase2);
+    el.hint2Btn.addEventListener("click", ()=>giveHint(2));
+    el.toPhase3Btn.addEventListener("click", tryAdvanceToPhase3);
+    el.choiceA.addEventListener("click", ()=>setSpeedChoice(st.pairA));
+    el.choiceB.addEventListener("click", ()=>setSpeedChoice(st.pairB));
+    el.compareBtn.addEventListener("click", checkPhase3);
+    el.hint3Btn.addEventListener("click", ()=>giveHint(3));
+    el.finishBtn.addEventListener("click", finishMission);
+    el.ampSlider.addEventListener("input", onAmpInput);
+    el.periodSlider.addEventListener("input", onPeriodInput);
+    window.addEventListener("resize", resize);
+    window.addEventListener("keydown", onKey);
+    canvas.addEventListener("pointerdown", onCanvasTap);
+  }
+
+  function onCanvasTap(){
+    if(intro.classList.contains("hidden") && st.running && st.phase===1){ analyzeFit(); }
+    else if(intro.classList.contains("hidden") && st.running && st.phase===3){ setSpeedChoice(st.choiceSpeed===st.pairA ? st.pairB : st.pairA || st.pairA); }
+  }
+
+  function onKey(e){
+    const k = e.key.toLowerCase();
+    if(!intro.classList.contains("hidden") && (k==="enter" || k===" ")){ e.preventDefault(); startMission(); return; }
+    if(k==="p"){ e.preventDefault(); togglePause(); }
+    if(k==="r"){ e.preventDefault(); resetMission(); startMission(); }
+    if(k==="h"){ e.preventDefault(); giveHint(st.phase); }
+    if(k===" " || k==="enter"){
+      e.preventDefault();
+      if(st.phase===1) analyzeFit();
+      else if(st.phase===2) checkPhase2();
+      else if(st.phase===3) checkPhase3();
+    }
+  }
+
+  function resize(){
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(canvas.clientWidth * dpr);
+    canvas.height = Math.floor(canvas.clientHeight * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function startMission(){
+    intro.classList.add("hidden");
+    end.classList.add("hidden");
+    st.running = true;
+    st.paused = false;
+    st.ended = false;
+    st.phase = 1;
+    st.startClock = performance.now();
+    st.elapsed = 0;
+    st.attempts = 0;
+    st.score = 100;
+    st.hints = 0;
+    st.currentError = null;
+    st.bestError = Infinity;
+    st.phase1Complete = false;
+    st.phase2Complete = false;
+    st.phase3Complete = false;
+    st.phase2Error = null;
+    st.phase3Error = null;
+    st.bestFitA = null; st.bestFitT = null;
+    st.log = [];
+    st.choiceSpeed = null;
+    st.difficulty = el.difficultySelect.value;
+    st.moon = el.moonSelect.value === "random" ? pick(["Io","Europa","Ganymede","Callisto"]) : el.moonSelect.value;
+    configurePrimaryMoon();
+    configurePair();
+    syncPanels();
+    pushLog("Mission loaded: " + st.moon + ". " + S.moons[st.moon].lore);
+    pushLog("Observe → decide → test → interpret → adapt. Telescope teams call this Tuesday.");
+    updateUI();
+  }
+
+  function resetMission(){
+    st.running = false;
+    st.paused = false;
+    st.ended = false;
+  }
+
+  function configurePrimaryMoon(){
+    const m = S.moons[st.moon];
+    let A = m.A, T = m.T;
+    if(st.difficulty==="easy"){
+      A += rand(-6,6); T += rand(-0.3,0.3); st.noise = 0.8; st.phaseShift = 0;
+    }else if(st.difficulty==="medium"){
+      A += rand(-12,12); T += rand(-0.6,0.6); st.noise = 1.5; st.phaseShift = Math.PI/10;
+    }else{
+      A += rand(-15,15); T += rand(-0.8,0.8); st.noise = 2.4; st.phaseShift = Math.PI/7;
+    }
+    st.trueA = round1(A);
+    st.trueT = round1(T);
+    st.playerA = clamp(Math.round(st.trueA + rand(-32,32)), 40, 220);
+    st.playerT = clamp(round1(st.trueT + rand(-2.0,2.0)), 4.0, 18.0);
+    el.ampSlider.value = st.playerA;
+    el.periodSlider.value = st.playerT;
+    syncSliderReads();
+    buildPrimaryObservations();
+  }
+
+  function buildPrimaryObservations(){
+    st.obsTimes.length = 0;
+    st.obsValues.length = 0;
+    const count = st.difficulty==="easy" ? 28 : st.difficulty==="medium" ? 34 : 40;
+    const total = st.difficulty==="easy" ? 12 : st.difficulty==="medium" ? 14 : 16;
+    for(let i=0;i<count;i++){
+      const t = total * i/(count-1);
+      const jitter = rand(-st.noise, st.noise);
+      const x = st.trueA * Math.cos((2*Math.PI/st.trueT)*t + st.phaseShift) + jitter;
+      st.obsTimes.push(t); st.obsValues.push(x);
+    }
+  }
+
+  function configurePair(){
+    const all = ["Io","Europa","Ganymede","Callisto"].filter(n=>n!==st.moon);
+    st.pairA = st.moon;
+    st.pairB = pick(all);
+    st.pairTrueRatio = round2(S.moons[st.pairB].T / S.moons[st.pairA].T);
+    const speedA = 2*Math.PI*S.moons[st.pairA].A / S.moons[st.pairA].T;
+    const speedB = 2*Math.PI*S.moons[st.pairB].A / S.moons[st.pairB].T;
+    st.pairFaster = speedA >= speedB ? st.pairA : st.pairB;
+    el.choiceA.textContent = st.pairA;
+    el.choiceB.textContent = st.pairB;
+    el.pairVal.textContent = st.pairA + " vs " + st.pairB;
+  }
+
+  function syncPanels(){
+    el.phase1Panel.classList.toggle("hidden", st.phase!==1);
+    el.phase2Panel.classList.toggle("hidden", st.phase!==2);
+    el.phase3Panel.classList.toggle("hidden", st.phase!==3);
+    el.p1.classList.toggle("active", st.phase===1); el.p2.classList.toggle("active", st.phase===2); el.p3.classList.toggle("active", st.phase===3);
+    el.p1.classList.toggle("done", st.phase1Complete);
+    el.p2.classList.toggle("done", st.phase2Complete);
+    el.p3.classList.toggle("done", st.phase3Complete);
+  }
+
+  function syncSliderReads(){
+    el.ampRead.textContent = Math.round(st.playerA) + " px";
+    el.periodRead.textContent = st.playerT.toFixed(1) + " s";
+  }
+
+  function onAmpInput(){
+    st.playerA = +el.ampSlider.value;
+    syncSliderReads();
+    if(Math.abs(st.playerA-135)<1 && Math.abs(st.playerT-9.5)<0.1){
+      pushLog("Easter egg: 23.5° sends regards from the axial-tilt fan club.");
+    }
+  }
+
+  function onPeriodInput(){
+    st.playerT = +el.periodSlider.value;
+    syncSliderReads();
+    if(Math.abs(st.playerT-6.0)<0.05){
+      pushLog("Galileo whisper detected: use the model, not vibes.");
+    }
+  }
+
+  function analyzeFit(){
+    if(!st.running || st.phase!==1 || st.ended) return;
+    st.attempts++;
+    const err = computeRMS(st.playerA, st.playerT);
+    st.currentError = err;
+    if(err < st.bestError){
+      st.bestError = err;
+      st.bestFitA = st.playerA;
+      st.bestFitT = st.playerT;
+    }
+    const aMsg = Math.abs(st.playerA - st.trueA) < 3 ? "A almost locked." : (st.playerA > st.trueA ? "A too high." : "A too low.");
+    const tMsg = Math.abs(st.playerT - st.trueT) < 0.25 ? "T almost locked." : (st.playerT > st.trueT ? "T too high." : "T too low.");
+    let vibe = err < 5 ? "That fit is scary good." : err < 10 ? "Strong fit." : err < 16 ? "Close. The wave is still drifting." : "Telemetry disagreement remains large.";
+    setFeedback(aMsg + " " + tMsg + " " + vibe);
+    pushLog("Phase 1 attempt " + st.attempts + ": RMS " + err.toFixed(2) + "%. " + aMsg + " " + tMsg);
+    applyScorePenalty(2.6 + err*0.14);
+    if(err < 12 && !st.phase1Complete){
+      st.phase1Complete = true;
+      setFeedback("Phase 1 unlocked. You may continue, but sharpening the fit will help your confidence later.");
+      pushLog("Phase 1 unlock achieved.");
+    }
+    updateUI();
+  }
+
+  function tryAdvanceToPhase2(){
+    if(!st.phase1Complete){
+      setFeedback("You need a fit under 12% RMS before entering Compute Burst.");
+      return;
+    }
+    st.phase = 2;
+    syncPanels();
+    setFeedback("Phase 2 active. Turn the graph into dynamics.");
+    pushLog("Phase 2 opened.");
+    updateUI();
+  }
+
+  function checkPhase2(){
+    if(!st.running || st.phase!==2 || st.ended) return;
+    st.attempts++;
+    const A = st.bestFitA ?? st.playerA;
+    const T = st.bestFitT ?? st.playerT;
+    const trueV = 2*Math.PI*st.trueA/st.trueT;
+    const trueAmax = 4*Math.PI*Math.PI*st.trueA/(st.trueT*st.trueT);
+    const guessV = parseFloat(el.vmaxInput.value);
+    const guessA = parseFloat(el.amaxInput.value);
+    if(!isFinite(guessV) || !isFinite(guessA)){
+      setFeedback("Enter numeric values for both v_max and a_max.");
+      return;
+    }
+    const errV = Math.abs(guessV - trueV)/trueV*100;
+    const errA = Math.abs(guessA - trueAmax)/trueAmax*100;
+    st.phase2Error = (errV + errA)/2;
+    const calcV = 2*Math.PI*A/T;
+    const calcA = 4*Math.PI*Math.PI*A/(T*T);
+
+    let msg = "";
+    msg += errV < 8 ? "v_max is solid. " : (guessV > trueV ? "v_max too high. " : "v_max too low. ");
+    msg += errA < 8 ? "a_max is solid. " : (guessA > trueAmax ? "a_max too high. " : "a_max too low. ");
+    msg += "Your current best-fit model would predict about " + calcV.toFixed(1) + " px/s and " + calcA.toFixed(1) + " px/s².";
+    setFeedback(msg);
+    pushLog("Phase 2 check: error " + st.phase2Error.toFixed(2) + "%.");
+    applyScorePenalty(2.8 + st.phase2Error*0.16);
+    if(st.phase2Error < 10){
+      st.phase2Complete = true;
+      pushLog("Phase 2 completed.");
+    }
+    updateUI();
+  }
+
+  function tryAdvanceToPhase3(){
+    if(!st.phase2Complete){
+      setFeedback("Phase 2 needs an average error under 10% before Galileo Mode.");
+      return;
+    }
+    st.phase = 3;
+    syncPanels();
+    setFeedback("Galileo Mode active. Two moons, one answer, zero mercy.");
+    pushLog("Phase 3 opened.");
+    updateUI();
+  }
+
+  function setSpeedChoice(name){
+    st.choiceSpeed = name;
+    el.choiceA.classList.toggle("active", name===st.pairA);
+    el.choiceB.classList.toggle("active", name===st.pairB);
+  }
+
+  function checkPhase3(){
+    if(!st.running || st.phase!==3 || st.ended) return;
+    st.attempts++;
+    const ratioGuess = parseFloat(el.ratioInput.value);
+    if(!isFinite(ratioGuess) || !st.choiceSpeed){
+      setFeedback("Enter a period ratio and choose the moon with larger maximum speed.");
+      return;
+    }
+    const ratioErr = Math.abs(ratioGuess - st.pairTrueRatio)/st.pairTrueRatio*100;
+    const speedErr = st.choiceSpeed === st.pairFaster ? 0 : 100;
+    st.phase3Error = ratioErr*0.65 + speedErr*0.35;
+    let msg = ratioErr < 8 ? "Period ratio is strong. " : (ratioGuess > st.pairTrueRatio ? "Period ratio too high. " : "Period ratio too low. ");
+    msg += st.choiceSpeed === st.pairFaster ? "Speed comparison is correct." : "Speed comparison is incorrect. Remember v_max = 2πA/T.";
+    setFeedback(msg);
+    pushLog("Phase 3 check: composite error " + st.phase3Error.toFixed(2) + "%.");
+    applyScorePenalty(3.2 + st.phase3Error*0.12);
+    if(ratioErr < 8 && st.choiceSpeed === st.pairFaster){
+      st.phase3Complete = true;
+      pushLog("Phase 3 completed.");
+      finishMission();
+    }
+    updateUI();
+  }
+
+  function giveHint(phase){
+    if(!st.running || st.ended) return;
+    st.hints++;
+    applyScorePenalty(6);
+    let msg = "";
+    if(phase===1){
+      const ampOff = st.playerA - st.trueA;
+      const tOff = st.playerT - st.trueT;
+      msg = Math.abs(ampOff) > Math.abs(tOff/st.trueT*st.trueA)
+        ? (ampOff>0 ? "Hint: your turning points are too far out. Reduce A." : "Hint: your turning points are too close in. Increase A.")
+        : (tOff>0 ? "Hint: your oscillation is too slow. Reduce T." : "Hint: your oscillation is too fast. Increase T.");
+    }else if(phase===2){
+      msg = "Hint: first compute ω = 2π/T. Then use v_max = ωA and a_max = ω²A. Units matter.";
+    }else{
+      msg = "Hint: period ratio uses T_B/T_A. Larger maximum speed comes from comparing 2πA/T, not from period alone.";
+    }
+    setFeedback(msg + " Hint penalty applied.");
+    pushLog("Hint used in phase " + phase + ".");
+    updateUI();
+  }
+
+  function computeRMS(A,T){
+    let s = 0;
+    for(let i=0;i<st.obsTimes.length;i++){
+      const m = A*Math.cos((2*Math.PI/T)*st.obsTimes[i] + st.phaseShift);
+      const d = m - st.obsValues[i];
+      s += d*d;
+    }
+    const rms = Math.sqrt(s/st.obsTimes.length);
+    return 100*rms/Math.max(1, st.trueA);
+  }
+
+  function applyScorePenalty(p){
+    st.score = Math.max(0, Math.round(st.score - p));
+  }
+
+  function finishMission(){
+    st.phase3Complete = st.phase3Complete || (st.phase===3 && st.phase3Error!=null && st.phase3Error<12);
+    st.running = false;
+    st.ended = true;
+    el.statusTop.textContent = S.statuses.done;
+    const p1 = isFinite(st.bestError) ? st.bestError : 99;
+    const p2 = st.phase2Error == null ? 99 : st.phase2Error;
+    const p3 = st.phase3Error == null ? 99 : st.phase3Error;
+    const combo = 0.45*p1 + 0.30*p2 + 0.25*Math.min(p3,100);
+    const medal = combo < 5 ? "🥇" : combo < 10 ? "🥈" : combo < 20 ? "🥉" : "💔";
+    el.medal.textContent = medal;
+    el.sumMoonVal.textContent = st.moon;
+    el.sumAttemptsVal.textContent = String(st.attempts);
+    el.sumScoreVal.textContent = String(st.score);
+    el.sumP1Val.textContent = (isFinite(st.bestError)?st.bestError.toFixed(2):"—") + "%";
+    el.sumP2Val.textContent = st.phase2Error==null ? "—" : st.phase2Error.toFixed(2)+"%";
+    el.sumP3Val.textContent = st.phase3Error==null ? "—" : st.phase3Error.toFixed(2)+"%";
+    end.classList.remove("hidden");
+    pushLog("Mission finished. Composite science error: " + combo.toFixed(2) + "%.");
+    updateUI();
+  }
+
+  function togglePause(){
+    if(!st.running || st.ended) return;
+    st.paused = !st.paused;
+    el.pauseBtn.textContent = st.paused ? S.resumeBtn : S.pauseBtn;
+    setFeedback(st.paused ? "Pause & Compute mode enabled." : "Live telemetry resumed.");
+    updateUI();
+  }
+
+  function setFeedback(txt){
+    el.feedback.textContent = txt;
+  }
+
+  function pushLog(txt){
+    st.log.unshift(st.elapsed.toFixed(1) + " s • " + txt);
+    st.log = st.log.slice(0,8);
+  }
+
+  function updateUI(){
+    el.attemptsTop.textContent = String(st.attempts);
+    el.scoreTop.textContent = String(st.score);
+    el.timerTop.textContent = st.elapsed.toFixed(1) + " s";
+    el.statusTop.textContent = st.ended ? S.statuses.done : st.paused ? S.statuses.paused : S.statuses.live;
+    el.moonVal.textContent = st.moon;
+    el.difficultyVal.textContent = cap(st.difficulty);
+    el.bestVal.textContent = isFinite(st.bestError) ? st.bestError.toFixed(2)+"%" : "—";
+    if(st.phase===1) el.liveVal.textContent = st.currentError==null ? "—" : st.currentError.toFixed(2)+"%";
+    else if(st.phase===2) el.liveVal.textContent = st.phase2Error==null ? "—" : st.phase2Error.toFixed(2)+"%";
+    else el.liveVal.textContent = st.phase3Error==null ? "—" : st.phase3Error.toFixed(2)+"%";
+    el.logBox.innerHTML = st.log.map(line=>"<div style='margin-bottom:6px'>"+line+"</div>").join("");
+    syncPanels();
+  }
+
+  function render(now){
+    if(st.running && !st.paused){
+      st.elapsed = (now - st.startClock)/1000;
+      st.t = st.elapsed;
+    }
+    drawScene();
+    updateUI();
+    requestAnimationFrame(render);
+  }
+
+  function drawScene(){
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+
+    // stars
+    for(let i=0;i<95;i++){
+      const x = (i*137)%w;
+      const y = (i*71)%h;
+      const a = 0.12 + ((i*37)%100)/550;
+      ctx.fillStyle = "rgba(255,255,255,"+a+")";
+      ctx.fillRect(x,y,2,2);
+    }
+
+    const leftW = Math.min(320, w*0.36);
+    const cx = leftW*0.47, cy = h*0.48, jR = Math.min(105, h*0.19);
+    const g = ctx.createRadialGradient(cx-jR*.15, cy-jR*.2, jR*.14, cx, cy, jR);
+    g.addColorStop(0, "#ffe0b6"); g.addColorStop(.38, "#eead67"); g.addColorStop(1, "#7f4b1f");
+    ctx.beginPath(); ctx.fillStyle = g; ctx.arc(cx,cy,jR,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "rgba(110,60,25,.42)"; ctx.lineWidth = 10;
+    for(let i=-2;i<=2;i++){ ctx.beginPath(); ctx.arc(cx,cy+i*18, Math.max(20,jR-Math.abs(i)*10), 0.18*Math.PI,0.82*Math.PI); ctx.stroke(); }
+
+    if(st.phase===1 || st.phase===2){
+      drawSingleMoonZone(cx,cy,leftW,w,h);
+      drawSinglePlot(leftW+10, 24, w-leftW-24, h-48);
+    }else{
+      drawDualMoonZone(cx,cy,leftW,w,h);
+      drawDualPlot(leftW+10, 24, w-leftW-24, h-48);
+    }
+  }
+
+  function drawSingleMoonZone(cx,cy,leftW,w,h){
+    const liveTrueX = cx + st.trueA*Math.cos((2*Math.PI/st.trueT)*st.t + st.phaseShift);
+    const livePlayerX = cx + st.playerA*Math.cos((2*Math.PI/st.playerT)*st.t + st.phaseShift);
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(cx-st.trueA, cy); ctx.lineTo(cx+st.trueA, cy); ctx.stroke();
+    ctx.beginPath(); ctx.fillStyle = S.moons[st.moon].color; ctx.arc(liveTrueX, cy, 11, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.lineWidth = 2; ctx.arc(livePlayerX, cy, 16, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("Observed moon", liveTrueX-28, cy-18);
+    ctx.fillText("Your model", livePlayerX-24, cy+30);
+  }
+
+  function drawDualMoonZone(cx,cy,leftW,w,h){
+    const y1 = cy-70, y2 = cy+70;
+    const mA = S.moons[st.pairA], mB = S.moons[st.pairB];
+    const xA = cx + mA.A*Math.cos((2*Math.PI/mA.T)*st.t);
+    const xB = cx + mB.A*Math.cos((2*Math.PI/mB.T)*st.t + Math.PI/9);
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(cx-mA.A,y1); ctx.lineTo(cx+mA.A,y1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-mB.A,y2); ctx.lineTo(cx+mB.A,y2); ctx.stroke();
+    ctx.beginPath(); ctx.fillStyle = mA.color; ctx.arc(xA,y1,10,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle = mB.color; ctx.arc(xB,y2,10,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(st.pairA, cx-leftW*0.12, y1-20);
+    ctx.fillText(st.pairB, cx-leftW*0.12, y2-20);
+    if(st.choiceSpeed){
+      ctx.fillText("Selected faster moon: " + st.choiceSpeed, cx-leftW*0.23, y2+40);
+    }
+  }
+
+  function drawSinglePlot(x,y,w,h){
+    roundRect(x,y,w,h,18,"rgba(255,255,255,.04)","rgba(255,255,255,.11)");
+    const pad = 16;
+    const X = x+pad, Y = y+pad, W = w-2*pad, H = h-2*pad;
+    drawGrid(X,Y,W,H);
+    const maxT = st.obsTimes[st.obsTimes.length-1] || 16;
+    const maxA = 220;
+    const toX = t => X + W*(t/maxT);
+    const toY = v => Y + H*(0.5 - v/(2*maxA));
+
+    ctx.fillStyle = "rgba(255,211,77,.92)";
+    for(let i=0;i<st.obsTimes.length;i++){
+      ctx.beginPath();
+      ctx.arc(toX(st.obsTimes[i]), toY(st.obsValues[i]), 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(255,255,255,.95)";
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for(let i=0;i<=240;i++){
+      const t = maxT*i/240;
+      const v = st.playerA*Math.cos((2*Math.PI/st.playerT)*t + st.phaseShift);
+      const px = toX(t), py = toY(v);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(112,240,172,.35)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(X, Y+H/2); ctx.lineTo(X+W, Y+H/2); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.font = "600 14px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText(st.phase===1 ? "Phase 1: observed signal vs your fit" : "Phase 2: the same graph now drives v_max and a_max", X+2, Y+12);
+  }
+
+  function drawDualPlot(x,y,w,h){
+    roundRect(x,y,w,h,18,"rgba(255,255,255,.04)","rgba(255,255,255,.11)");
+    const pad = 16;
+    const X = x+pad, Y = y+pad, W = w-2*pad, H = h-2*pad;
+    drawGrid(X,Y,W,H);
+    const maxT = 16, maxA = 220;
+    const toX = t => X + W*(t/maxT);
+    const toY = v => Y + H*(0.5 - v/(2*maxA));
+    const mA = S.moons[st.pairA], mB = S.moons[st.pairB];
+
+    ctx.strokeStyle = mA.color; ctx.lineWidth = 2.2; ctx.beginPath();
+    for(let i=0;i<=240;i++){
+      const t = maxT*i/240;
+      const v = mA.A*Math.cos((2*Math.PI/mA.T)*t);
+      const px = toX(t), py = toY(v);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = mB.color; ctx.lineWidth = 2.2; ctx.beginPath();
+    for(let i=0;i<=240;i++){
+      const t = maxT*i/240;
+      const v = mB.A*Math.cos((2*Math.PI/mB.T)*t + Math.PI/9);
+      const px = toX(t), py = toY(v);
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.font = "600 14px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("Phase 3: compare two moon traces", X+2, Y+12);
+    ctx.fillStyle = mA.color; ctx.fillText(st.pairA, X+2, Y+32);
+    ctx.fillStyle = mB.color; ctx.fillText(st.pairB, X+90, Y+32);
+  }
+
+  function drawGrid(X,Y,W,H){
+    ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
+    for(let i=0;i<=6;i++){ const xx = X+W*i/6; ctx.beginPath(); ctx.moveTo(xx,Y); ctx.lineTo(xx,Y+H); ctx.stroke(); }
+    for(let i=0;i<=4;i++){ const yy = Y+H*i/4; ctx.beginPath(); ctx.moveTo(X,yy); ctx.lineTo(X+W,yy); ctx.stroke(); }
+    ctx.fillStyle = "rgba(255,255,255,.62)";
+    ctx.font = "12px " + getComputedStyle(document.body).fontFamily;
+    ctx.fillText("time", X+W-28, Y+H-6);
+    ctx.save(); ctx.translate(X+10,Y+26); ctx.rotate(-Math.PI/2); ctx.fillText("x (px)",0,0); ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r,fill,stroke){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.1;ctx.stroke();}
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+  function round1(v){ return Math.round(v*10)/10; }
+  function round2(v){ return Math.round(v*100)/100; }
+
+  setStaticText();
+  bind();
+  resize();
+  syncSliderReads();
+  setFeedback(S.phase1Unlock);
+  updateUI();
+  requestAnimationFrame(render);
+}
+</script>
+</body>
+</html>
