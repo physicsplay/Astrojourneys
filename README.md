@@ -4,6 +4,15 @@ Mission ATLAS is a browser-based portfolio of upper-secondary physics games fram
 
 Each mission turns a common student misconception into a playable decision problem: learners calculate, predict, test, fail safely, and try again. The repository is designed for lightweight classroom use: single-file HTML games, fast loading, and direct play from the browser.
 
+This project is currently in **early beta testing**.  
+The games are still under development, and some of them may not open properly or may contain technical issues, incomplete features, or possible physics errors.
+
+If you test a game and find a bug, a broken mission, unclear instructions, or a possible scientific mistake, please report it using this Google Form:
+
+**[Google Form – Send Feedback] https://forms.gle/MiCsNUvj7YF8tNJK7**
+
+Thank you for helping us improve these astronomy-based physics learning games.
+
 ## Landing page
 
 - [index.html](./index.html)
