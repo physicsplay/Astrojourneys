@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission ATLAS — Physics Games Portfolio — Beta Testing</title>
+<meta name="description" content="Mission ATLAS: astronomy-themed upper-secondary physics games for classroom use. Early beta testing — see the README for details.">
+<style>
+:root{
+  --bg:#06101f; --panel:rgba(10,24,46,.78); --line:rgba(255,255,255,.12); --text:#eef5ff; --muted:#bfd0e7;
+  --cyan:#7be3ff; --gold:#ffd166; --green:#7ee39c; --violet:#c3a8ff; --shadow:0 20px 55px rgba(0,0,0,.34); --radius:22px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; --ui: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--ui);color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 20% 0%, rgba(123,227,255,.10), transparent 55%),
+    radial-gradient(900px 650px at 80% 15%, rgba(255,209,102,.08), transparent 55%),
+    linear-gradient(180deg, #040914 0%, #07101d 50%, #091627 100%);
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 14px;border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(180deg, rgba(8,18,34,.85), rgba(8,18,34,.62));
+  box-shadow:var(--shadow);position:sticky;top:10px;z-index:10;backdrop-filter:blur(10px)
+}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--mono);letter-spacing:.05em}
+.brand strong{font-size:1.02rem}
+.brand small{display:block;color:var(--muted);font-size:.78rem}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:7px 12px;border-radius:999px;font-size:.78rem;border:1px solid rgba(123,227,255,.26);background:rgba(123,227,255,.09);color:#cff6ff}
+.badge.gold{border-color:rgba(255,209,102,.28);background:rgba(255,209,102,.10);color:#ffe4a4}
+.hero{
+  margin-top:20px;padding:28px;border:1px solid var(--line);border-radius:28px;
+  background:
+    radial-gradient(900px 420px at 75% 0%, rgba(123,227,255,.12), transparent 60%),
+    linear-gradient(180deg, rgba(10,24,46,.92), rgba(6,16,30,.88));
+  box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .85fr;gap:18px
+}
+@media (max-width:980px){.hero{grid-template-columns:1fr}}
+.hero h1{margin:0 0 10px;font-size:clamp(1.8rem, 4vw, 3.2rem);line-height:1.02}
+.hero p{margin:0;color:var(--muted);line-height:1.55;font-size:1.02rem}
+.hero-panel{padding:18px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.04)}
+.hero-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+@media (max-width:720px){.hero-grid{grid-template-columns:1fr}}
+.metric{padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.metric .n{font-size:1.8rem;font-weight:800}
+.metric .k{color:var(--muted);font-size:.86rem}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin:28px 0 14px}
+.section-head h2{margin:0;font-size:1.35rem}
+.section-head p{margin:0;color:var(--muted);max-width:760px;line-height:1.45}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.legend .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.78rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:1080px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+.card{
+  display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:24px;border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(10,24,46,.88), rgba(8,16,30,.86));box-shadow:var(--shadow);min-height:300px
+}
+.card .eyebrow{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tag{padding:6px 10px;border-radius:999px;font-size:.76rem;border:1px solid rgba(123,227,255,.22);background:rgba(123,227,255,.08);color:#cdefff}
+.file{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.card h3{margin:0;font-size:1.25rem;line-height:1.15}
+.card p{margin:0;color:var(--muted);line-height:1.45}
+.meta{display:grid;gap:10px;margin-top:auto}
+.meta-box{padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.meta-box strong{display:block;font-size:.82rem;margin-bottom:4px;color:#fff}
+.meta-box span{color:var(--muted);font-size:.9rem;line-height:1.4}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:700;
+  transition:transform .15s ease, background .15s ease,border-color .15s ease
+}
+.btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.08)}
+.btn.primary{background:linear-gradient(135deg, rgba(123,227,255,.18), rgba(123,227,255,.08));border-color:rgba(123,227,255,.34)}
+.btn.gold{background:linear-gradient(135deg, rgba(255,209,102,.18), rgba(255,209,102,.08));border-color:rgba(255,209,102,.34)}
+.info{
+  margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px
+}
+@media (max-width:900px){.info{grid-template-columns:1fr}}
+.info-box{padding:18px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.04)}
+.info-box h3{margin:0 0 10px}
+.info-box ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.55}
+footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.92rem}
+footer a{text-decoration:underline}
+
+.title-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.beta-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:8px 14px;border-radius:999px;
+  font-size:.95rem;font-weight:800;letter-spacing:.02em;
+  border:1px solid rgba(255,209,102,.34);
+  background:linear-gradient(135deg, rgba(255,209,102,.18), rgba(255,209,102,.08));
+  color:#ffe4a4;
+  box-shadow:0 8px 22px rgba(255,209,102,.10);
+}
+.beta-note{
+  margin-top:14px;padding:14px 16px;border-radius:18px;
+  border:1px solid rgba(255,209,102,.24);
+  background:rgba(255,209,102,.08);
+  color:#ffe6ad;
+}
+.beta-note a{
+  text-decoration:underline;
+  font-weight:700;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div style="font-size:1.45rem">🚀</div>
+      <div>
+        <strong>MISSION ATLAS</strong>
+        <small>Astronomy-themed physics games for upper-secondary learners</small>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge">11 playable games</span>
+      <span class="badge">Single-file HTML</span>
+      <span class="badge">Classroom-friendly</span>
+      <span class="badge gold">Beta testing</span>
+      <span class="badge gold">Physics first</span>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div>
+      <div class="title-row">
+        <h1>Mission ATLAS — Physics Games Portfolio</h1>
+        <span class="beta-label">Beta testing</span>
+      </div>
+      <p>
+        Mission ATLAS is a browser-based collection of astronomy-themed physics games designed for classroom use.
+        Each mission turns a scientific idea into a playable challenge: observe, calculate, test, fail safely, and try again.
+        The correct physical model is the most reliable path to success.
+      </p>
+      <div class="beta-note">
+        This portfolio is currently in an early beta stage. Some games may not open properly, and some missions may still contain technical issues, incomplete features, or possible physics inaccuracies.
+        See the <a href="./README.md">README</a> for details.
+      </div>
+      <div class="hero-grid">
+        <div class="metric"><div class="n">11</div><div class="k">Current games in this repository</div></div>
+        <div class="metric"><div class="n">HTML5</div><div class="k">Runs locally or on GitHub Pages</div></div>
+        <div class="metric"><div class="n">ATLAS</div><div class="k">Astronomy as anchor, physics as core</div></div>
+        <div class="metric"><div class="n">5–20 min</div><div class="k">Suitable for short classroom missions</div></div>
+      </div>
+    </div>
+    <div class="hero-panel">
+      <h2 style="margin-top:0">Portfolio focus</h2>
+      <p>
+        Mechanics, gravitation, energy, circuits, waves, data analysis and modern physics — all framed through space exploration,
+        observation, and decision-making. The games below link directly to the HTML files in this repository.
+      </p>
+      <div class="legend" style="margin-top:14px">
+        <span class="pill">Mechanics & Orbits</span>
+        <span class="pill">Energy & Electricity</span>
+        <span class="pill">Waves & Data</span>
+        <span class="pill">Modern Physics</span>
+      </div>
+      <div style="margin-top:16px" class="actions">
+        <a class="btn primary" href="./README.md">Open README</a>
+        <a class="btn gold" href="#games">Browse games</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head" id="games">
+    <div>
+      <h2>All games</h2>
+      <p>Direct links to every playable mission currently listed in the repository.</p>
+    </div>
+    <div class="legend">
+      <span class="pill">relative links</span>
+      <span class="pill">GitHub Pages ready</span>
+      <span class="pill">portfolio overview</span>
+    </div>
+  </div>
+
+  <section class="grid">
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Mechanics • Landing</span>
+        <span class="file">Comet_Lander_Rosetta.html</span>
+      </div>
+      <h3>Comet Lander: Rosetta's Philae</h3>
+      <p>Guide a fragile lander onto a comet-inspired target zone.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>gravity, thrust control, landing speed, energy</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #5, #7</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Comet_Lander_Rosetta.html">Play mission</a>
+        <a class="btn" href="./Comet_Lander_Rosetta.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Data • Exoplanets</span>
+        <span class="file">ExoCase.html</span>
+      </div>
+      <h3>ExoCase: Space Detective</h3>
+      <p>Investigate space clues and identify the most plausible exoplanet scenario.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>pattern recognition, evidence, light-data reasoning</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #5, #9</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./ExoCase.html">Play mission</a>
+        <a class="btn" href="./ExoCase.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Electricity • Survival Systems</span>
+        <span class="file">Habitat_blackout.html</span>
+      </div>
+      <h3>Habitat Blackout</h3>
+      <p>Restore a failing habitat before essential systems shut down.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>Ohm’s law, power, current, series/parallel reasoning</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #5, #11</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Habitat_blackout.html">Play mission</a>
+        <a class="btn" href="./Habitat_blackout.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Mechanics • Moon Mission</span>
+        <span class="file">Lunar_Rescue.html</span>
+      </div>
+      <h3>Lunar Rescue</h3>
+      <p>Land safely on the Moon with limited control authority.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>kinematics, thrust, lunar gravity, work–energy</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #7</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Lunar_Rescue.html">Play mission</a>
+        <a class="btn" href="./Lunar_Rescue.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Energy • Terrain</span>
+        <span class="file">Mars_EVA_Traverse.html</span>
+      </div>
+      <h3>Mars EVA Traverse</h3>
+      <p>Plan and execute a surface traverse across difficult Martian terrain.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>work, power, friction, slopes, energy budgeting</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #7, #11</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Mars_EVA_Traverse.html">Play mission</a>
+        <a class="btn" href="./Mars_EVA_Traverse.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Mechanics • Entry & Landing</span>
+        <span class="file">Mars_Landing_Window.html</span>
+      </div>
+      <h3>Mars Landing Window</h3>
+      <p>Hit the correct landing profile before Mars hits back.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>forces, drag, gravity, thrust, energy</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #5, #7</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Mars_Landing_Window.html">Play mission</a>
+        <a class="btn" href="./Mars_Landing_Window.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Orbits • Relative Motion</span>
+        <span class="file">Orbital_Rendezvous.html</span>
+      </div>
+      <h3>Orbital Rendezvous</h3>
+      <p>Meet and dock with a target craft in orbit without wasting fuel.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>orbital motion, phasing, relative velocity, Δv</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #7, #11</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./Orbital_Rendezvous.html">Play mission</a>
+        <a class="btn" href="./Orbital_Rendezvous.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Momentum • Planetary Defense</span>
+        <span class="file">asteroid_deflection.html</span>
+      </div>
+      <h3>Asteroid Deflection</h3>
+      <p>Choose a defensible deflection plan before the window closes.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>momentum, impulse, Δv, lead-time amplification</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #5, #11</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./asteroid_deflection.html">Play mission</a>
+        <a class="btn" href="./asteroid_deflection.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Oscillations • Jupiter Moons</span>
+        <span class="file">galilean_resonance_triple_signal.html</span>
+      </div>
+      <h3>Galilean Resonance: Triple Signal</h3>
+      <p>Decode the motion of Jupiter’s moons like a telescope analyst under pressure.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>simple harmonic motion, period, amplitude, v_max, a_max</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #1, #4, #7</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./galilean_resonance_triple_signal.html">Play mission</a>
+        <a class="btn" href="./galilean_resonance_triple_signal.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Waves • Radar Scanning</span>
+        <span class="file">lunar_lava_tube_scout.html</span>
+      </div>
+      <h3>Lunar Lava Tube Scout</h3>
+      <p>Scan the lunar subsurface and choose the safest route for exploration.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>EM waves, penetration vs resolution, material discrimination</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #5, #7</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./lunar_lava_tube_scout.html">Play mission</a>
+        <a class="btn" href="./lunar_lava_tube_scout.html">Open file</a>
+      </div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">
+        <span class="tag">Modern Physics • Photons</span>
+        <span class="file">quantum_rescue_full.html</span>
+      </div>
+      <h3>Quantum Rescue: The Photon Lock</h3>
+      <p>Use quantum logic to unlock a photon-gated rescue system.</p>
+      <div class="meta">
+        <div class="meta-box">
+          <strong>Physics focus</strong>
+          <span>photoelectric effect, photons, threshold frequency, light–matter interaction</span>
+        </div>
+        <div class="meta-box">
+          <strong>Astronomy anchor</strong>
+          <span>Big Ideas #4, #5</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="./quantum_rescue_full.html">Play mission</a>
+        <a class="btn" href="./quantum_rescue_full.html">Open file</a>
+      </div>
+    </article>
+  </section>
+
+  <section class="info">
+    <div class="info-box">
+      <h3>How to use this portfolio</h3>
+      <ul>
+        <li>Open a mission directly from the cards above.</li>
+        <li>Use the games as warm-ups, mini-labs, revision activities, or homework missions.</li>
+        <li>Each file is standalone HTML, so deployment and classroom sharing stay simple.</li>
+      </ul>
+    </div>
+    <div class="info-box">
+      <h3>Design principles</h3>
+      <ul>
+        <li>Physics first: formulas, units, and model choices are visible.</li>
+        <li>Astronomy as anchor: every game is framed by a defensible space-science context.</li>
+        <li>Anti-randomness: feedback rewards reasoning, not blind slider spam.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div>Mission ATLAS portfolio landing page</div>
+    <div><a href="./LICENSE">MIT License</a> · <a href="./README.md">Repository README</a></div>
+  </footer>
+</div>
+</body>
+</html>
