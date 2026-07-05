@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>Mission ATLAS #10 — Quantum Rescue: The Photoelectric Key</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#04060f;--panel:rgba(9,13,28,.93);--card:rgba(255,255,255,.035);--line:rgba(255,255,255,.11);--text:#eef3ff;--muted:#aebfdc;
+  --gold:#ffd166;--cyan:#5fe6d8;--red:#ff7070;--green:#7ce38b;--purple:#b08cff;--orange:#ffaa55;--uv:#c9a7ff;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--ui:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif}
+html,body{min-height:100%;background:linear-gradient(180deg,#04060f,#0a0d22,#120a1c);color:var(--text);font-family:var(--ui);overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:var(--text)}button{cursor:pointer}
+.hidden{display:none!important}
+.good{color:var(--green)!important}.warn{color:var(--gold)!important}.bad{color:var(--red)!important}
+.tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--purple)}
+.block{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px}
+.block h3{font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.mini{font-size:.82rem;color:var(--muted);line-height:1.42}
+.formula{font-family:var(--mono);font-size:.78rem;white-space:pre-line;color:rgba(200,212,232,.88);line-height:1.45;padding:9px;border-radius:9px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);font-size:.66rem;color:var(--muted);font-family:var(--mono);margin:2px}
+.btn{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:.84rem;transition:.15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.12)}
+.btn.pri{background:linear-gradient(135deg,#b08cff,#7c6cff);color:#fff;border-color:rgba(176,140,255,.5);font-weight:800}
+.btn.go{background:linear-gradient(135deg,#5fe6d8,#22a8c8);color:#03222a;border-color:rgba(95,230,216,.5);font-weight:800}
+.btn.danger{background:rgba(255,112,112,.1);border-color:rgba(255,112,112,.3)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.numInput{width:110px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.06);padding:6px 8px;font-family:var(--mono);font-size:.86rem;text-align:right}
+.numInput:focus{outline:none;border-color:rgba(176,140,255,.55);box-shadow:0 0 0 2px rgba(176,140,255,.15)}
+.numInput.error{border-color:var(--red);background:rgba(255,112,112,.07)}
+.numInput:disabled{opacity:.35}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(140%);padding:10px 20px;border-radius:999px;background:rgba(9,13,26,.96);border:1px solid rgba(176,140,255,.35);color:#d4c0ff;font-weight:700;font-size:.84rem;z-index:70;transition:transform .3s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@keyframes shake{0%,100%{transform:translate(0)}15%{transform:translate(-3px,2px)}30%{transform:translate(3px,-2px)}45%{transform:translate(-2px,1px)}}
+.shaking{animation:shake .35s ease}
+#fwCanvas{position:fixed;inset:0;pointer-events:none;z-index:65}
+/* Insight layer — canonical */
+.insight{background:linear-gradient(135deg,rgba(176,140,255,.09),rgba(95,230,216,.05));border:1px solid rgba(176,140,255,.32);border-radius:14px;padding:12px;margin-bottom:8px}
+.insight h3{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin-bottom:5px}
+.insight .q{font-size:.88rem;line-height:1.42;margin-bottom:6px}
+.mcq-opt{display:block;width:100%;text-align:left;padding:9px 11px;margin-top:6px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:.83rem;line-height:1.35;transition:.15s}
+.mcq-opt:hover:not(:disabled){transform:translateX(3px);border-color:rgba(176,140,255,.4)}
+.mcq-opt.right{border-color:rgba(124,227,139,.6);background:rgba(124,227,139,.1)}
+.mcq-opt.wrong{border-color:rgba(255,112,112,.5);background:rgba(255,112,112,.07);opacity:.75}
+.mcq-opt:disabled{cursor:default}
+.lawline{margin-top:7px;padding:8px 10px;border-radius:9px;background:rgba(124,227,139,.07);border-left:3px solid var(--green);font-size:.79rem;color:rgba(222,240,226,.95)}
+.gate-note{font-size:.72rem;color:var(--orange);font-family:var(--mono);margin-top:6px}
+.att-badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:.64rem;font-family:var(--mono);border:1px solid rgba(255,170,85,.35);background:rgba(255,170,85,.08);color:var(--orange)}
+.nb-step{padding:9px;border-radius:10px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.06);margin-bottom:7px}
+.nb-step .step-num{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;text-align:center;line-height:22px;font-size:.7rem;font-weight:700;margin-right:6px}
+.nb-step .step-text{font-size:.82rem;color:rgba(230,240,255,.9)}
+.checkrow{display:flex;gap:6px;align-items:center;font-size:.78rem;color:var(--muted);padding:2px 0}
+.checkrow .cb{width:16px;height:16px;border-radius:5px;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem}
+.checkrow.done{color:var(--green)}.checkrow.done .cb{border-color:rgba(124,227,139,.5);background:rgba(124,227,139,.12)}
+.metalTbl{width:100%;border-collapse:collapse;font-size:.76rem;font-family:var(--mono)}
+.metalTbl th{text-align:left;color:var(--muted);font-weight:600;padding:2px 4px;border-bottom:1px solid var(--line)}
+.metalTbl td{padding:2px 4px}
+.metalTbl tr.sel td{background:rgba(176,140,255,.12)}
+.lamBtn{padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-family:var(--mono);font-size:.76rem;background:rgba(255,255,255,.04)}
+.lamBtn.active{border-color:rgba(95,230,216,.6);background:rgba(95,230,216,.1)}
+/* INTRO */
+#introScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:radial-gradient(ellipse at 30% 15%,rgba(95,230,216,.07),transparent 50%),radial-gradient(ellipse at 70% 30%,rgba(176,140,255,.07),transparent 50%),linear-gradient(180deg,#04060f,#0a0d22,#140a20)}
+.icard{width:min(1080px,96vw);border-radius:26px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(800px 400px at 50% 0%,rgba(176,140,255,.08),transparent 55%),var(--panel);box-shadow:0 30px 80px rgba(0,0,0,.6);padding:22px}
+.ititle{font-size:clamp(1.5rem,4vw,2.3rem);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin-bottom:10px}
+.ititle span{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.igrid{display:grid;grid-template-columns:1.25fr .85fr;gap:12px}
+@media(max-width:860px){.igrid{grid-template-columns:1fr}}
+.idialogue{line-height:1.6;color:rgba(235,240,255,.92);font-size:.89rem}
+.idialogue .who{font-weight:800;color:#d4c0ff}
+.idialogue .em{color:var(--gold);font-weight:700}
+.idialogue .par{color:var(--cyan);font-family:var(--mono)}
+.ibtn{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:.84rem;transition:.15s;cursor:pointer}
+.ibtn.active{background:rgba(176,140,255,.14);border-color:rgba(176,140,255,.5)}
+.igo{display:block;width:100%;padding:14px;border-radius:14px;border:1px solid rgba(124,227,139,.55);background:linear-gradient(135deg,#7ce38b,#2ecc71);color:#04140a;font-weight:900;font-size:1.02rem;text-align:center;margin-top:10px;cursor:pointer;transition:.15s}
+.igo:hover{filter:brightness(1.08);transform:translateY(-1px)}
+kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+/* GAME */
+#gameScreen{display:none}
+.gl{display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr auto;min-height:100vh}
+@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto auto minmax(300px,42vh) auto auto}}
+.topbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(9,13,26,.94);backdrop-filter:blur(8px);z-index:5}
+.tbt{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.84rem}
+.tbs{display:flex;gap:5px}
+.ts{min-width:60px;padding:4px 8px;border-radius:9px;text-align:center;background:var(--card);border:1px solid var(--line)}
+.ts .v{font-family:var(--mono);font-size:.86rem;font-weight:700}.ts .k{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.ts.streak .v{color:var(--orange)}
+@keyframes score-pop{0%{transform:scale(1)}50%{transform:scale(1.45);color:var(--gold)}100%{transform:scale(1)}}
+.score-pop{animation:score-pop .4s ease}
+.stages{grid-column:1/-1;display:flex;gap:4px;padding:6px 14px;border-bottom:1px solid var(--line);background:rgba(9,13,26,.85);overflow-x:auto}
+.stbtn{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:.72rem;font-family:var(--mono);white-space:nowrap;transition:.12s}
+.stbtn.active{background:rgba(176,140,255,.13);border-color:rgba(176,140,255,.45);color:var(--purple)}
+.stbtn.done{background:rgba(124,227,139,.08);border-color:rgba(124,227,139,.3);color:var(--green)}
+.stbtn.locked{opacity:.4;cursor:not-allowed}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 6px rgba(176,140,255,.15)}50%{box-shadow:0 0 18px rgba(176,140,255,.45)}}
+.stbtn.active{animation:pulse-glow 2s ease infinite}
+.cw{position:relative;overflow:hidden;background:#04060f;min-height:280px}
+.cw canvas{position:absolute;inset:0;width:100%;height:100%}
+.radio-msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);padding:7px 18px;border-radius:999px;background:rgba(0,0,0,.85);border:1px solid rgba(176,140,255,.3);font-family:var(--mono);font-size:.78rem;color:#d4c0ff;z-index:8;pointer-events:none;opacity:0;transition:opacity .4s;max-width:92%;text-align:center}
+.radio-msg.on{opacity:1}
+.side{border-left:1px solid var(--line);background:linear-gradient(180deg,rgba(9,13,26,.9),rgba(9,13,26,.65));overflow-y:auto;padding:8px}
+@media(max-width:1020px){.side{border-left:none;border-top:1px solid var(--line)}}
+.foot{grid-column:1/-1;border-top:1px solid var(--line);background:rgba(9,13,26,.9);display:flex;justify-content:space-between;padding:5px 14px;font-size:.66rem;color:var(--muted);gap:8px;flex-wrap:wrap}
+.sr{display:flex;justify-content:space-between;gap:6px;font-size:.8rem;padding:2px 0}
+.sr .k{color:var(--muted)}.sr .v{font-family:var(--mono);font-weight:600}
+.crisis-timer{font-family:var(--mono);font-size:1.5rem;font-weight:900;color:var(--red);text-align:center;padding:4px}
+.metalBtn{padding:6px 9px;border-radius:9px;border:1px solid var(--line);font-family:var(--mono);font-size:.74rem;background:rgba(255,255,255,.04)}
+.metalBtn.right{border-color:rgba(124,227,139,.6);background:rgba(124,227,139,.12)}
+.metalBtn.wrong{border-color:rgba(255,112,112,.5);background:rgba(255,112,112,.08);opacity:.7}
+/* debrief */
+.ov{position:fixed;inset:0;background:rgba(3,5,14,.88);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;z-index:60;overflow-y:auto;padding:20px 10px}
+.ov.open{display:flex}
+.emod{width:min(880px,96vw);border-radius:22px;border:1px solid rgba(255,255,255,.12);background:var(--panel);padding:20px;margin:auto}
+.medal{font-size:1.4rem;font-weight:900;font-family:var(--mono);padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.etbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.etbl th{text-align:left;color:var(--muted);font-weight:600;padding:3px 6px 3px 0}
+.etbl td{font-family:var(--mono);padding:3px 0}
+@media(max-width:420px){
+  .ts{min-width:50px;padding:3px 6px}.ts .v{font-size:.76rem}
+  .stbtn{padding:6px 8px;font-size:.62rem}.numInput{width:96px}
+  .block{padding:10px}.insight{padding:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= INTRO ================= -->
+<div id="introScreen">
+<div class="icard">
+  <div class="tag">MISSION ATLAS #10 · THE HELIOS INCIDENT — EPISODE 1 · THE PHOTOELECTRIC EFFECT</div>
+  <div class="ititle">⚛️ QUANTUM RESCUE: <span>The Photoelectric Key</span></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+    <span class="pill">Station HELIOS-7 · Mercury orbit</span><span class="pill">Einstein 1905 · Nobel 1921</span><span class="pill">ONE relationship: K = hf − W</span>
+  </div>
+  <div class="igrid">
+    <div>
+      <div class="block"><div class="idialogue" id="xDial"></div></div>
+      <div class="g2">
+        <div class="block"><h3>🎯 Learning target</h3><div class="mini">Master ONE relationship — the photoelectric equation:<br><b>K<sub>max</sub> = hf − W = 1240/λ[nm] − W [eV]</b><br>Used by hand in every stage: forward, inverse, and to identify an unknown metal.</div></div>
+        <div class="block"><h3>⚠️ Misconception to break</h3><div class="mini">"Brighter light gives electrons more energy." No: intensity only changes HOW MANY photons arrive. Energy is paid <b>per photon</b>, E = hf. Below the work function, a floodlight achieves nothing.</div></div>
+      </div>
+      <div class="block"><h3>🧪 Model & assumptions (stated honestly)</h3>
+        <div class="mini">Clean metal surfaces in vacuum · teaching value hc ≈ 1240 eV·nm (exact: 1239.84) · work functions are standard teaching values · stopping potential V<sub>s</sub>[V] equals K<sub>max</sub>[eV] numerically · electron flight animation slowed ~10⁹× (real transit: nanoseconds) — the physics itself is never altered.</div></div>
+    </div>
+    <div>
+      <div class="block">
+        <h3>Difficulty <span class="pill" id="diffDesc">generous tolerances</span></h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="iDiffs"><button class="ibtn active" data-diff="easy">Easy</button><button class="ibtn" data-diff="medium">Medium</button><button class="ibtn" data-diff="hard">Hard</button></div>
+      </div>
+      <div class="block"><h3>📐 Key formulas (given)</h3><div class="formula">E_photon = h·f = hc/λ = 1240/λ[nm]  [eV]
+K_max = E_photon − W
+V_s [V] = K_max [eV]   (numerically)
+threshold: emission only if E_photon > W
+electron speed: v = √(2K/mₑ)</div></div>
+      <div class="block"><h3>🎓 Curriculum — 4 doors</h3>
+        <div class="mini">1️⃣ <b>Airlock · Watch</b> — see intensity fail, frequency win<br>2️⃣ <b>Lab · Predict</b> — compute E &amp; K; numbers arm the laser<br>3️⃣ <b>Reactor · Inverse</b> — pick λ for a target K<br>4️⃣ <b>Core · Crisis</b> — unknown coating, 90 s, identify &amp; unlock<br><span style="color:var(--orange)">Bronze+ opens the next door.</span></div></div>
+      <div class="block"><h3>Controls</h3><div class="mini"><kbd>Space</kbd> fire · <kbd>Enter</kbd> commit · <kbd>P</kbd> pause · <kbd>R</kbd> reset stage · <kbd>H</kbd> hint. Each door opens with a <b>🧠 reasoning question</b>. Wrong submissions −2 pts.</div></div>
+      <button class="igo" id="goBtn">🔦 Begin the rescue</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================= GAME ================= -->
+<div id="gameScreen">
+<div class="gl">
+  <div class="topbar">
+    <div class="tbt"><span>⚛️</span><strong>QUANTUM RESCUE</strong></div>
+    <div class="tbs">
+      <div class="ts"><div class="v" id="tsStage">1/4</div><div class="k">Door</div></div>
+      <div class="ts"><div class="v" id="tsScore">0</div><div class="k">Score</div></div>
+      <div class="ts streak"><div class="v" id="tsStreak">0</div><div class="k">🔥 Streak</div></div>
+      <div class="ts"><div class="v" id="tsAtt">0</div><div class="k">Wrong</div></div>
+      <div class="ts"><div class="v" id="tsHints">0</div><div class="k">Hints</div></div>
+    </div>
+    <div class="tag" id="rankTag">PHOTON CADET</div>
+  </div>
+
+  <div class="stages" id="stageBar"></div>
+
+  <div class="cw" id="stageWrap">
+    <canvas id="C"></canvas>
+    <div class="radio-msg" id="radio"></div>
+  </div>
+
+  <aside class="side" id="sidePanel"></aside>
+
+  <div class="foot"><div>HELIOS-7 · NPC: Dr. Noor Haddad + SPARK</div><div>ATLAS #10 · hc≈1240 eV·nm · wrong −2 · hint −3/−4/−5</div></div>
+</div>
+</div>
+
+<!-- ================= DEBRIEF ================= -->
+<div class="ov" id="endScr">
+<div class="emod">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div><div class="tag">ATLAS / QUANTUM DEBRIEF</div><h2 id="eTit"></h2></div>
+    <span class="medal" id="eMed"></span>
+  </div>
+  <div class="g2" style="margin-top:10px">
+    <div class="block"><h3>Results</h3><table class="etbl"><tbody id="eRB"></tbody></table></div>
+    <div class="block"><h3>Analysis (precision, not politeness)</h3><table class="etbl"><tbody id="eAB"></tbody></table></div>
+  </div>
+  <div class="block" style="margin-top:6px"><h3>✅ Full solution (as on paper)</h3><div class="mini" id="eSol"></div></div>
+  <div class="block"><canvas id="eCh" width="820" height="190" style="width:100%"></canvas>
+    <div class="mini" style="margin-top:3px"><span style="color:var(--cyan)">━ K<sub>max</sub>(λ) for this metal</span> · <span style="color:var(--gold)">● your shot</span> · <span style="color:var(--green)">▮ target band</span></div></div>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <button class="btn danger" id="bRetry" style="flex:1">↺ Retry door</button>
+    <button class="btn pri" id="bNext" style="flex:2">Next door →</button>
+  </div>
+</div>
+</div>
+
+<canvas id="fwCanvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ================================================================
+   MISSION ATLAS #10 — QUANTUM RESCUE v10 (photoelectric-only rebuild)
+   ONE relationship (Charter Art.2):
+        K_max = hf − W  =  1240/λ[nm] − W   [eV]
+   Replaces v9 which taught Wien + photoelectric + de Broglie + Compton.
+   Those three topics are parked as future separate ATLAS games.
+   Curriculum (Art.6): Watch → Predict → Inverse → Crisis, Bronze+ gating.
+   The student's numbers ARM the laser (Art.1/Principle 3).
+   English-only build; I18N shim ready per Art.12.
+   ================================================================ */
+const $=id=>document.getElementById(id);
+const $$=s=>[...document.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ===== PHYSICS (teaching values, stated in intro) ===== */
+const HC=1240;               // eV·nm
+const ME=9.109e-31,QE=1.602e-19;
+const METALS=[['Cs',1.90],['Na',2.30],['Ca',2.90],['Al',4.10],['Zn',4.30],['Ag',4.50],['Cu',4.70],['Pt',5.70]];
+const Wof=s=>METALS.find(m=>m[0]===s)[1];
+const Kof=(lam,W)=>HC/lam-W;
+const eSpeed=K=>Math.sqrt(2*Math.max(K,0)*QE/ME); // m/s
+
+const DIFFS={
+  easy:  {hint:3, s2:{m:'Cs',lam:620}, s3:{m:'Cs',kt:0.58,band:0.15}, s4band:0.15, desc:'generous tolerances'},
+  medium:{hint:4, s2:{m:'Na',lam:400}, s3:{m:'Na',kt:1.70,band:0.12}, s4band:0.12, desc:'normal tolerances'},
+  hard:  {hint:5, s2:{m:'Zn',lam:200}, s3:{m:'Pt',kt:2.05,band:0.10}, s4band:0.10, desc:'tight tolerances'}
+};
+const STAGE_PTS=[10,30,30,30];
+/* Crisis variants — curated pool, re-rolled on retry (probe reading → W → metal → rescue λ) */
+const CRISES=[
+  {id:'A', lm:248, vs:0.70, metal:'Zn', kt:3.70},   // W=4.30 → λ_rescue=155.0
+  {id:'B', lm:248, vs:0.30, metal:'Cu', kt:5.30},   // W=4.70 → λ_rescue=124.0
+  {id:'C', lm:496, vs:0.60, metal:'Cs', kt:1.20}    // W=1.90 → λ_rescue=400.0
+];
+const S1_METAL='Ca';         // 2.90 eV — never used in graded stages (anti-leak)
+const S1_PRESETS=[620,500,400,310,248];
+
+/* ===== STATE ===== */
+let diff='easy', D=DIFFS.easy;
+let stage=0, unlockedMax=0;
+let score=0, hints=0, wrongTotal=0, streak=0;
+let rankFired={r30:false,r60:false,r90:false};
+let stageMedal=[null,null,null,null], stagePts=[0,0,0,0], stageWrong=[0,0,0,0];
+let phase='ready';           // ready | firing | decision | ended
+let beam=null;               // {lam,intensity,t,K,emits,count}
+let electrons=[], stars=[];
+let s1checks={nored:false,eject:false,intensity:false}, s1McqOK=false;
+let predE=null, predK=null, planLam=null;
+let crisis=null, crisisTimer=0, crisisTick=0, crisisW=false, crisisMetal=false;
+let activeCheck=null, lastR=null, lamTblUnlocked=false;
+
+try{unlockedMax=Math.min(3,parseInt(localStorage.getItem('quantum_unlocked')||'0')||0);}catch(e){}
+try{lamTblUnlocked=localStorage.getItem('quantum_lam0')==='1';}catch(e){}
+function saveUnlock(){try{localStorage.setItem('quantum_unlocked',String(unlockedMax));localStorage.setItem('quantum_lam0',lamTblUnlocked?'1':'0');}catch(e){}}
+
+/* ===== I18N shim (EN-only build; structure ready per Art.12) ===== */
+const T={en:{}};let lang='en';
+function t(k){return T[lang]?.[k]??k;}
+
+/* ===== AUDIO — canonical IMPLEMENTATION_PATTERNS names ===== */
+let audioCtx=null;
+function ensureAudio(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();}
+function playTone(freq,dur,type='sine',vol=0.05){if(!audioCtx)return;try{
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.value=freq;g.gain.value=vol;
+  o.connect(g);g.connect(audioCtx.destination);o.start();
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+  o.stop(audioCtx.currentTime+dur);}catch(e){}}
+function playNoise(dur,vol=0.05){if(!audioCtx)return;try{
+  const n=audioCtx.sampleRate*dur,buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=audioCtx.createBufferSource(),g=audioCtx.createGain();
+  s.buffer=buf;g.gain.value=vol;s.connect(g);g.connect(audioCtx.destination);s.start();}catch(e){}}
+function sndMissionReady(){ensureAudio();playTone(523,.08);setTimeout(()=>playTone(659,.08),100);setTimeout(()=>playTone(880,.18,'sine',.06),200);}
+function sndCompute(){ensureAudio();playTone(440,.08,'triangle',.05);setTimeout(()=>playTone(659,.12,'triangle',.05),80);}
+function sndNotebookOK(){ensureAudio();[392,494,587,784].forEach((f,i)=>setTimeout(()=>playTone(f,.12,'triangle',.045),i*60));}
+function sndUnlock(){ensureAudio();playTone(523,.1);setTimeout(()=>playTone(659,.1),100);setTimeout(()=>playTone(784,.1),200);setTimeout(()=>playTone(1047,.25,'sine',.06),300);}
+function sndRunStart(){ensureAudio();playTone(880,.15,'sine',.06);setTimeout(()=>playTone(1100,.12,'sine',.05),100);setTimeout(()=>playTone(1320,.1,'sine',.05),200);}
+function sndFanfareGold(){ensureAudio();[523,659,784,988,1319].forEach((f,i)=>setTimeout(()=>{playTone(f,.18,'triangle',.07);playTone(f*2,.18,'sine',.04);},i*110));
+  setTimeout(()=>{for(let i=0;i<8;i++)setTimeout(()=>playTone(2000+Math.random()*1500,.05,'sine',.03),i*40);},600);}
+function sndFanfareSilver(){ensureAudio();[392,494,587].forEach((f,i)=>setTimeout(()=>playTone(f,.2,'triangle',.06),i*120));}
+function sndFanfareBronze(){ensureAudio();playTone(330,.15,'triangle',.05);setTimeout(()=>playTone(440,.25,'triangle',.05),150);}
+function sndFail(){ensureAudio();playTone(330,.15,'sawtooth',.05);setTimeout(()=>playTone(294,.15,'sawtooth',.05),150);setTimeout(()=>playTone(247,.3,'sawtooth',.06),300);}
+function sndZap(){ensureAudio();playNoise(.08,.06);playTone(1600,.07,'square',.03);}
+
+/* ===== FIREWORKS — canonical ===== */
+let fireworks=[];
+const FW_PALETTES={gold:['#FFD700','#FFEC80','#FFA500','#FFFFFF'],silver:['#E8E8FF','#C0E0FF','#FFFFFF','#A8B8E0'],bronze:['#E89B5F','#D17030','#FFC890','#FFFFFF']};
+function launchFireworks(cx,cy,palette){const colors=FW_PALETTES[palette]||FW_PALETTES.gold,n=60;
+  for(let i=0;i<n;i++){const a=(Math.PI*2*i/n)+Math.random()*.2,s=2+Math.random()*3.5;
+    fireworks.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:50+Math.random()*40,maxLife:90,
+      color:colors[Math.floor(Math.random()*colors.length)],size:1.5+Math.random()*2.5,twinkle:Math.random()<.3});}}
+function updateFireworks(){fireworks=fireworks.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.vx*=.985;p.vy*=.99;p.life--;return p.life>0;});}
+function drawFireworksCanvas(){const c=$('fwCanvas');if(!c)return;
+  if(c.width!==innerWidth)c.width=innerWidth;if(c.height!==innerHeight)c.height=innerHeight;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);updateFireworks();
+  for(const p of fireworks){const a=Math.max(0,p.life/p.maxLife),f=p.twinkle?(.6+.4*Math.random()):1;
+    const h=p.color.substring(1),r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+    ctx.fillStyle=`rgba(${r},${g},${b},${a*.25*f})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size*3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(${r},${g},${b},${a*f})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}}
+function celebrate(level){const W=innerWidth,H=innerHeight;
+  if(level==='gold'){sndFanfareGold();launchFireworks(W*.5,H*.3,'gold');setTimeout(()=>launchFireworks(W*.3,H*.35,'gold'),350);
+    setTimeout(()=>launchFireworks(W*.7,H*.35,'silver'),600);setTimeout(()=>launchFireworks(W*.5,H*.45,'gold'),900);}
+  else if(level==='silver'){sndFanfareSilver();launchFireworks(W*.5,H*.35,'silver');setTimeout(()=>launchFireworks(W*.4,H*.4,'silver'),400);}
+  else if(level==='bronze'){sndFanfareBronze();launchFireworks(W*.5,H*.4,'bronze');}
+  else sndFail();}
+
+/* ===== toast / typewriter radio ===== */
+let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3400);}
+let radioT=0,radioTyper=0;
+function radio(m){const e=$('radio');clearTimeout(radioT);clearInterval(radioTyper);
+  const full='📡 '+m;let i=0;e.textContent='';e.classList.add('on');
+  radioTyper=setInterval(()=>{i+=2;e.textContent=full.slice(0,i);
+    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),4200);}},16);}
+const JOKES=[
+ "SPARK: A photon checks into the station hotel. No luggage — it was travelling light.",
+ "SPARK: Our electrons refuse to leave for less than the work function. Strong union.",
+ "SPARK: Shining red light at this plate is just a very bright apology."
+];
+
+/* ===== easter eggs ===== */
+function eggCheck(raw){const v=parseFloat(raw);
+  if(raw==='42'||v===42){toast('🥚 42 — correct for the Universe, not for this field.');return;}
+  if(v===137){toast('🥚 1/α! The fine-structure constant approves of your taste.');return;}
+  if(v===1240){toast('🥚 You typed hc itself. The equation is flattered.');}
+}
+
+/* ===== scoring ===== */
+function wrongAttempt(fb,el,msg){
+  stageWrong[stage]++;wrongTotal++;score=Math.max(0,score-2);
+  $('tsAtt').textContent=wrongTotal;setScore();
+  if(el)el.classList.add('error');
+  if(fb)fb.innerHTML='<span class="bad">'+msg+'</span>'+(stageWrong[stage]>=3?' <span class="warn">Stuck? Press H for a strategy hint.</span>':'');
+  sndFail();
+}
+function setScore(){$('tsScore').textContent=score;
+  const s=$('tsScore');s.classList.remove('score-pop');void s.offsetWidth;s.classList.add('score-pop');
+  const ranks=[[30,'r30','BEAM TECHNICIAN'],[60,'r60','SENIOR BEAM TECHNICIAN'],[90,'r90','QUANTUM LOCKSMITH 👑']];
+  for(const[th,key,name]of ranks){if(score>=th&&!rankFired[key]){rankFired[key]=true;$('rankTag').textContent=name;
+    setTimeout(()=>{toast('⭐ RANK UP: '+name);sndUnlock();},700);}}}
+function awardStage(medal){
+  const mult={gold:1,silver:.8,bronze:.6}[medal]||0;
+  const pts=Math.round(STAGE_PTS[stage]*mult);
+  if(pts>stagePts[stage]){score+=pts-stagePts[stage];stagePts[stage]=pts;setScore();}
+  if(medal&&(!stageMedal[stage]||{gold:3,silver:2,bronze:1}[medal]>({gold:3,silver:2,bronze:1}[stageMedal[stage]]||0)))stageMedal[stage]=medal;
+  if(medal){unlockedMax=Math.max(unlockedMax,Math.min(3,stage+1));if(stage===1)lamTblUnlocked=true;saveUnlock();}
+  if(stageWrong[stage]===0&&medal){streak++;if(streak>=2)toast('🔥 STREAK ×'+streak+' — flawless!');}
+  else if(!medal)streak=0;
+  $('tsStreak').textContent=streak;
+}
+
+/* ===== hints (strategy only — Art.7) ===== */
+const HINTS={
+ 0:['Keep λ fixed and slide intensity: which meter moves, the COUNT or the ENERGY?','Try the reddest beam at maximum intensity. Then the shortest λ at minimum. Compare.','The plate is Ca, W = 2.90 eV. Which presets give E = 1240/λ above that?'],
+ 1:['Step 1 is pure division: E = 1240/λ. Only then subtract W.','Sanity range: photon energies here are a few eV. If you got hundreds, the calculator ate a zero.','V_s in volts equals K_max in eV — a free numerical check.'],
+ 2:['Work backwards: E_needed = W + K_target. Then λ = 1240/E_needed.','Compute W + K first as one number. The division comes last.','Check: does your λ give E ABOVE W? Below threshold nothing leaves the plate.'],
+ 3:['Energy audit per photon: W = 1240/λ_probe − V_s. One reading is enough because h and c are known.','Match your W to the table — the coating is one of those metals, ±0.05 eV.','Rescue shot: λ = 1240/(W + K_target). Same equation, third disguise.']
+};
+function useHint(){ensureAudio();
+  const hs=HINTS[stage]||['Trust the equation.'];
+  const h=hs[hints%hs.length];hints++;score=Math.max(0,score-D.hint);
+  $('tsHints').textContent=hints;setScore();
+  toast('💡 Hint (−'+D.hint+' pts)');radio('Dr. Haddad: '+h);playTone(440,.08,'triangle',.06);}
+
+/* ===== INSIGHT LAYER — canonical MCQ gates ===== */
+const INSIGHTS={
+ 0:{q:'You just saw it: a BLINDING red beam ejected nothing, while a DIM violet beam ejected electrons instantly. Why?',
+    opts:[
+     {t:'light pays energy PER PHOTON (E = hf); intensity only changes how many photons arrive',ok:true},
+     {t:'the red beam carries less total energy than the dim violet one',why:'At max intensity the red beam carried far MORE total energy — and still failed. Totals don\'t matter; each photon must individually beat W.'},
+     {t:'electrons need time to warm up, and violet heats them faster',why:'Emission is instantaneous (< ns) the moment E_photon > W. No warm-up exists — that was the classical prediction, and it\'s wrong.'},
+     {t:'violet light penetrates deeper into the metal',why:'Penetration depth isn\'t the mechanism. One surface photon with E > W is enough; a billion with E < W achieve nothing.'}],
+    law:'⚖️ Law of the case: E = hf per photon. Below W, intensity buys you MORE useless photons, not stronger ones.'},
+ 1:{q:'The beam is already above threshold. If you DOUBLE the frequency f, the electrons\' K_max becomes…',
+    opts:[
+     {t:'MORE than double',ok:true},
+     {t:'exactly double',why:'K = hf − W. New K = 2hf − W = 2K + W. That leftover +W means you overshoot doubling. Linear ≠ proportional!'},
+     {t:'less than double',why:'Check the algebra: 2hf − W = 2(hf − W) + W = 2K + W — strictly more than 2K.'},
+     {t:'unchanged — intensity controls K',why:'Intensity controls the COUNT. Frequency (through E = hf) controls each electron\'s energy budget.'}],
+    law:'⚖️ Law of the case: K = hf − W is linear with an offset. Doubling f adds a bonus +W beyond doubling K.'},
+ 2:{q:'Estimate before planning: to DOUBLE the energy of each photon, you should…',
+    opts:[
+     {t:'HALVE the wavelength',ok:true},
+     {t:'double the wavelength',why:'E = hc/λ — energy and wavelength are INVERSELY related. Doubling λ halves E.'},
+     {t:'double the intensity',why:'Intensity never changes the energy of a single photon. Only λ (or f) does.'},
+     {t:'impossible — photon energy is fixed by the source brightness',why:'Brightness sets the photon count. E = hc/λ sets the energy — change the colour, change the energy.'}],
+    law:'⚖️ Law of the case: E ∝ 1/λ. Shorter wavelength = harder photons. That inversion is the whole trick of stage 3.'},
+ 3:{q:'The Core\'s coating is unknown. Why does ONE probe reading (λ, V_s) pin down the work function W?',
+    opts:[
+     {t:'energy audit per photon: W = E_photon − K_max = 1240/λ − V_s, and h, c are already known',ok:true},
+     {t:'you need TWO readings to draw a straight line first',why:'Two points determine the line when h is UNKNOWN (Millikan\'s job, 1916). We already know h — one point closes the audit.'},
+     {t:'V_s alone equals W directly',why:'V_s measures K_max, the energy LEFT OVER after paying W. You must subtract it from the photon energy to get W.'},
+     {t:'you must average many intensities',why:'Intensity changes the current, never the energies. V_s is intensity-independent — that\'s the quantum signature.'}],
+    law:'⚖️ Law of the case: each photon\'s ledger reads E = W + K. Known E, measured K ⇒ W. One reading, one metal.'}
+};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildMCQ(container,idx,onPass,alreadyDone){
+  const spec=INSIGHTS[idx];
+  const box=document.createElement('div');box.className='insight';
+  box.innerHTML=`<h3>🧠 Insight check — reasoning unlocks the laser</h3><div class="q">${spec.q}</div>`;
+  const opts=shuffle(spec.opts.slice());let solved=false;
+  opts.forEach(o=>{const b=document.createElement('button');b.className='mcq-opt';b.textContent=o.t;
+    b.addEventListener('click',()=>{ensureAudio();if(solved)return;
+      if(o.ok){solved=true;b.classList.add('right');
+        box.querySelectorAll('.mcq-opt').forEach(x=>x.disabled=true);
+        const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+        sndNotebookOK();onPass();
+      }else{b.classList.add('wrong');b.disabled=true;wrongAttempt(null,null,'');
+        let fb=box.querySelector('.mcq-fb');
+        if(!fb){fb=document.createElement('div');fb.className='mini mcq-fb';fb.style.marginTop='6px';box.appendChild(fb);}
+        fb.innerHTML='<span class="bad">✗ '+o.why+' (−2 pts)</span>';}});
+    box.appendChild(b);});
+  if(alreadyDone){solved=true;
+    box.querySelectorAll('.mcq-opt').forEach(x=>{x.disabled=true;if(spec.opts.find(o=>o.ok&&o.t===x.textContent))x.classList.add('right');});
+    const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+    setTimeout(onPass,0);
+  }else{const note=document.createElement('div');note.className='gate-note';note.textContent='🔒 Controls unlock when you answer correctly.';box.appendChild(note);}
+  container.appendChild(box);
+}
+
+/* ===== stage bar ===== */
+const STAGE_NAMES=['1. Airlock · Watch','2. Lab · Predict','3. Reactor · Inverse','4. Core · Crisis'];
+function buildStageBar(){const bar=$('stageBar');bar.innerHTML='';
+  STAGE_NAMES.forEach((name,i)=>{const b=document.createElement('button');
+    const locked=i>unlockedMax;
+    b.className='stbtn'+(i===stage?' active':'')+(stageMedal[i]?' done':'')+(locked?' locked':'');
+    b.textContent=name+(stageMedal[i]?' '+({gold:'🥇',silver:'🥈',bronze:'🥉'}[stageMedal[i]]):'');
+    b.addEventListener('click',()=>{if(!locked)setStage(i);else toast('🔒 Bronze+ on the previous door unlocks this.');});
+    bar.appendChild(b);});}
+function setStage(s){stage=s;$('tsStage').textContent=(s+1)+'/4';activeCheck=null;phase='ready';
+  clearInterval(crisisTick);
+  beam=null;electrons=[];predE=null;predK=null;planLam=null;crisis=null;crisisW=false;crisisMetal=false;
+  s1checks={nored:false,eject:false,intensity:false};
+  buildStageBar();buildSide();sndCompute();}
+
+/* ===== metal table card (λ0 column is a locked bonus — anti-cheat unlock) ===== */
+function metalTableHTML(){
+  let rows=METALS.map(([s,w])=>`<tr data-m="${s}"><td>${s}</td><td>${w.toFixed(2)}</td><td>${lamTblUnlocked?(HC/w).toFixed(0)+' nm':'🔒'}</td></tr>`).join('');
+  return `<div class="block"><h3>Work functions (teaching values)</h3>
+    <table class="metalTbl"><thead><tr><th>metal</th><th>W (eV)</th><th>λ₀ = 1240/W ${lamTblUnlocked?'':'<span class="gate-note" style="margin:0">(unlocks after Lab door)</span>'}</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+/* ===== BEAM / FIRING ===== */
+function lamColor(lam){
+  if(lam>=580)return'#ff5a4d';if(lam>=560)return'#ffd94d';if(lam>=490)return'#59e07a';
+  if(lam>=450)return'#4da3ff';if(lam>=380)return'#8f6bff';return'#c9a7ff';}
+function fireBeam(lam,intensity,W,onDone){
+  ensureAudio();phase='firing';electrons=[];
+  const E=HC/lam,K=E-W,emits=K>0;
+  beam={lam,intensity,W,E,K:Math.max(0,K),emits,t:0,done:false,onDone,photons:[]};
+  const n=Math.round(intensity);
+  for(let i=0;i<n;i++)beam.photons.push({p:-(i*0.09)-Math.random()*.05,hit:false});
+  sndRunStart();
+}
+function stepBeam(dt){
+  if(!beam||phase!=='firing')return;
+  beam.t+=dt;
+  const speed=0.9; // beam progress per second
+  let allDone=true;
+  for(const ph of beam.photons){
+    if(!ph.hit){ph.p+=speed*dt;
+      if(ph.p>=1){ph.hit=true;
+        if(beam.emits){sndZap();
+          electrons.push({x:0,y:(Math.random()-.5)*0.5,vx:0.25+0.6*Math.sqrt(beam.K/6),vy:(Math.random()-.5)*.15,life:1.6});}
+        else playTone(160,.06,'sine',.03);}
+      else allDone=false;}
+  }
+  electrons.forEach(e=>{e.x+=e.vx*dt;e.y+=e.vy*dt;e.life-=dt;});
+  electrons=electrons.filter(e=>e.life>0&&e.x<1.4);
+  if(allDone&&beam.t>1.7&&!beam.done){beam.done=true;phase='ready';const cb=beam.onDone;if(cb)cb(beam);}
+}
+
+/* ===== CANVAS SCENE ===== */
+function resizeC(){const c=$('C'),b=c.parentElement.getBoundingClientRect();
+  c.width=Math.max(400,Math.floor(b.width*devicePixelRatio));c.height=Math.max(260,Math.floor(b.height*devicePixelRatio));
+  stars=[];for(let i=0;i<130;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.4+.3,a:Math.random()*.35+.08,w:Math.random()*6});}
+function draw(){
+  const c=$('C');if(!c||!c.width)return;const cx=c.getContext('2d'),W=c.width,H=c.height,dpr=devicePixelRatio,now=Date.now()*.001;
+  cx.clearRect(0,0,W,H);
+  const bg=cx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#04060f');bg.addColorStop(.6,'#0a0d22');bg.addColorStop(1,'#140a20');cx.fillStyle=bg;cx.fillRect(0,0,W,H);
+  stars.forEach(s=>{cx.globalAlpha=s.a+.08*Math.sin(now+s.w);cx.fillStyle='#fff';cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();});cx.globalAlpha=1;
+  // Mercury horizon glow
+  const mg=cx.createRadialGradient(W*.85,H*1.25,H*.1,W*.85,H*1.25,H*.7);mg.addColorStop(0,'rgba(255,170,85,.25)');mg.addColorStop(1,'transparent');cx.fillStyle=mg;cx.fillRect(0,0,W,H);
+  // geometry
+  const emX=W*.10, plX=W*.42, colX=W*.86, midY=H*.52;
+  // emitter
+  cx.fillStyle='#22263a';cx.strokeStyle='rgba(255,255,255,.15)';cx.lineWidth=2;
+  cx.beginPath();cx.roundRect?cx.roundRect(emX-46*dpr,midY-26*dpr,52*dpr,52*dpr,8*dpr):cx.rect(emX-46*dpr,midY-26*dpr,52*dpr,52*dpr);cx.fill();cx.stroke();
+  cx.fillStyle='rgba(255,255,255,.5)';cx.font=`${9*dpr}px ui-monospace`;cx.fillText('LASER',emX-42*dpr,midY-32*dpr);
+  // plate (the lock)
+  cx.fillStyle='#3a3f55';cx.fillRect(plX,midY-70*dpr,10*dpr,140*dpr);
+  cx.fillStyle='rgba(255,255,255,.55)';cx.fillText((stage===0?S1_METAL:stage===1?D.s2.m:stage===2?D.s3.m:(crisis?'??':'??'))+' plate',plX-8*dpr,midY-78*dpr);
+  // collector ring
+  cx.strokeStyle='rgba(95,230,216,.5)';cx.lineWidth=3*dpr;cx.beginPath();cx.arc(colX,midY,26*dpr,0,Math.PI*2);cx.stroke();
+  cx.fillStyle='rgba(255,255,255,.5)';cx.fillText('collector',colX-24*dpr,midY-34*dpr);
+  // beam + photons
+  if(beam&&(phase==='firing'||beam.done)){
+    const col=lamColor(beam.lam);
+    if(phase==='firing'){
+      cx.strokeStyle=col;cx.globalAlpha=.22;cx.lineWidth=8*dpr;
+      cx.beginPath();cx.moveTo(emX+8*dpr,midY);cx.lineTo(plX,midY);cx.stroke();cx.globalAlpha=1;
+      for(const ph of beam.photons){if(!ph.hit&&ph.p>0){
+        const x=emX+8*dpr+(plX-emX-8*dpr)*ph.p;
+        cx.fillStyle=col;cx.beginPath();cx.arc(x,midY+Math.sin(ph.p*40)*3*dpr,4*dpr,0,Math.PI*2);cx.fill();
+        cx.globalAlpha=.35;cx.beginPath();cx.arc(x,midY,8*dpr,0,Math.PI*2);cx.fill();cx.globalAlpha=1;}}
+    }
+    if(beam.lam<380){cx.fillStyle='rgba(201,167,255,.9)';cx.font=`bold ${10*dpr}px ui-monospace`;cx.fillText('⚠ UV — drawn in false colour',emX+10*dpr,midY-14*dpr);}
+    cx.fillStyle='rgba(230,240,255,.8)';cx.font=`${10*dpr}px ui-monospace`;
+    cx.fillText('λ = '+beam.lam.toFixed(1)+' nm   E = '+beam.E.toFixed(2)+' eV',emX+10*dpr,midY+34*dpr);
+  }
+  // electrons flying
+  for(const e of electrons){
+    const x=plX+12*dpr+(colX-plX-30*dpr)*e.x, y=midY+e.y*80*dpr;
+    cx.fillStyle='#5fe6d8';cx.beginPath();cx.arc(x,y,3.2*dpr,0,Math.PI*2);cx.fill();
+    cx.globalAlpha=.3;cx.beginPath();cx.arc(x,y,7*dpr,0,Math.PI*2);cx.fill();cx.globalAlpha=1;}
+  if(beam&&beam.done&&beam.emits){
+    cx.fillStyle='rgba(124,227,139,.85)';cx.font=`${10*dpr}px ui-monospace`;
+    cx.fillText('K = '+beam.K.toFixed(2)+' eV → v ≈ '+(eSpeed(beam.K)/1e3).toFixed(0)+' km/s',plX+16*dpr,midY+56*dpr);}
+  if(beam&&beam.done&&!beam.emits){
+    cx.fillStyle='rgba(255,112,112,.9)';cx.font=`bold ${11*dpr}px ui-monospace`;
+    cx.fillText('NO EMISSION — E < W. The plate keeps every electron.',plX+16*dpr,midY+56*dpr);}
+  // K needle meter (top right) with target band
+  const target=stage===2?D.s3.kt:stage===3&&crisis?crisis.kt:null;
+  const band=stage===2?D.s3.band:D.s4band;
+  drawMeter(cx,W*.70,H*.16,W*.26,26*dpr,beam&&beam.done?beam.K:0,6.0,target,band,dpr);
+  // doors strip (bottom): 4 lights
+  const dw=W*.5, dx0=W*.06, dy=H*.90;
+  cx.fillStyle='rgba(255,255,255,.45)';cx.font=`${9*dpr}px ui-monospace`;cx.fillText('HELIOS-7 doors:',dx0,dy-10*dpr);
+  ['AIRLOCK','LAB','REACTOR','CORE'].forEach((n,i)=>{
+    const x=dx0+i*(dw/4);
+    cx.fillStyle=stageMedal[i]?'rgba(124,227,139,.85)':(i===stage?'rgba(255,209,102,.8)':'rgba(255,255,255,.18)');
+    cx.beginPath();cx.arc(x+8*dpr,dy,6*dpr,0,Math.PI*2);cx.fill();
+    cx.fillStyle='rgba(255,255,255,.5)';cx.fillText(n,x+20*dpr,dy+3*dpr);});
+  // honest slow-mo badge
+  cx.fillStyle='rgba(255,209,102,.75)';cx.font=`${9*dpr}px ui-monospace`;
+  cx.fillText('⏱ e⁻ flight slowed ~10⁹× for viewing — real transit: nanoseconds',W*.06,H*.965);
+}
+function drawMeter(cx,x,y,w,h,val,max,target,band,dpr){
+  cx.fillStyle='rgba(0,0,0,.35)';cx.fillRect(x,y,w,h);
+  cx.strokeStyle='rgba(255,255,255,.2)';cx.strokeRect(x,y,w,h);
+  if(target!=null){const t0=clamp((target-band)/max,0,1),t1=clamp((target+band)/max,0,1);
+    cx.fillStyle='rgba(124,227,139,.25)';cx.fillRect(x+w*t0,y,w*(t1-t0),h);
+    cx.strokeStyle='rgba(124,227,139,.7)';cx.beginPath();cx.moveTo(x+w*(target/max),y);cx.lineTo(x+w*(target/max),y+h);cx.stroke();}
+  const f=clamp(val/max,0,1);
+  cx.fillStyle='rgba(95,230,216,.8)';cx.fillRect(x,y,w*f,h);
+  cx.fillStyle='rgba(255,255,255,.7)';cx.font=`${9*dpr}px ui-monospace`;
+  cx.fillText('K_max meter (eV): '+val.toFixed(2)+(target!=null?('  target '+target.toFixed(2)+' ± '+band.toFixed(2)):''),x,y-6*dpr);
+}
+
+/* ===== SIDE PANELS ===== */
+function buildSide(){
+  const sp=$('sidePanel');sp.innerHTML='';
+  if(stage===0)buildS1(sp);
+  else if(stage===1)buildS2(sp,!!stageMedal[1]);
+  else if(stage===2)buildS3(sp,!!stageMedal[2]);
+  else buildS4(sp);
+}
+
+/* ---- STAGE 1: AIRLOCK · WATCH ---- */
+function buildS1(sp){
+  const done=!!stageMedal[0];
+  s1McqOK=done; if(done)s1checks={nored:true,eject:true,intensity:true};
+  sp.innerHTML=`
+  <div class="block"><h3>🎬 Door 1 — Airlock · free experiment</h3>
+    <div class="mini">The airlock sensor is a <b>${S1_METAL}</b> plate (W = ${Wof(S1_METAL).toFixed(2)} eV). Fire freely — nothing is graded here. Your job is to make intensity <i>fail</i> and frequency <i>win</i>.</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px" id="lamRow">
+      ${S1_PRESETS.map(l=>`<button class="lamBtn${l===620?' active':''}" data-l="${l}">${l} nm</button>`).join('')}
+    </div>
+    <div class="sr" style="margin-top:6px"><div class="k">Intensity (photons/burst)</div><div class="v" id="intVal">6</div></div>
+    <input type="range" id="intRange" min="1" max="12" step="1" value="6" style="width:100%"/>
+    <button class="btn go" id="bFire1" style="width:100%;margin-top:7px">🔦 Fire burst</button>
+    <div style="margin-top:7px">
+      <div class="checkrow" id="ck1"><span class="cb"></span> Max-intensity beam with E &lt; W → zero electrons</div>
+      <div class="checkrow" id="ck2"><span class="cb"></span> Any beam with E &gt; W → instant ejection</div>
+      <div class="checkrow" id="ck3"><span class="cb"></span> More intensity (E &gt; W) → more electrons, SAME K</div>
+    </div>
+  </div>
+  <div id="s1Mcq"></div>
+  ${metalTableHTML()}
+  <button class="btn pri" id="s1Done" style="width:100%" ${done?'':'disabled'}>Open the Airlock →</button>`;
+  let lam=620,lastK=null;
+  $$('#lamRow .lamBtn').forEach(b=>b.onclick=()=>{lam=+b.dataset.l;$$('#lamRow .lamBtn').forEach(x=>x.classList.toggle('active',x===b));});
+  $('intRange').oninput=()=>$('intVal').textContent=$('intRange').value;
+  $('bFire1').onclick=()=>{if(phase==='firing')return;
+    const inten=+$('intRange').value;
+    fireBeam(lam,inten,Wof(S1_METAL),b=>{
+      if(!b.emits&&inten>=10){s1checks.nored=true;radio('SPARK: '+inten+' photons of pure disappointment. Not one electron. Told you — totals don\'t count.');}
+      if(b.emits){s1checks.eject=true;
+        radio('SPARK: Ejection! Each electron left with K = '+b.K.toFixed(2)+' eV — instantly.');}
+      if(b.emits&&lastK!==null&&Math.abs(lastK-b.K)<1e-6)s1checks.intensity=true;
+      if(b.emits)lastK=b.K;
+      updS1();});};
+  function updS1(){
+    $('ck1').classList.toggle('done',s1checks.nored);$('ck1').querySelector('.cb').textContent=s1checks.nored?'✓':'';
+    $('ck2').classList.toggle('done',s1checks.eject);$('ck2').querySelector('.cb').textContent=s1checks.eject?'✓':'';
+    $('ck3').classList.toggle('done',s1checks.intensity);$('ck3').querySelector('.cb').textContent=s1checks.intensity?'✓':'';
+    if(s1checks.nored&&s1checks.eject&&s1checks.intensity&&s1McqOK)$('s1Done').disabled=false;}
+  buildMCQ($('s1Mcq'),0,()=>{s1McqOK=true;updS1();},done);
+  updS1();
+  $('s1Done').onclick=()=>{awardStage('gold');buildStageBar();
+    toast('✅ Airlock open! +10 pts');sndUnlock();
+    radio('Dr. Haddad: You broke the brightest myth in physics. The Lab door is next — now you compute.');
+    setTimeout(()=>setStage(1),1200);};
+}
+
+/* ---- STAGE 2: LAB · PREDICT ---- */
+function buildS2(sp,done){
+  const P=D.s2,W=Wof(P.m),E=HC/P.lam,K=E-W;
+  sp.innerHTML=`
+  <div class="block"><h3>📋 Door 2 — Lab · predict, then fire ${stageWrong[1]?'<span class="att-badge">wrong: '+stageWrong[1]+'</span>':''}</h3>
+    <div class="mini">The Lab lock reads the ejected electrons' energy. Mission parameters (fixed):</div>
+    <div class="sr"><div class="k">Plate metal</div><div class="v">${P.m} (W = ${W.toFixed(2)} eV)</div></div>
+    <div class="sr"><div class="k">Laser wavelength λ</div><div class="v">${P.lam} nm</div></div>
+    <div class="sr"><div class="k">Constant</div><div class="v">hc ≈ 1240 eV·nm</div></div>
+  </div>
+  <div id="s2Mcq"></div>
+  <div class="block"><h3>🔒 Prediction arms the laser</h3>
+    <div class="nb-step"><span class="step-num">1</span><span class="step-text">Photon energy E = 1240/λ</span>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span class="mini">E (eV):</span><input class="numInput" id="pE" type="number" step="0.01" placeholder="_.__" disabled/></div></div>
+    <div class="nb-step"><span class="step-num">2</span><span class="step-text">K_max = E − W</span>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span class="mini">K (eV):</span><input class="numInput" id="pK" type="number" step="0.01" placeholder="_.__" disabled/></div></div>
+    <button class="btn go" id="bCommit" style="width:100%;margin-top:4px" disabled>📝 Commit prediction</button>
+    <div class="mini" id="s2Fb" style="margin-top:5px"></div>
+    <button class="btn pri" id="bRun" style="width:100%;margin-top:6px" disabled>🔦 Fire (locked)</button>
+  </div>
+  ${metalTableHTML()}`;
+  buildMCQ($('s2Mcq'),1,()=>{['pE','pK','bCommit'].forEach(id=>$(id).disabled=false);
+    if(!done)radio('Dr. Haddad: Offset-linearity on record. Now the actual numbers.');},done);
+  const doCommit=()=>{ensureAudio();
+    if($('bCommit').disabled)return;
+    eggCheck($('pE').value);eggCheck($('pK').value);
+    const a=parseFloat($('pE').value),b=parseFloat($('pK').value);
+    if(isNaN(a)||isNaN(b)){wrongAttempt($('s2Fb'),null,'Both numbers, please — the lock reads a full prediction.');return;}
+    if(b<0){wrongAttempt($('s2Fb'),$('pK'),'Negative K means no emission — is E really below W here? Redo 1240/λ. (−2)');return;}
+    if(b>a+1e-9){wrongAttempt($('s2Fb'),$('pK'),'K_max cannot exceed the photon energy — the electron can\'t leave with more than it was paid. (−2)');return;}
+    if(Math.abs(a-b)<0.02){wrongAttempt($('s2Fb'),$('pK'),'That\'s the photon energy twice. Step 2 subtracts the work function. (−2)');return;}
+    if(a>15||a<0.3){wrongAttempt($('s2Fb'),$('pE'),'Photon energies here are a few eV. Recheck E = 1240/λ. (−2)');return;}
+    predE=a;predK=b;
+    $('pE').classList.remove('error');$('pK').classList.remove('error');
+    $('pE').disabled=true;$('pK').disabled=true;$('bCommit').disabled=true;
+    $('s2Fb').innerHTML='<span class="good">✅ Locked: E='+a.toFixed(2)+' eV, K='+b.toFixed(2)+' eV. Laser armed.</span>';
+    $('bRun').disabled=false;$('bRun').textContent='🔦 Fire';
+    sndNotebookOK();radio('SPARK: Numbers received. Firing will make them extremely public.');};
+  $('bCommit').onclick=doCommit;activeCheck=doCommit;
+  $('bRun').onclick=()=>{if($('bRun').disabled||phase!=='ready')return;
+    fireBeam(P.lam,8,W,()=>finishStage2());};
+}
+function finishStage2(){
+  phase='ended';
+  const P=D.s2,W=Wof(P.m),E=HC/P.lam,K=E-W;
+  const eE=Math.abs(predE-E)/E, eK=Math.abs(predK-K)/K, err=Math.max(eE,eK)*100;
+  let medal=null;if(err<5)medal='gold';else if(err<10)medal='silver';else if(err<20)medal='bronze';
+  if(medal)awardStage(medal);else{streak=0;$('tsStreak').textContent=streak;}
+  celebrate(medal||'fail');
+  lastR={st:1,medal,err,eE,eK,E,K,P,W,predE,predK};
+  showDebrief();
+}
+
+/* ---- STAGE 3: REACTOR · INVERSE ---- */
+function buildS3(sp,done){
+  const P=D.s3,W=Wof(P.m);
+  sp.innerHTML=`
+  <div class="block"><h3>🎯 Door 3 — Reactor · inverse problem ${stageWrong[2]?'<span class="att-badge">wrong: '+stageWrong[2]+'</span>':''}</h3>
+    <div class="mini">The Reactor lock only opens for electrons in a narrow energy band. <b>Your λ IS the key.</b></div>
+    <div class="sr"><div class="k">Plate metal</div><div class="v">${P.m} (W = ${W.toFixed(2)} eV)</div></div>
+    <div class="sr"><div class="k">Required K_max</div><div class="v">${P.kt.toFixed(2)} ± ${P.band.toFixed(2)} eV</div></div>
+    <div class="sr"><div class="k">Optics limit</div><div class="v">λ ≥ 100 nm</div></div>
+  </div>
+  <div id="s3Mcq"></div>
+  <div class="block"><h3>🔒 Your computed λ drives the laser</h3>
+    <div class="nb-step"><span class="step-num">1</span><span class="step-text">Invert: λ = 1240 / (W + K_target)</span>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span class="mini">λ (nm):</span><input class="numInput" id="pLam" type="number" step="0.1" placeholder="___._" disabled/></div></div>
+    <button class="btn go" id="bCommit3" style="width:100%;margin-top:4px" disabled>📝 Commit λ</button>
+    <div class="mini" id="s3Fb" style="margin-top:5px"></div>
+    <button class="btn pri" id="bRun3" style="width:100%;margin-top:6px" disabled>🔦 Fire (locked)</button>
+  </div>
+  ${metalTableHTML()}`;
+  buildMCQ($('s3Mcq'),2,()=>{['pLam','bCommit3'].forEach(id=>$(id).disabled=false);
+    if(!done)radio('Dr. Haddad: E ∝ 1/λ understood. Now cut the key.');},done);
+  const doCommit=()=>{ensureAudio();
+    if($('bCommit3').disabled)return;
+    eggCheck($('pLam').value);
+    const L=parseFloat($('pLam').value);
+    if(isNaN(L)||L<=0){wrongAttempt($('s3Fb'),$('pLam'),'A wavelength in nm.');return;}
+    if(L<100){wrongAttempt($('s3Fb'),$('pLam'),'Below the 100 nm optics limit — the station laser can\'t go that hard-UV. (−2)');return;}
+    if(L>2000){wrongAttempt($('s3Fb'),$('pLam'),'That\'s deep infrared — reconsider which way λ moves the energy. (−2)');return;}
+    planLam=L;
+    $('pLam').classList.remove('error');$('pLam').disabled=true;$('bCommit3').disabled=true;
+    $('s3Fb').innerHTML='<span class="good">✅ λ = '+L.toFixed(1)+' nm committed — no take-backs.</span>';
+    $('bRun3').disabled=false;$('bRun3').textContent='🔦 Fire';
+    sndNotebookOK();};
+  $('bCommit3').onclick=doCommit;activeCheck=doCommit;
+  $('bRun3').onclick=()=>{if($('bRun3').disabled||phase!=='ready')return;
+    fireBeam(planLam,8,W,()=>finishStage3());};
+}
+function finishStage3(){
+  phase='ended';
+  const P=D.s3,W=Wof(P.m);
+  const lamReq=HC/(W+P.kt);
+  const Kgot=Kof(planLam,W);
+  const hit=Kgot>0&&Math.abs(Kgot-P.kt)<=P.band;
+  const err=Math.abs(planLam-lamReq)/lamReq*100;
+  let medal=null;
+  if(hit){if(err<5)medal='gold';else if(err<10)medal='silver';else if(err<20)medal='bronze';}
+  if(medal)awardStage(medal);else{streak=0;$('tsStreak').textContent=streak;}
+  celebrate(medal||'fail');
+  lastR={st:2,medal,err,lamReq,planLam,Kgot:Math.max(0,Kgot),hit,P,W,noEmit:Kgot<=0};
+  showDebrief();
+}
+
+/* ---- STAGE 4: CORE · CRISIS ---- */
+function buildS4(sp){
+  sp.innerHTML=`
+  <div class="block"><h3>🚨 Door 4 — Core · unknown coating ${stageWrong[3]?'<span class="att-badge">wrong: '+stageWrong[3]+'</span>':''}</h3>
+    <div class="mini">The solar storm re-coated the Core sensor with an <b>unknown metal</b>. SPARK salvaged ONE probe reading. You get <b>90 seconds</b> from the moment you open the feed: identify the metal, cut the key, fire. Wrong identification costs −2. Variants re-roll on retry.</div>
+    <button class="btn go" id="bFeed" style="width:100%;margin-top:6px">📂 Open probe feed (starts the clock)</button>
+  </div>
+  <div id="s4Mcq"></div>
+  ${metalTableHTML()}
+  <div id="s4Panel"></div>`;
+  let mcqOK=!!stageMedal[3];
+  buildMCQ($('s4Mcq'),3,()=>{mcqOK=true;
+    radio('Dr. Haddad: One-reading audit understood. Open the feed when ready — the clock is real.');},!!stageMedal[3]);
+  $('bFeed').onclick=()=>{
+    if(!mcqOK){toast('🔒 Answer the insight check first — you\'ll need it under the clock.');sndFail();return;}
+    if(crisis)return;
+    startCrisis();};
+}
+function startCrisis(){
+  crisis=CRISES[Math.floor(Math.random()*CRISES.length)];
+  crisisTimer=90;crisisW=false;crisisMetal=false;
+  phase='decision';
+  const box=$('s4Panel');
+  box.innerHTML=`
+  <div class="block" style="border-color:rgba(255,112,112,.4)"><h3>⚠️ PROBE FEED — one reading</h3>
+    <div class="crisis-timer" id="cTimer">90</div>
+    <div class="sr"><div class="k">Probe λ</div><div class="v">${crisis.lm} nm</div></div>
+    <div class="sr"><div class="k">Stopping potential V_s</div><div class="v">${crisis.vs.toFixed(2)} V</div></div>
+    <div class="nb-step"><span class="step-num">1</span><span class="step-text">W = 1240/λ − V_s</span>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span class="mini">W (eV):</span><input class="numInput" id="pW" type="number" step="0.01" placeholder="_.__"/>
+      <button class="btn go" id="bW">check</button></div><div class="mini" id="wFb"></div></div>
+    <div class="nb-step"><span class="step-num">2</span><span class="step-text">Identify the coating:</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px" id="metalRow">
+        ${METALS.map(([s])=>`<button class="metalBtn" data-m="${s}" disabled>${s}</button>`).join('')}
+      </div><div class="mini" id="mFb"></div></div>
+    <div class="nb-step"><span class="step-num">3</span><span class="step-text">Cut the key: required K = <b id="ktShow">?</b> eV → λ = 1240/(W + K)</span>
+      <div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span class="mini">λ (nm):</span><input class="numInput" id="pLam4" type="number" step="0.1" placeholder="___._" disabled/>
+      <button class="btn pri" id="bFire4" disabled>🔦 FIRE</button></div><div class="mini" id="lFb"></div></div>
+  </div>`;
+  sndRunStart();radio('SPARK: Feed open. λ = '+crisis.lm+' nm, V_s = '+crisis.vs.toFixed(2)+' V. Ninety seconds. No pressure. Some pressure.');
+  crisisTick=setInterval(()=>{crisisTimer--;const el=$('cTimer');if(el)el.textContent=crisisTimer;
+    if(crisisTimer===20){playTone(880,.1,'sine',.06);radio('Dr. Haddad: Twenty seconds. The equation has three parts — where are you?');}
+    if(crisisTimer<=0){clearInterval(crisisTick);crisisFail('⏱ Time expired. The audit takes three short lines — practice them and re-roll.');}
+  },1000);
+  const Wtrue=HC/crisis.lm-crisis.vs;
+  $('bW').onclick=()=>{ensureAudio();
+    eggCheck($('pW').value);const w=parseFloat($('pW').value);
+    if(isNaN(w)){wrongAttempt($('wFb'),$('pW'),'A value in eV.');return;}
+    if(Math.abs(w-HC/crisis.lm)<0.05){wrongAttempt($('wFb'),$('pW'),'That\'s the PHOTON energy. Subtract V_s — the part the electron kept. (−2)');return;}
+    if(Math.abs(w-crisis.vs)<0.05){wrongAttempt($('wFb'),$('pW'),'V_s measures K_max, not W. W is what the metal charged at the exit. (−2)');return;}
+    if(Math.abs(w-Wtrue)>0.05){wrongAttempt($('wFb'),$('pW'),'Off. Redo 1240/λ first, then subtract V_s. (−2)');return;}
+    crisisW=true;$('pW').classList.remove('error');$('pW').disabled=true;$('bW').disabled=true;
+    $('wFb').innerHTML='<span class="good">✅ W = '+w.toFixed(2)+' eV. Now name the metal.</span>';
+    $$('#metalRow .metalBtn').forEach(b=>b.disabled=false);sndCompute();};
+  $$('#metalRow .metalBtn').forEach(b=>b.onclick=()=>{ensureAudio();
+    if(crisisMetal)return;
+    if(b.dataset.m===crisis.metal){crisisMetal=true;b.classList.add('right');
+      $$('#metalRow .metalBtn').forEach(x=>x.disabled=true);
+      $('mFb').innerHTML='<span class="good">✅ '+crisis.metal+' confirmed. Required K = '+crisis.kt.toFixed(2)+' eV.</span>';
+      $('ktShow').textContent=crisis.kt.toFixed(2);
+      $('pLam4').disabled=false;$('bFire4').disabled=false;sndNotebookOK();
+      activeCheck=()=>$('bFire4').click();
+    }else{b.classList.add('wrong');b.disabled=true;
+      wrongAttempt($('mFb'),null,b.dataset.m+' has a different W — check the table against your number. (−2)');}});
+  $('bFire4').onclick=()=>{ensureAudio();
+    if(phase!=='decision')return;
+    eggCheck($('pLam4').value);const L=parseFloat($('pLam4').value);
+    if(isNaN(L)||L<100||L>2000){wrongAttempt($('lFb'),$('pLam4'),'A realistic λ in nm (≥100). (−2)');return;}
+    clearInterval(crisisTick);
+    planLam=L;
+    fireBeam(L,8,Wof(crisis.metal),()=>finishStage4());};
+  activeCheck=()=>$('bW').click();
+}
+function crisisFail(msg){
+  phase='ended';streak=0;$('tsStreak').textContent=streak;
+  celebrate('fail');
+  lastR={st:3,medal:null,failMsg:msg,crisis};
+  showDebrief();
+}
+function finishStage4(){
+  phase='ended';
+  const W=Wof(crisis.metal),lamReq=HC/(W+crisis.kt),Kgot=Kof(planLam,W);
+  const hit=Kgot>0&&Math.abs(Kgot-crisis.kt)<=D.s4band;
+  const err=Math.abs(planLam-lamReq)/lamReq*100;
+  let medal=null;
+  if(hit){if(err<5)medal='gold';else if(err<10)medal='silver';else if(err<20)medal='bronze';}
+  if(medal)awardStage(medal);else{streak=0;$('tsStreak').textContent=streak;}
+  celebrate(medal||'fail');
+  lastR={st:3,medal,err,lamReq,planLam,Kgot:Math.max(0,Kgot),hit,crisis,W};
+  showDebrief();
+  if(stageMedal[0]&&stageMedal[1]&&stageMedal[2]&&stageMedal[3]){
+    setTimeout(()=>{toast('🏆 HELIOS-7 FULLY UNLOCKED — crew safe. Final score '+score+'/100');
+      celebrate(score>=85?'gold':score>=70?'silver':'bronze');
+      radio('Dr. Haddad: Four doors, one equation. Einstein sends his regards.');
+      setTimeout(()=>radio('SPARK: Archiving the storm spectrum… anomaly. This does not match the Sun. Filing under: EPISODE 2.'),5200);},1600);}
+}
+
+/* ===== DEBRIEF (Art.8) ===== */
+function showDebrief(){
+  const f=lastR;if(!f)return;
+  const rb=$('eRB'),ab=$('eAB');rb.innerHTML='';ab.innerHTML='';
+  const add=(tb,k,v,c='')=>{const tr=document.createElement('tr');tr.innerHTML=`<th>${k}</th><td class="${c}">${v}</td>`;tb.appendChild(tr);};
+  $('eMed').textContent={gold:'🥇 GOLD',silver:'🥈 SILVER',bronze:'🥉 BRONZE'}[f.medal]||'💔 TRY AGAIN';
+  let sol='',chart=null;
+  if(f.st===1){
+    $('eTit').textContent=f.medal?'Lab lock opened':'Prediction missed';
+    add(rb,'Your E',f.predE.toFixed(2)+' eV');add(rb,'Actual E',f.E.toFixed(2)+' eV');
+    add(rb,'Your K',f.predK.toFixed(2)+' eV');add(rb,'Actual K',f.K.toFixed(2)+' eV');
+    add(ab,'E error',Math.abs(f.predE-f.E).toFixed(2)+' eV ('+(f.eE*100).toFixed(1)+'%)',f.eE<.05?'good':f.eE<.2?'warn':'bad');
+    add(ab,'K error',Math.abs(f.predK-f.K).toFixed(2)+' eV ('+(f.eK*100).toFixed(1)+'%)',f.eK<.05?'good':f.eK<.2?'warn':'bad');
+    add(ab,'Medal rule','max error <5% 🥇 · <10% 🥈 · <20% 🥉');
+    add(ab,'Bonus check','V_s = '+f.K.toFixed(2)+' V (equals K in eV)');
+    sol=`E = 1240/λ = 1240/${f.P.lam} = <b>${f.E.toFixed(2)} eV</b><br>`+
+        `K_max = E − W = ${f.E.toFixed(2)} − ${f.W.toFixed(2)} = <b>${f.K.toFixed(2)} eV</b><br>`+
+        `electron speed v = √(2K/mₑ) ≈ ${(eSpeed(f.K)/1e3).toFixed(0)} km/s`;
+    chart={W:f.W,shotLam:f.P.lam,shotK:f.K,target:null,band:0};
+  } else if(f.st===2){
+    $('eTit').textContent=f.noEmit?'No emission — below threshold':(f.hit?'Reactor lock opened':'Outside the band');
+    add(rb,'Required λ',f.lamReq.toFixed(1)+' nm');
+    add(rb,'Your λ',f.planLam.toFixed(1)+' nm');
+    add(rb,'K achieved',f.Kgot.toFixed(2)+' eV');
+    add(rb,'Band',f.P.kt.toFixed(2)+' ± '+f.P.band.toFixed(2)+' eV');
+    add(ab,'λ error',Math.abs(f.planLam-f.lamReq).toFixed(1)+' nm ('+f.err.toFixed(1)+'%)',f.err<5?'good':f.err<20?'warn':'bad');
+    add(ab,'In band',f.hit?'YES':'NO',f.hit?'good':'bad');
+    if(f.noEmit)add(ab,'Diagnosis','E = 1240/λ came out BELOW W — nothing could leave the plate','bad');
+    add(ab,'Medal rule','in band AND λ error <5/10/20%');
+    sol=`E_needed = W + K_target = ${f.W.toFixed(2)} + ${f.P.kt.toFixed(2)} = ${(f.W+f.P.kt).toFixed(2)} eV<br>`+
+        `λ = 1240 / ${(f.W+f.P.kt).toFixed(2)} = <b>${f.lamReq.toFixed(1)} nm</b>`;
+    chart={W:f.W,shotLam:f.planLam,shotK:f.Kgot,target:f.P.kt,band:f.P.band};
+  } else if(f.st===3){
+    $('eTit').textContent=f.medal?'CORE UNLOCKED — crew safe':'Core sealed';
+    if(f.failMsg){add(ab,'Debrief',f.failMsg,'bad');
+      const Wt=HC/f.crisis.lm-f.crisis.vs;
+      add(rb,'Probe',`λ=${f.crisis.lm} nm, V_s=${f.crisis.vs.toFixed(2)} V`);
+      add(rb,'Coating was',f.crisis.metal+' (W = '+Wt.toFixed(2)+' eV)');
+      sol=`W = 1240/${f.crisis.lm} − ${f.crisis.vs.toFixed(2)} = ${(HC/f.crisis.lm).toFixed(2)} − ${f.crisis.vs.toFixed(2)} = <b>${Wt.toFixed(2)} eV → ${f.crisis.metal}</b><br>`+
+          `λ_rescue = 1240/(${Wt.toFixed(2)} + ${f.crisis.kt.toFixed(2)}) = <b>${(HC/(Wt+f.crisis.kt)).toFixed(1)} nm</b>`;
+      chart={W:Wt,shotLam:null,shotK:null,target:f.crisis.kt,band:D.s4band};
+    } else {
+      add(rb,'Coating',f.crisis.metal+' (W = '+f.W.toFixed(2)+' eV)');
+      add(rb,'Required λ',f.lamReq.toFixed(1)+' nm');
+      add(rb,'Your λ',f.planLam.toFixed(1)+' nm');
+      add(rb,'K achieved',f.Kgot.toFixed(2)+' eV (band '+f.crisis.kt.toFixed(2)+' ± '+D.s4band.toFixed(2)+')');
+      add(ab,'λ error',Math.abs(f.planLam-f.lamReq).toFixed(1)+' nm ('+f.err.toFixed(1)+'%)',f.err<5?'good':f.err<20?'warn':'bad');
+      add(ab,'In band',f.hit?'YES':'NO',f.hit?'good':'bad');
+      add(ab,'Medal rule','correct metal + in band + λ error <5/10/20%');
+      sol=`W = 1240/${f.crisis.lm} − ${f.crisis.vs.toFixed(2)} = <b>${f.W.toFixed(2)} eV → ${f.crisis.metal}</b><br>`+
+          `E_needed = ${f.W.toFixed(2)} + ${f.crisis.kt.toFixed(2)} = ${(f.W+f.crisis.kt).toFixed(2)} eV<br>`+
+          `λ = 1240 / ${(f.W+f.crisis.kt).toFixed(2)} = <b>${f.lamReq.toFixed(1)} nm</b>`;
+      chart={W:f.W,shotLam:f.planLam,shotK:f.Kgot,target:f.crisis.kt,band:D.s4band};
+    }
+  }
+  $('eSol').innerHTML=sol;
+  drawKChart(chart);
+  $('bNext').disabled=!(stageMedal[stage]&&stage<3);
+  $('bNext').textContent=stage>=3?'Mission complete 🏁':(stageMedal[stage]?'Next door →':'Next door (needs Bronze+) 🔒');
+  $('endScr').classList.add('open');
+}
+function drawKChart(ch){
+  const cc=$('eCh'),ctx=cc.getContext('2d'),W=cc.width,H=cc.height;ctx.clearRect(0,0,W,H);
+  if(!ch)return;
+  const pad=34,l0=100,l1=700;
+  const Kmax=Math.max(HC/l0-ch.W,1);
+  const X=lam=>pad+(W-pad-8)*((lam-l0)/(l1-l0));
+  const Y=k=>H-pad-(H-pad-8)*(k/Kmax);
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.beginPath();ctx.moveTo(pad,4);ctx.lineTo(pad,H-pad);ctx.lineTo(W-4,H-pad);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px ui-monospace';
+  ctx.fillText('λ (nm)',W-52,H-10);ctx.fillText('K (eV)',6,14);
+  // target band
+  if(ch.target!=null){ctx.fillStyle='rgba(124,227,139,.15)';
+    ctx.fillRect(pad,Y(ch.target+ch.band),W-pad-8,Y(ch.target-ch.band)-Y(ch.target+ch.band));
+    ctx.strokeStyle='rgba(124,227,139,.6)';ctx.beginPath();ctx.moveTo(pad,Y(ch.target));ctx.lineTo(W-8,Y(ch.target));ctx.stroke();}
+  // curve K=1240/λ−W
+  ctx.strokeStyle='#5fe6d8';ctx.lineWidth=2;ctx.beginPath();let started=false;
+  for(let lam=l0;lam<=l1;lam+=4){const k=HC/lam-ch.W;if(k<0)break;
+    const x=X(lam),y=Y(k);started?ctx.lineTo(x,y):ctx.moveTo(x,y);started=true;}
+  ctx.stroke();
+  // threshold marker
+  const lam0=HC/ch.W;
+  if(lam0<=l1){ctx.fillStyle='rgba(255,170,85,.9)';ctx.beginPath();ctx.arc(X(lam0),Y(0),4,0,Math.PI*2);ctx.fill();
+    ctx.fillText('λ₀='+lam0.toFixed(0),X(lam0)-18,Y(0)-8);}
+  // shot
+  if(ch.shotLam!=null){ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(X(clamp(ch.shotLam,l0,l1)),Y(clamp(ch.shotK,0,Kmax)),5,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='rgba(255,255,255,.35)';
+  [l0,300,500,700].forEach(l=>ctx.fillText(l,X(l)-10,H-pad+14));
+}
+
+/* ===== MAIN LOOP ===== */
+let lastTs=0,raf=0,paused=false;
+function loop(ts){
+  const dt=Math.min((ts-lastTs)/1000||0,0.05);lastTs=ts;
+  if(!paused)stepBeam(dt);
+  draw();drawFireworksCanvas();
+  raf=requestAnimationFrame(loop);
+}
+
+/* ===== difficulty / start ===== */
+function setDiff(d){if(!DIFFS[d])return;diff=d;D=DIFFS[d];
+  $$('#iDiffs .ibtn').forEach(b=>b.classList.toggle('active',b.dataset.diff===d));
+  $('diffDesc').textContent=D.desc;}
+function startGame(){ensureAudio();
+  $('introScreen').style.display='none';$('gameScreen').style.display='block';
+  score=0;hints=0;wrongTotal=0;streak=0;rankFired={r30:false,r60:false,r90:false};
+  stageMedal=[null,null,null,null];stagePts=[0,0,0,0];stageWrong=[0,0,0,0];
+  $('tsScore').textContent='0';$('tsHints').textContent='0';$('tsAtt').textContent='0';$('tsStreak').textContent='0';
+  $('rankTag').textContent='PHOTON CADET';
+  setStage(0);resizeC();
+  sndMissionReady();
+  radio('Dr. Haddad: HELIOS-7 is dark and the crew is behind four photo-locked doors. One equation opens them all. '+JOKES[0]);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('xDial').innerHTML=`<span class="who">DR. NOOR HADDAD (photonics lead):</span> "Solar storm knocked out station <span class="em">HELIOS-7</span>. Four doors between us and the crew — each opened by a <span class="em">photo-electric lock</span>: shine light on a metal plate, and the ejected electrons' energy is the key."<br><br><span class="who">SPARK (station AI):</span> "Warning: the locks read <span class="par">energy per electron</span>. Flooding them with bright light does nothing. I tried. For six hours."<br><br><span class="who">YOU:</span> "So I choose the <span class="par">wavelength</span>, compute K = 1240/λ − W, and the numbers cut the key?"<br><br><span class="who">DR. HADDAD:</span> "Exactly. One equation, four disguises. <span class="par">Einstein got a Nobel for this — you get a rescue.</span> ⚛️"`;
+  $$('#iDiffs .ibtn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
+  $('goBtn').addEventListener('click',startGame);
+  $('bRetry').addEventListener('click',()=>{$('endScr').classList.remove('open');setStage(stage);});
+  $('bNext').addEventListener('click',()=>{if(stage<3&&stageMedal[stage]){$('endScr').classList.remove('open');setStage(stage+1);}else $('endScr').classList.remove('open');});
+  document.addEventListener('keydown',e=>{
+    if($('introScreen').style.display!=='none'){if(e.code==='Enter'||e.code==='Space'){e.preventDefault();startGame();}return;}
+    if($('endScr').classList.contains('open')){if(e.code==='KeyR')$('bRetry').click();return;}
+    if(e.code==='Enter'&&activeCheck&&phase!=='firing'){e.preventDefault();activeCheck();return;}
+    const inInput=e.target&&e.target.tagName==='INPUT';
+    if(e.code==='Space'){if(inInput)return;e.preventDefault();
+      const btn=$('bFire1')||$('bRun')||$('bRun3')||$('bFire4');
+      if(btn&&!btn.disabled&&phase==='ready')btn.click();return;}
+    if(e.code==='KeyP'){if(inInput)return;paused=!paused;toast(paused?'⏸ Paused — the photons wait politely.':'▶ Resumed');return;}
+    if(e.code==='KeyR'){if(inInput)return;if(phase!=='decision'&&confirm('Reset this door?'))setStage(stage);return;}
+    if(e.code==='KeyH'){if(inInput)return;useHint();return;}
+  });
+  window.addEventListener('resize',resizeC);
+  setDiff('easy');
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>
