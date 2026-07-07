@@ -78,8 +78,8 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
 @media(max-width:700px){.g2{grid-template-columns:1fr}}
 /* GAME */
 #gameScreen{display:none}
-.gl{display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr auto;min-height:100vh}
-@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto auto minmax(300px,42vh) auto auto}}
+.gl{display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto auto 1fr auto;min-height:100vh}
+@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(300px,42vh) auto auto}}
 .topbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(4,14,9,.96);z-index:5}
 .tbt{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.84rem}
 .tbs{display:flex;gap:5px}
@@ -117,6 +117,13 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
 .etbl th{text-align:left;color:var(--muted);font-weight:600;padding:3px 6px 3px 0}
 .etbl td{font-family:var(--mono);padding:3px 0}
 @media(max-width:420px){.ts{min-width:50px;padding:3px 6px}.ts .v{font-size:.76rem}.stbtn{padding:6px 8px;font-size:.62rem}.numInput{width:100px}.block{padding:10px}}
+.hintbar{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;padding:9px 14px;background:linear-gradient(90deg,rgba(255,209,102,.16),rgba(255,209,102,.04));border-bottom:1px solid rgba(255,209,102,.4);color:#ffe6ad;font-size:.9rem;line-height:1.5}
+.hintbar #hintBarText{flex:1}
+.hintbar-x{margin-left:auto;flex:none;background:rgba(0,0,0,.25);border:1px solid rgba(255,209,102,.45);border-radius:7px;color:#ffe6ad;padding:2px 9px;font-family:var(--mono);cursor:pointer}
+.whycorrect{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(124,227,139,.1);border:1px solid rgba(124,227,139,.45)}
+.whycorrect .wc-head{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#7ce38b;text-transform:uppercase;margin-bottom:3px}
+.whycorrect .wc-opt{font-size:.86rem;color:#dfffe9;font-weight:600;margin-bottom:4px}
+.whycorrect .wc-law{font-size:.8rem;color:rgba(220,240,228,.92);line-height:1.45}
 </style>
 </head>
 <body>
@@ -150,6 +157,7 @@ why 31.5: 1 mm/s × 3.15×10⁷ s = 31.5 km per year</div></div>
       <div class="block"><h3>🕹 Curriculum — 4 watches</h3>
         <div class="mini">1️⃣ <b>Panic vs Physics · Watch</b> — play the arcade, lose; compute, win<br>2️⃣ <b>Track · Predict</b> — Δv &amp; t given; your miss d arms the launch<br>3️⃣ <b>Corridor · Inverse</b> — corridor wants d; you set Δv<br>4️⃣ <b>Red Alert · Crisis</b> — 90 s, pick the interceptor, save Earth<br><span style="color:var(--amb)">Bronze+ opens the next watch. Scenarios re-roll every retry.</span></div></div>
       <div class="block"><h3>Controls</h3><div class="mini"><kbd>Space</kbd> thrust/launch · <kbd>A</kbd>/<kbd>D</kbd>/<kbd>←→</kbd> thrust (manual) · <kbd>Enter</kbd> commit · <kbd>P</kbd> pause · <kbd>R</kbd> reset · <kbd>H</kbd> hint. Wrong submissions −2 pts.</div></div>
+      <div class="block"><h3>🏅 How scoring works</h3><div class="mini">Every stage: answer the reasoning question, then <b>compute and commit a number</b>. Your medal is set by accuracy — 🥇 under 5% · 🥈 under 10% · 🥉 under 20% error — and a Bronze or better unlocks the next stage. A wrong answer costs −2 points (−1 on Easy, and your first reasoning slip on each question is free on Easy). A hint costs −3/−4/−5. Fewer tries and higher accuracy mean a higher score — so it always pays to calculate, not guess.</div></div>
       <button class="igo" id="goBtn">🛰 TAKE THE WATCH</button>
     </div>
   </div>
@@ -170,6 +178,7 @@ why 31.5: 1 mm/s × 3.15×10⁷ s = 31.5 km per year</div></div>
     <div class="tag" id="rankTag">ROOKIE WATCHMAN</div>
   </div>
   <div class="stages" id="stageBar"></div>
+  <div class="hintbar hidden" id="hintBar"><span id="hintBarText"></span><button class="hintbar-x" id="hintBarX">✕ close</button></div>
   <div class="cw" id="stageWrap">
     <canvas id="C"></canvas>
     <div class="radio-msg" id="radio"></div>
@@ -344,12 +353,12 @@ function sndStamp(){ensureAudio();playNoise(.09,.12);playTone(92,.16,'sine',.12)
 function slamStamp(label,sub,color,big=false){stamp={label,sub,color,t:0,big};setTimeout(sndStamp,110);}
 
 /* ===== toast / typewriter radio ===== */
-let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3400);}
+let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),6000);}
 let radioT=0,radioTyper=0;
 function radio(m){const e=$('radio');clearTimeout(radioT);clearInterval(radioTyper);
   const full='📡 '+m;let i=0;e.textContent='';e.classList.add('on');
   radioTyper=setInterval(()=>{i+=2;e.textContent=full.slice(0,i);
-    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),4600);}},16);}
+    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),9200);}},16);}
 const JOKES=[
  "SPARK: We do not blow up asteroids. Hollywood is not peer-reviewed.",
  "Dr. Haddad: One millimetre per second. The asteroid will not even feel it. In ten years it will miss by a city.",
@@ -367,10 +376,11 @@ function eggCheck(raw){const v=parseFloat(raw);
 
 /* ===== scoring ===== */
 function wrongAttempt(fb,el,msg){
-  stageWrong[stage]++;wrongTotal++;score=Math.max(0,score-2);
+  const pen=(diff==='easy'?1:2);
+  stageWrong[stage]++;wrongTotal++;score=Math.max(0,score-pen);
   $('tsAtt').textContent=wrongTotal;setScore();
   if(el)el.classList.add('error');
-  if(fb)fb.innerHTML='<span class="bad">'+msg+'</span>'+(stageWrong[stage]>=3?' <span class="warn">Stuck? Press H for a strategy hint.</span>':'');
+  if(fb)fb.innerHTML='<span class="bad">'+msg+' (−'+pen+' pts)'+'</span>'+(stageWrong[stage]>=3?' <span class="warn">Stuck? Press H for a hint — it now stays on screen.</span>':'');
   sndFail();
 }
 function setScore(){$('tsScore').textContent=score;
@@ -400,20 +410,20 @@ function useHint(){ensureAudio();
   const hs=HINTS[stage]||['Trust the 31.5.'];
   const h=hs[hints%hs.length];hints++;score=Math.max(0,score-D.hint);
   $('tsHints').textContent=hints;setScore();
-  toast('💡 Hint (−'+D.hint+' pts)');radio('Dr. Haddad: '+h);playTone(440,.08,'triangle',.06);}
+  toast('💡 Hint (−'+D.hint+' pts)');showHintBar(h);radio('Dr. Haddad: '+h);playTone(440,.08,'triangle',.06);}
 
 /* ===== INSIGHT LAYER — canonical MCQ gates ===== */
 const INSIGHTS={
  0:{q:'You just LOST the arcade round: thirty frantic thruster pulses bought a 28 km miss out of 1500 needed. Then one computed burn a year early cleared it. Why?',
     opts:[
-     {t:'drift is Δv × TIME: early pushes get multiplied by years; panic at the end has almost no t left',ok:true},
+     {t:'drift is Δv × time: early pushes get multiplied by years; panic at the end has almost no t left',ok:true},
      {t:'the manual thrusters were simply too weak',why:'The SAME 0.6 mm/s applied ten years earlier would have bought ~190 km — and 3 mm/s would clear it. The weakness was the timing, not the engine.'},
      {t:'the computed burn used a smarter trajectory',why:'Same straight-line model, same rule. The only difference was WHEN: d = 31.5·Δv·t, and t is the multiplier you wasted.'},
      {t:'the asteroid slowed down near Earth',why:'Nothing slowed. The rock never changes its plan — only your Δv·t budget decides the miss.'}],
     law:'⚖️ Law of the watch: d = 31.5·Δv·t. Planetary defense is a game of EARLINESS, not power.'},
  1:{q:'Mission control doubles your warning time t. The Δv required for the same miss distance becomes…',
     opts:[
-     {t:'HALF as much',ok:true},
+     {t:'half as much',ok:true},
      {t:'double',why:'Backwards: d = 31.5·Δv·t is a product. More time means LESS push for the same drift.'},
      {t:'the same — Δv is set by the asteroid',why:'Δv is set by YOU. The asteroid only supplies the deadline; d = 31.5·Δv·t trades one for the other.'},
      {t:'a quarter',why:'The rule is linear in t, not quadratic. Double t → half Δv. Clean inverse pair.'}],
@@ -427,32 +437,39 @@ const INSIGHTS={
     law:'⚖️ Law of the watch: 31.5 km per mm/s per year. The snail wins because the race is measured in years.'},
  3:{q:'One radar fix — required miss d and time t — is enough to pick the interceptor from the hangar. Why?',
     opts:[
-     {t:'Δv = d/(31.5·t) pins ONE number, and each craft carries exactly one Δv spec',ok:true},
+     {t:'Δv = d/(31.5·t) pins one number, and each craft carries exactly one Δv spec',ok:true},
      {t:'you also need the asteroid\u2019s mass',why:'Mass is buried inside the craft\u2019s Δv spec (impactor engineering). The DRIFT rule needs only Δv and t.'},
      {t:'you need its speed toward Earth',why:'Approach speed sets t — and t is already in your radar fix. The rule closes with what you have.'},
      {t:'bigger is always safer, so just fire the Ark',why:'Overshoot throws the rock past the corridor — into keyhole territory (ask Apophis). You compute, then you match.'}],
     law:'⚖️ Law of the watch: one fix, one division, one craft. Matter of arithmetic, not luck.'}
 };
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function appendWhyCorrect(box,spec){
+  const c=spec.opts.find(o=>o.ok);if(!c)return;
+  const w=document.createElement('div');w.className='whycorrect';
+  w.innerHTML='<div class="wc-head">✓ Correct answer — here’s why</div><div class="wc-opt">“'+c.t+'”</div><div class="wc-law">'+spec.law+'</div>';
+  box.appendChild(w);}
+function showHintBar(txt){const b=$('hintBar');if(!b)return;const el=$('hintBarText');if(el)el.innerHTML='💡 '+txt;b.classList.remove('hidden');}
+function hideHintBar(){const b=$('hintBar');if(b)b.classList.add('hidden');}
 function buildMCQ(container,idx,onPass,alreadyDone){
   const spec=INSIGHTS[idx];
   const box=document.createElement('div');box.className='insight';
   box.innerHTML=`<h3>🧠 Insight check — reasoning arms the console</h3><div class="q">${spec.q}</div>`;
-  const opts=shuffle(spec.opts.slice());let solved=false;
+  const opts=shuffle(spec.opts.slice());let solved=false,wrongN=0;
   opts.forEach(o=>{const b=document.createElement('button');b.className='mcq-opt';b.textContent=o.t;
     b.addEventListener('click',()=>{ensureAudio();if(solved)return;
       if(o.ok){solved=true;b.classList.add('right');
         box.querySelectorAll('.mcq-opt').forEach(x=>x.disabled=true);
-        const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+        appendWhyCorrect(box,spec);
         sndNotebookOK();onPass();
-      }else{b.classList.add('wrong');b.disabled=true;wrongAttempt(null,null,'');
+      }else{b.classList.add('wrong');b.disabled=true;wrongN++;const free=(diff==='easy'&&wrongN===1);if(free){sndFail();}else{wrongAttempt(null,null,'');}
         let fb=box.querySelector('.mcq-fb');
         if(!fb){fb=document.createElement('div');fb.className='mini mcq-fb';fb.style.marginTop='6px';box.appendChild(fb);}
-        fb.innerHTML='<span class="bad">✗ '+o.why+' (−2 pts)</span>';}});
+        fb.innerHTML='<span class="bad">✗ '+o.why+(free?' (no penalty on Easy — try again)':' (−'+(diff==='easy'?1:2)+' pts)')+'</span>';}});
     box.appendChild(b);});
   if(alreadyDone){solved=true;
     box.querySelectorAll('.mcq-opt').forEach(x=>{x.disabled=true;if(spec.opts.find(o=>o.ok&&o.t===x.textContent))x.classList.add('right');});
-    const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+    appendWhyCorrect(box,spec);
     setTimeout(onPass,0);
   }else{const note=document.createElement('div');note.className='gate-note';note.textContent='🔒 Controls unlock when you answer correctly.';box.appendChild(note);}
   container.appendChild(box);
@@ -467,7 +484,7 @@ function buildStageBar(){const bar=$('stageBar');bar.innerHTML='';
     b.textContent=name+(stageMedal[i]?' '+({gold:'🥇',silver:'🥈',bronze:'🥉'}[stageMedal[i]]):'');
     b.addEventListener('click',()=>{if(!locked)setStage(i);else toast('🔒 Bronze+ on the previous watch unlocks this.');});
     bar.appendChild(b);});}
-function setStage(s){stage=s;$('tsStage').textContent=(s+1)+'/4';activeCheck=null;phase='ready';
+function setStage(s){stage=s;$('tsStage').textContent=(s+1)+'/4';activeCheck=null;phase='ready';hideHintBar();if(diff==='easy'&&typeof HINTS!=='undefined'&&HINTS[s]&&s>0){setTimeout(()=>showHintBar('Scaffold (free on Easy): '+HINTS[s][0]),60);}
   clearInterval(crisisTick);
   run=null;man=null;floaties=[];stamp=null;corridor=null;floorR=null;
   predMiss=null;plan3=null;pd2=null;crisis=null;crisisStep=1;
@@ -736,10 +753,10 @@ function buildS2(sp,done){
     eggCheck($('pMiss').value);
     const a=parseFloat($('pMiss').value);
     if(isNaN(a)){wrongAttempt($('s2Fb'),$('pMiss'),'A distance in km, officer.');return;}
-    if(Math.abs(a-S.dv*S.t)/(S.dv*S.t)<0.05){wrongAttempt($('s2Fb'),$('pMiss'),'You multiplied Δv·t and dropped the 31.5 — a year is 3.15×10⁷ seconds, not one. (−2)');return;}
-    if(Math.abs(a-S.dv)<=Math.max(0.02*S.dv,0.05)){wrongAttempt($('s2Fb'),$('pMiss'),'That is the Δv itself. Multiply by 31.5 and by the years. (−2)');return;}
-    if(Math.abs(a-S.t)<0.15){wrongAttempt($('s2Fb'),$('pMiss'),'That is the time. The rule is a product of three numbers. (−2)');return;}
-    if(a<1||a>2e5){wrongAttempt($('s2Fb'),$('pMiss'),'Magnitude check: mm/s over years lands in hundreds-to-thousands of km. (−2)');return;}
+    if(Math.abs(a-S.dv*S.t)/(S.dv*S.t)<0.05){wrongAttempt($('s2Fb'),$('pMiss'),'You multiplied Δv·t and dropped the 31.5 — a year is 3.15×10⁷ seconds, not one.');return;}
+    if(Math.abs(a-S.dv)<=Math.max(0.02*S.dv,0.05)){wrongAttempt($('s2Fb'),$('pMiss'),'That is the Δv itself. Multiply by 31.5 and by the years.');return;}
+    if(Math.abs(a-S.t)<0.15){wrongAttempt($('s2Fb'),$('pMiss'),'That is the time. The rule is a product of three numbers.');return;}
+    if(a<1||a>2e5){wrongAttempt($('s2Fb'),$('pMiss'),'Magnitude check: mm/s over years lands in hundreds-to-thousands of km.');return;}
     predMiss=a;
     $('pMiss').classList.remove('error');$('pMiss').disabled=true;$('bCommit').disabled=true;
     $('s2Fb').innerHTML='<span class="good">✅ Locked: d = '+a.toFixed(1)+' km. Launch armed.</span>';
@@ -789,10 +806,10 @@ function buildS3(sp,done){
     eggCheck($('pDv').value);
     const v=parseFloat($('pDv').value);
     if(isNaN(v)||v<=0){wrongAttempt($('s3Fb'),$('pDv'),'A Δv in mm/s, officer.');return;}
-    if(Math.abs(v-S.dr/S.t)/(S.dr/S.t)<0.05){wrongAttempt($('s3Fb'),$('pDv'),'d/t gives km per YEAR — divide by 31.5 as well. (−2)');return;}
-    if(Math.abs(v-S.dr)<0.5){wrongAttempt($('s3Fb'),$('pDv'),'That is the corridor distance itself. Invert the rule. (−2)');return;}
-    if(v<0.05){wrongAttempt($('s3Fb'),$('pDv'),'Below 0.05 mm/s the thruster is a rumour. (−2)');return;}
-    if(v>200){wrongAttempt($('s3Fb'),$('pDv'),'Above 200 mm/s you are writing Hollywood. Recheck the division. (−2)');return;}
+    if(Math.abs(v-S.dr/S.t)/(S.dr/S.t)<0.05){wrongAttempt($('s3Fb'),$('pDv'),'d/t gives km per YEAR — divide by 31.5 as well.');return;}
+    if(Math.abs(v-S.dr)<0.5){wrongAttempt($('s3Fb'),$('pDv'),'That is the corridor distance itself. Invert the rule.');return;}
+    if(v<0.05){wrongAttempt($('s3Fb'),$('pDv'),'Below 0.05 mm/s the thruster is a rumour.');return;}
+    if(v>200){wrongAttempt($('s3Fb'),$('pDv'),'Above 200 mm/s you are writing Hollywood. Recheck the division.');return;}
     plan3=v;
     $('pDv').classList.remove('error');$('pDv').disabled=true;$('bCommit3').disabled=true;
     $('s3Fb').innerHTML='<span class="good">✅ Δv = '+v+' mm/s committed — no take-backs.</span>';
@@ -868,10 +885,10 @@ function startCrisis(){
   $('bDv4').onclick=()=>{ensureAudio();
     eggCheck($('pDv4').value);const v=parseFloat($('pDv4').value);
     if(isNaN(v)||v<=0){wrongAttempt($('dvFb'),$('pDv4'),'A Δv in mm/s.');return;}
-    if(Math.abs(v-crisis.dr/crisis.t)/(crisis.dr/crisis.t)<0.05){wrongAttempt($('dvFb'),$('pDv4'),'d/t is km per YEAR — divide by 31.5 as well. (−2)');return;}
-    if(Math.abs(v-crisis.dr)<1){wrongAttempt($('dvFb'),$('pDv4'),'That is the distance itself. Invert the rule. (−2)');return;}
-    if(Math.abs(v-crisis.t)<0.15){wrongAttempt($('dvFb'),$('pDv4'),'That is the time. Δv = d/(31.5·t). (−2)');return;}
-    if(Math.abs(v-crisis.dv)/crisis.dv>0.02){wrongAttempt($('dvFb'),$('pDv4'),'Off. Compute 31.5×'+crisis.t+' first, then divide '+crisis.dr+' by it. (−2)');return;}
+    if(Math.abs(v-crisis.dr/crisis.t)/(crisis.dr/crisis.t)<0.05){wrongAttempt($('dvFb'),$('pDv4'),'d/t is km per YEAR — divide by 31.5 as well.');return;}
+    if(Math.abs(v-crisis.dr)<1){wrongAttempt($('dvFb'),$('pDv4'),'That is the distance itself. Invert the rule.');return;}
+    if(Math.abs(v-crisis.t)<0.15){wrongAttempt($('dvFb'),$('pDv4'),'That is the time. Δv = d/(31.5·t).');return;}
+    if(Math.abs(v-crisis.dv)/crisis.dv>0.02){wrongAttempt($('dvFb'),$('pDv4'),'Off. Compute 31.5×'+crisis.t+' first, then divide '+crisis.dr+' by it.');return;}
     crisisStep=2;
     $('pDv4').classList.remove('error');$('pDv4').disabled=true;$('bDv4').disabled=true;
     $('dvFb').innerHTML='<span class="good">✅ Δv = '+v.toFixed(1)+' mm/s. Now match the hangar.</span>';
@@ -886,14 +903,14 @@ function startCrisis(){
       radio('SPARK: '+crisis.craft+' rolled to the pad. The window slipped — same rule, new clock.');
       activeCheck=()=>$('bFire4').click();
     }else{b.classList.add('wrong');b.disabled=true;
-      wrongAttempt($('cFb'),null,b.dataset.c+' carries a different Δv — check the table against your number. (−2)');}});
+      wrongAttempt($('cFb'),null,b.dataset.c+' carries a different Δv — check the table against your number.');}});
   $('bFire4').onclick=()=>{ensureAudio();
     if(phase!=='decision'||crisisStep!==3)return;
     eggCheck($('pD2').value);const a=parseFloat($('pD2').value);
     if(isNaN(a)){wrongAttempt($('d2Fb'),$('pD2'),'A distance in km.');return;}
-    if(Math.abs(a-drift(crisis.dv,crisis.t))/drift(crisis.dv,crisis.t)<0.02){wrongAttempt($('d2Fb'),$('pD2'),'That is the OLD window — the clock slipped to t₂ = '+crisis.t2+' yr. (−2)');return;}
-    if(Math.abs(a-crisis.dv*crisis.t2)/(crisis.dv*crisis.t2)<0.05){wrongAttempt($('d2Fb'),$('pD2'),'Δv·t₂ without the 31.5 — the year is 3.15×10⁷ seconds. (−2)');return;}
-    if(a<10||a>2e4){wrongAttempt($('d2Fb'),$('pD2'),'Magnitude check: this drift lands in hundreds-to-thousands of km. (−2)');return;}
+    if(Math.abs(a-drift(crisis.dv,crisis.t))/drift(crisis.dv,crisis.t)<0.02){wrongAttempt($('d2Fb'),$('pD2'),'That is the OLD window — the clock slipped to t₂ = '+crisis.t2+' yr.');return;}
+    if(Math.abs(a-crisis.dv*crisis.t2)/(crisis.dv*crisis.t2)<0.05){wrongAttempt($('d2Fb'),$('pD2'),'Δv·t₂ without the 31.5 — the year is 3.15×10⁷ seconds.');return;}
+    if(a<10||a>2e4){wrongAttempt($('d2Fb'),$('pD2'),'Magnitude check: this drift lands in hundreds-to-thousands of km.');return;}
     pd2=a;clearInterval(crisisTick);
     startRun(crisis.dv,crisis.t2,6,()=>finish4());};
   activeCheck=()=>$('bDv4').click();
@@ -1034,6 +1051,7 @@ function startGame(){ensureAudio();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  const _hx=document.getElementById('hintBarX');if(_hx)_hx.onclick=hideHintBar;
   $('xDial').innerHTML=`<span class="who">DR. NOOR HADDAD (NEO Watch lead):</span> "New detection, collision track. We do not blow it up — we <span class="em">nudge it early</span>. In 2022, DART hit Dimorphos and changed its speed by millimetres per second. On purpose."<br><br><span class="who">SPARK (station AI):</span> "One rule runs this desk: <span class="par">d = 31.5 · Δv · t</span> — kilometres, millimetres-per-second, years. You get one shot and one multiplication."<br><br><span class="who">YOU:</span> "So the earlier I push, the less push I need?"<br><br><span class="who">DR. HADDAD:</span> "31.5 kilometres per millimetre-per-second per year. <span class="par">Take the watch.</span> ☄️"`;
   $$('#iDiffs .ibtn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
   $('goBtn').addEventListener('click',startGame);

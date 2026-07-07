@@ -37,6 +37,9 @@ a{color:inherit}.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
 .newBadge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:linear-gradient(135deg,#7ee39c,#4ecdc4);color:#081a10;margin-left:8px;vertical-align:middle}
 .roadmap{margin-top:16px;padding:18px;border-radius:24px;border:1px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.03)}.roadmapGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}@media (max-width:900px){.roadmapGrid{grid-template-columns:1fr}}.ghost{padding:16px;border-radius:18px;border:1px dashed rgba(255,255,255,.16);background:rgba(255,255,255,.03)}
 .muted{color:var(--muted)}.footer{margin-top:24px;padding:16px 18px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg, rgba(8,18,34,.82), rgba(8,18,34,.65));display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted)}.small{font-size:.92rem;line-height:1.5}.kicker{color:var(--cyan);font-family:var(--mono);font-size:.82rem;letter-spacing:.10em;text-transform:uppercase;margin-bottom:8px}.hide{display:none!important}
+.beta-badge{display:inline-block;margin-left:10px;padding:3px 12px;border-radius:999px;background:linear-gradient(135deg,#ffb020,#c77c00);color:#1a1000;font-weight:800;font-size:.62rem;letter-spacing:.14em;vertical-align:middle;box-shadow:0 2px 12px rgba(255,176,32,.45)}
+.beta-note{margin-top:14px;padding:11px 15px;border-radius:12px;background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.38);color:#ffd9a0;font-size:.92rem;line-height:1.55}
+.beta-note b{color:#ffe8c2}
 </style>
 </head>
 <body>
@@ -48,9 +51,10 @@ a{color:inherit}.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
 
   <section class="hero">
     <div>
-      <div class="kicker">Interactive science portfolio</div>
+      <div class="kicker">Interactive science portfolio <span class="beta-badge">PUBLIC BETA</span></div>
       <h1>Playable physics, framed by Big Ideas in Astronomy.</h1>
       <p>Mission ATLAS is a growing collection of browser-based physics games designed for classroom use. Each mission turns a common misconception into a decision problem: students must calculate, predict, test, and revise. It now spans lunar mechanics, orbital motion, Mars surface and landing physics, spacecraft electrical systems, planetary defence, a comet touchdown, exoplanet detection, and a four-part quantum saga — from the photoelectric effect to Compton scattering.</p>
+      <p class="beta-note"><b>⚠️ Public beta.</b> These games are playable and the physics is verified, but scoring, interface polish, and difficulty are still being tuned. Greek and Italian translations are planned for a later release — the current versions are in English.</p>
       <div class="cta"><a class="btn primary" href="#games">Browse games</a><a class="btn secondary" href="README.md">Open README</a></div>
     </div>
     <div style="margin-top:16px;padding:12px 14px;border:1px solid rgba(123,227,255,.24);border-radius:16px;background:rgba(123,227,255,.08)">
@@ -178,14 +182,14 @@ a{color:inherit}.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
 
       <!-- Game 08 -->
       <article class="card" data-tags="waves energy" style="--accent:#4ecdc4;--glow:rgba(78,205,196,.14)">
-        <div class="cardTop"><div><div class="gameNo">Game 09</div><h3>🌋 Lunar Lava Tube Scout</h3><span class="newBadge">New</span></div><div class="tagrow"><span class="tag">Waves</span><span class="tag">Radar</span></div></div>
-        <p>Scout a lunar lava tube with multi-frequency radar. Trade off penetration depth against resolution, interpret return signatures, and map voids for future habitation.</p>
+        <div class="cardTop"><div><div class="gameNo">Game 09</div><h3>🌋 Lunar Lava Tube Scout — The Echo Rule</h3><span class="newBadge">New</span></div><div class="tagrow"><span class="tag">Waves</span><span class="tag">Radar</span></div></div>
+        <p>Map a hidden lava tube at Marius Hills with ground-penetrating radar: time each echo, halve the round trip, and prove the cavern&#39;s rock ceiling can shield a habitat — before a moonquake shifts the site.</p>
         <div class="meta">
-          <div class="metaBox"><strong>Physics focus</strong><span>Wave reflection, frequency–wavelength–penetration trade-offs, signal interpretation, indirect measurement (d = v·t/2).</span></div>
-          <div class="metaBox"><strong>Misconception target</strong><span>"Higher frequency is always better." Lower f penetrates deeper; higher f gives finer detail but shallower reach.</span></div>
+          <div class="metaBox"><strong>Physics focus (ONE relationship)</strong><span>Echo ranging: d = v·t/2 — depth is half the round-trip path. Signal speed per material (v = c/√εᵣ) is given; the frequency ↔ penetration ↔ resolution trade-off stays as stated flavour.</span></div>
+          <div class="metaBox"><strong>Misconception target</strong><span>"The echo time is the depth." The pulse travels down AND back — forget the ÷2 and every cave comes out twice too deep.</span></div>
           <div class="metaBox"><strong>Big Ideas in Astronomy</strong><span>7.7 Earth–Moon system · 4.4 Astronomy uses observations and models.</span></div>
         </div>
-        <div class="actions"><a class="play" href="lunar_lava_tube_scout.html">Play online</a><a class="read" href="README.md#lunar-lava-tube-scout">Read summary</a></div>
+        <div class="actions"><a class="play" href="lunar_lava_tube_scout_v3.html">Play online</a><a class="read" href="README.md#lunar-lava-tube-scout">Read summary</a></div>
       </article>
 
     </div>

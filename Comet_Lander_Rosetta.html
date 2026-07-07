@@ -74,8 +74,8 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
 
 /* GAME */
 #gameScreen{display:none}
-.gl{display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto 1fr auto;min-height:100vh}
-@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto auto minmax(300px,42vh) auto auto}}
+.gl{display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto auto auto 1fr auto;min-height:100vh}
+@media(max-width:1020px){.gl{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(300px,42vh) auto auto}}
 .topbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(10,14,30,.94);backdrop-filter:blur(8px);z-index:5}
 .tbt{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.84rem}
 .tbs{display:flex;gap:5px}
@@ -122,6 +122,13 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
   .stbtn{padding:6px 8px;font-size:.62rem}.numInput{width:96px}
   .block{padding:10px}.insight{padding:10px}
 }
+.hintbar{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;padding:9px 14px;background:linear-gradient(90deg,rgba(255,209,102,.16),rgba(255,209,102,.04));border-bottom:1px solid rgba(255,209,102,.4);color:#ffe6ad;font-size:.9rem;line-height:1.5}
+.hintbar #hintBarText{flex:1}
+.hintbar-x{margin-left:auto;flex:none;background:rgba(0,0,0,.25);border:1px solid rgba(255,209,102,.45);border-radius:7px;color:#ffe6ad;padding:2px 9px;font-family:var(--mono);cursor:pointer}
+.whycorrect{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(124,227,139,.1);border:1px solid rgba(124,227,139,.45)}
+.whycorrect .wc-head{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#7ce38b;text-transform:uppercase;margin-bottom:3px}
+.whycorrect .wc-opt{font-size:.86rem;color:#dfffe9;font-weight:600;margin-bottom:4px}
+.whycorrect .wc-law{font-size:.8rem;color:rgba(220,240,228,.92);line-height:1.45}
 </style>
 </head>
 <body>
@@ -155,6 +162,7 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
       <div class="block"><h3>🎓 Curriculum — 4 stages</h3>
         <div class="mini">1️⃣ <b>Watch</b> — same drop on Earth &amp; 67P, live<br>2️⃣ <b>Predict</b> — compute t &amp; v; numbers unlock Release<br>3️⃣ <b>Inverse</b> — find the push v₀ for a target touchdown<br>4️⃣ <b>Bounce Crisis</b> — the real 2014 failure, your call<br><span style="color:var(--orange)">Bronze+ unlocks the next stage.</span></div></div>
       <div class="block"><h3>Controls</h3><div class="mini" id="xKeys"><kbd>Space</kbd> release · <kbd>P</kbd> pause · <kbd>R</kbd> reset stage · <kbd>H</kbd> hint · <kbd>Enter</kbd> commit. Each stage opens with a <b>🧠 reasoning question</b> that unlocks the numbers. Wrong submissions −2 pts. ⏩ Time compression is always labelled — physics is never faked.</div></div>
+      <div class="block"><h3>🏅 How scoring works</h3><div class="mini">Every stage: answer the reasoning question, then <b>compute and commit a number</b>. Your medal is set by accuracy — 🥇 under 5% · 🥈 under 10% · 🥉 under 20% error — and a Bronze or better unlocks the next stage. A wrong answer costs −2 points (−1 on Easy, and your first reasoning slip on each question is free on Easy). A hint costs −3/−4/−5. Fewer tries and higher accuracy mean a higher score — so it always pays to calculate, not guess.</div></div>
       <button class="igo" id="goBtn">🚀 Start mission</button>
     </div>
   </div>
@@ -177,6 +185,7 @@ kbd{font-family:var(--mono);font-size:.72rem;padding:2px 5px;border-radius:4px;b
   </div>
 
   <div class="stages" id="stageBar"></div>
+  <div class="hintbar hidden" id="hintBar"><span id="hintBarText"></span><button class="hintbar-x" id="hintBarX">✕ close</button></div>
 
   <div class="cw" id="stageWrap">
     <canvas id="C"></canvas>
@@ -345,12 +354,12 @@ function celebrate(level){const W=innerWidth,H=innerHeight;
   else sndFail();}
 
 /* ===== toast / typewriter radio ===== */
-let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3400);}
+let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),6000);}
 let radioT=0,radioTyper=0;
 function radio(m){const e=$('radio');clearTimeout(radioT);clearInterval(radioTyper);
   const full='📡 '+m;let i=0;e.textContent='';e.classList.add('on');
   radioTyper=setInterval(()=>{i+=2;e.textContent=full.slice(0,i);
-    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),4200);}},16);}
+    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),8400);}},16);}
 
 /* ===== easter eggs ===== */
 function eggCheck(raw){
@@ -360,10 +369,11 @@ function eggCheck(raw){
 
 /* ===== scoring ===== */
 function wrongAttempt(fb,el,msg){
-  stageWrong[stage]++;wrongTotal++;score=Math.max(0,score-2);
+  const pen=(diff==='easy'?1:2);
+  stageWrong[stage]++;wrongTotal++;score=Math.max(0,score-pen);
   $('tsAtt').textContent=wrongTotal;setScore();
   if(el)el.classList.add('error');
-  if(fb)fb.innerHTML='<span class="bad">'+msg+'</span>'+(stageWrong[stage]>=3?' <span class="warn">Stuck? Press H for a strategy hint.</span>':'');
+  if(fb)fb.innerHTML='<span class="bad">'+msg+' (−'+pen+' pts)</span>'+(stageWrong[stage]>=3?' <span class="warn">Stuck? Press H for a hint — it now stays on screen.</span>':'');
   sndFail();
 }
 function setScore(){$('tsScore').textContent=score;
@@ -392,13 +402,13 @@ function useHint(){ensureAudio();
   const hs=HINTS[stage]||['Trust the formula sheet.'];
   const h=hs[hints%hs.length];hints++;score=Math.max(0,score-D.hint);
   $('tsHints').textContent=hints;setScore();
-  toast('💡 Hint (−'+D.hint+' pts)');radio('Dr. Costa: '+h.replace('💡',''));playTone(440,.08,'triangle',.06);}
+  toast('💡 Hint (−'+D.hint+' pts)');showHintBar(h);radio('Dr. Costa: '+h.replace('💡',''));playTone(440,.08,'triangle',.06);}
 
 /* ===== INSIGHT LAYER — canonical MCQ gates ===== */
 const INSIGHTS={
  0:{q:'Both landers were released at the same instant, same height, same v₀. Why does the Earth one crash in seconds while the comet one crawls?',
     opts:[
-     {t:'acceleration equals the LOCAL g — Earth pulls ~10,000× harder on the very same lander',ok:true},
+     {t:'acceleration equals the local g — Earth pulls ~10,000× harder on the very same lander',ok:true},
      {t:'the lander weighs less on the comet, and lighter objects fall slower',why:'Lighter objects do NOT fall slower — free-fall acceleration is independent of mass (Galileo). The lander\'s mass never changed anyway; g did.'},
      {t:'air resistance slows the comet lander down',why:'67P has essentially no atmosphere — nothing to resist. (And our Earth panel neglects air too, as stated in the model.)'},
      {t:'the Earth lander was released with a bigger push',why:'Identical v₀ by construction — check the setup. The ONLY difference between the panels is g.'}],
@@ -412,7 +422,7 @@ const INSIGHTS={
     law:'⚖️ Law of the case: t = √(2h/g) — time scales as 1/√g. Weakening gravity 10,000× only slows the fall 100×. Estimate first; the calculator confirms.'},
  2:{q:'Think before planning: from rest, you want HALF the touchdown speed. You must release from…',
     opts:[
-     {t:'one QUARTER of the height',ok:true},
+     {t:'one quarter of the height',ok:true},
      {t:'one half of the height',why:'v_td = √(2gh) — the square root strikes again. Half the height gives 1/√2 ≈ 0.71 of the speed, not half.'},
      {t:'one eighth of the height',why:'That would give √(1/8) ≈ 0.35 of the speed — you overshot. v ∝ √h means half speed ⇒ quarter height.'},
      {t:'the same height with a smaller lander',why:'Mass does not appear in v_td = √(2gh). Free fall doesn\'t care what\'s falling.'}],
@@ -426,25 +436,32 @@ const INSIGHTS={
     law:'⚖️ Law of the case: apex h = v_b²/(2g) ∝ 1/g. And if v_b ≥ 0.9 m/s (escape), there is no apex at all — Philae leaves forever.'}
 };
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function appendWhyCorrect(box,spec){
+  const c=spec.opts.find(o=>o.ok);if(!c)return;
+  const w=document.createElement('div');w.className='whycorrect';
+  w.innerHTML='<div class="wc-head">✓ Correct answer — here’s why</div><div class="wc-opt">“'+c.t+'”</div><div class="wc-law">'+spec.law+'</div>';
+  box.appendChild(w);}
+function showHintBar(txt){const b=$('hintBar');if(!b)return;const el=$('hintBarText');if(el)el.innerHTML='💡 '+txt;b.classList.remove('hidden');}
+function hideHintBar(){const b=$('hintBar');if(b)b.classList.add('hidden');}
 function buildMCQ(container,idx,onPass,alreadyDone){
   const spec=INSIGHTS[idx];
   const box=document.createElement('div');box.className='insight';
   box.innerHTML=`<h3>🧠 Insight check — reasoning unlocks the numbers</h3><div class="q">${spec.q}</div>`;
-  const opts=shuffle(spec.opts.slice());let solved=false;
+  const opts=shuffle(spec.opts.slice());let solved=false,wrongN=0;
   opts.forEach(o=>{const b=document.createElement('button');b.className='mcq-opt';b.textContent=o.t;
     b.addEventListener('click',()=>{ensureAudio();if(solved)return;
       if(o.ok){solved=true;b.classList.add('right');
         box.querySelectorAll('.mcq-opt').forEach(x=>x.disabled=true);
-        const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+        appendWhyCorrect(box,spec);
         sndNotebookOK();onPass();
-      }else{b.classList.add('wrong');b.disabled=true;wrongAttempt(null,null,'');
+      }else{b.classList.add('wrong');b.disabled=true;wrongN++;const free=(diff==='easy'&&wrongN===1);if(free){sndFail();}else{wrongAttempt(null,null,'');}
         let fb=box.querySelector('.mcq-fb');
         if(!fb){fb=document.createElement('div');fb.className='mini mcq-fb';fb.style.marginTop='6px';box.appendChild(fb);}
-        fb.innerHTML='<span class="bad">✗ '+o.why+' (−2 pts)</span>';}});
+        fb.innerHTML='<span class="bad">✗ '+o.why+(free?' (no penalty on Easy — try again)':' (−'+(diff==='easy'?1:2)+' pts)')+'</span>';}});
     box.appendChild(b);});
   if(alreadyDone){solved=true;
     box.querySelectorAll('.mcq-opt').forEach(x=>{x.disabled=true;if(spec.opts.find(o=>o.ok&&o.t===x.textContent))x.classList.add('right');});
-    const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+    appendWhyCorrect(box,spec);
     setTimeout(onPass,0);
   }else{const note=document.createElement('div');note.className='gate-note';note.textContent='🔒 The stage controls unlock when you answer correctly.';box.appendChild(note);}
   container.appendChild(box);
@@ -458,7 +475,7 @@ function buildStageBar(){const bar=$('stageBar');bar.innerHTML='';
     b.textContent=name+(stageMedal[i]?' '+({gold:'🥇',silver:'🥈',bronze:'🥉'}[stageMedal[i]]):'');
     b.addEventListener('click',()=>{if(!locked)setStage(i);else toast('🔒 Bronze+ on the previous stage unlocks this.');});
     bar.appendChild(b);});}
-function setStage(s){stage=s;$('tsStage').textContent=(s+1)+'/4';activeCheck=null;phase='ready';
+function setStage(s){stage=s;$('tsStage').textContent=(s+1)+'/4';activeCheck=null;phase='ready';hideHintBar();if(diff==='easy'&&typeof HINTS!=='undefined'&&HINTS[s]&&s>0){setTimeout(()=>showHintBar('Scaffold (free on Easy): '+HINTS[s][0]),60);}
   clearInterval(crisisTick);
   veh=null;earthVeh=null;hist=[];particles=[];pred={t:null,v:null};planV0=null;crisis=null;
   buildStageBar();buildSide();draw();sndCompute();}
@@ -716,8 +733,8 @@ function buildS2(sp,done){
     if(isNaN(a)||isNaN(b)){wrongAttempt($('s2Fb'),null,'Both numbers, please — a prediction with holes is a guess.');return;}
     if(a<=0||b<=0){wrongAttempt($('s2Fb'),$('pT'),'Positive values. Falling takes time; arriving takes speed.');return;}
     // sanity gates that CATCH the classic errors without revealing the answer
-    if(a<60){wrongAttempt($('s2Fb'),$('pT'),'That t belongs to Earth gravity. You are on 67P — check which g you used. (−2)');return;}
-    if(b>ESC*2){wrongAttempt($('s2Fb'),$('pV'),'That speed would vaporise Philae. Re-check: v = √(v₀²+2gh) with g = 0.001. (−2)');return;}
+    if(a<60){wrongAttempt($('s2Fb'),$('pT'),'That t belongs to Earth gravity. You are on 67P — check which g you used.');return;}
+    if(b>ESC*2){wrongAttempt($('s2Fb'),$('pV'),'That speed would vaporise Philae. Re-check: v = √(v₀²+2gh) with g = 0.001.');return;}
     committed=true;pred={t:a,v:b};
     $('pT').classList.remove('error');$('pV').classList.remove('error');
     $('pT').disabled=true;$('pV').disabled=true;$('bCommit').disabled=true;
@@ -778,8 +795,8 @@ function buildS3(sp,done){
     const raw=$('pV0').value;eggCheck(raw);
     const v0=parseFloat(raw);
     if(isNaN(v0)||v0<0){wrongAttempt($('s3Fb'),$('pV0'),'A non-negative speed, in m/s.');return;}
-    if(v0>=ESC){wrongAttempt($('s3Fb'),$('pV0'),'That push is at/above ESCAPE velocity — Philae would leave 67P immediately. Rethink. (−2)');return;}
-    if(v0>P.vt){wrongAttempt($('s3Fb'),$('pV0'),'Your v₀ exceeds the target touchdown speed — falling only ADDS speed. v₀ must be smaller than v_td. (−2)');return;}
+    if(v0>=ESC){wrongAttempt($('s3Fb'),$('pV0'),'That push is at/above ESCAPE velocity — Philae would leave 67P immediately. Rethink.');return;}
+    if(v0>P.vt){wrongAttempt($('s3Fb'),$('pV0'),'Your v₀ exceeds the target touchdown speed — falling only ADDS speed. v₀ must be smaller than v_td.');return;}
     committed=true;planV0=v0;
     $('pV0').classList.remove('error');$('pV0').disabled=true;$('bCommit3').disabled=true;
     $('s3Fb').innerHTML='<span class="good">✅ v₀ = '+v0.toFixed(4)+' m/s committed. It now drives the lander — no take-backs.</span>';
@@ -868,8 +885,8 @@ function buildDecisionPanel(){
       $('apexFb').innerHTML='<span class="good">✅ apex ≈ '+a.toFixed(0)+' m ('+(rel*100).toFixed(1)+'% off)</span>';
       lastApexErr=rel*100;sndCompute();}
     else if(crisis.escape&&Math.abs(a-crisis.vb*crisis.vb/(2*G))/(crisis.vb*crisis.vb/(2*G))<0.1){
-      wrongAttempt($('apexFb'),$('pApex'),'You computed the apex of the ESCAPING v_b — but at ≥0.9 m/s there is no apex. Fire first, then compute the post-burn apex. (−2)');}
-    else wrongAttempt($('apexFb'),$('pApex'),'Off. h = v_b²/(2g) with g = 0.001 — mind the little numbers. (−2)');};
+      wrongAttempt($('apexFb'),$('pApex'),'You computed the apex of the ESCAPING v_b — but at ≥0.9 m/s there is no apex. Fire first, then compute the post-burn apex.');}
+    else wrongAttempt($('apexFb'),$('pApex'),'Off. h = v_b²/(2g) with g = 0.001 — mind the little numbers.');};
   $('actWait').onclick=()=>decide('wait');
   $('actFire').onclick=()=>decide('fire');
   activeCheck=()=>$('bApex').click();
@@ -885,7 +902,7 @@ function decide(action){
       :'You waited on a rebound of '+crisis.vb.toFixed(2)+' m/s — AT/ABOVE escape (0.90). Philae never came back. The one correct move was the immediate burn.');
     return;
   }
-  if(!crisisApexOK){wrongAttempt($('actFb'),null,'Action noted, but commit a correct apex first — decisions need numbers attached. (−2)');crisisActed=null;return;}
+  if(!crisisApexOK){wrongAttempt($('actFb'),null,'Action noted, but commit a correct apex first — decisions need numbers attached.');crisisActed=null;return;}
   clearInterval(crisisTick);
   if(action==='fire'){veh.vy=-(crisis.vb-THRUST_DV);toast('🔥 Burn complete: rebound now '+(crisis.vb-THRUST_DV).toFixed(2)+' m/s — sub-escape.');playNoise(.3,.08);}
   $('s4Decision').innerHTML='<div class="block"><div class="mini good">✅ Decision locked. Watching the bounce arc — compressed and labelled.</div></div>';
@@ -1022,6 +1039,7 @@ function startGame(){ensureAudio();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  const _hx=document.getElementById('hintBarX');if(_hx)_hx.onclick=hideHintBar;
   $$('#iLangs .ibtn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
   $$('#iDiffs .ibtn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
   $$('#gLangs .ibtn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));

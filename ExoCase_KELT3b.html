@@ -85,8 +85,8 @@ input[type=range]:disabled{opacity:.35}
 
 /* GAME */
 #game{display:none}
-.glayout{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto auto auto 1fr auto;min-height:100vh}
-@media(max-width:1020px){.glayout{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(420px,1fr) auto auto}}
+.glayout{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto auto auto auto 1fr auto;min-height:100vh}
+@media(max-width:1020px){.glayout{grid-template-columns:1fr;grid-template-rows:auto auto auto auto minmax(420px,1fr) auto auto}}
 .topbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(8,16,36,.94);backdrop-filter:blur(8px);z-index:5}
 .tbt{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.84rem}
 .tbs{display:flex;gap:5px}.ts{min-width:64px;padding:4px 8px;border-radius:9px;text-align:center;background:var(--card);border:1px solid var(--line)}
@@ -134,6 +134,13 @@ input[type=range]:disabled{opacity:.35}
   .numInput{width:96px}
   .block{padding:10px}.phase-panel{padding:10px}.insight{padding:10px}
 }
+.hintbar{grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;padding:9px 14px;background:linear-gradient(90deg,rgba(255,209,102,.16),rgba(255,209,102,.04));border-bottom:1px solid rgba(255,209,102,.4);color:#ffe6ad;font-size:.9rem;line-height:1.5}
+.hintbar #hintBarText{flex:1}
+.hintbar-x{margin-left:auto;flex:none;background:rgba(0,0,0,.25);border:1px solid rgba(255,209,102,.45);border-radius:7px;color:#ffe6ad;padding:2px 9px;font-family:var(--mono);cursor:pointer}
+.whycorrect{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(124,227,139,.1);border:1px solid rgba(124,227,139,.45)}
+.whycorrect .wc-head{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#7ce38b;text-transform:uppercase;margin-bottom:3px}
+.whycorrect .wc-opt{font-size:.86rem;color:#dfffe9;font-weight:600;margin-bottom:4px}
+.whycorrect .wc-law{font-size:.8rem;color:rgba(220,240,228,.92);line-height:1.45}
 </style>
 </head>
 <body>
@@ -179,6 +186,7 @@ input[type=range]:disabled{opacity:.35}
       </div>
       <div class="block"><h3>📐 Key formulas (given — Kepler's law in this form may be new to you)</h3><div class="formula" id="xFormulas"></div></div>
       <div class="block"><h3>Controls</h3><div class="mini" id="xKeys">Hover/touch the light curve to read exact values — it's an instrument, not a picture. Each phase opens with a <b>🧠 reasoning question</b> that unlocks the calculator work: think first, compute second. <b>Enter</b> submits · <b>H</b> hint · <b>R</b> restart. Wrong submissions cost −2 pts.</div></div>
+      <div class="block"><h3>🏅 How scoring works</h3><div class="mini">Each phase: answer the reasoning question, then <b>compute and commit a number</b>. Medal by accuracy — 🥇 under 5% · 🥈 under 10% · 🥉 under 20% error — and finishing a phase unlocks the next. A wrong answer costs −2 points (−1 on Easy, and your first reasoning slip on each question is free on Easy). A hint costs −3/−4/−5. Easy also shows worked scaffolds. Fewer tries + higher accuracy = higher score — so calculate, don’t guess.</div></div>
       <button class="igo" id="goBtn">🔭 Begin Investigation</button>
     </div>
   </div>
@@ -201,6 +209,7 @@ input[type=range]:disabled{opacity:.35}
   </div>
 
   <div class="phases" id="phaseBar"></div>
+  <div class="hintbar hidden" id="hintBar"><span id="hintBarText"></span><button class="hintbar-x" id="hintBarX">✕ close</button></div>
   <div class="xp-wrap"><div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div></div>
 
   <div class="main-area" id="mainArea">
@@ -368,12 +377,12 @@ function celebrate(level){const W=innerWidth,H=innerHeight;
   else sndFail();}
 
 /* ===== toast / typewriter radio ===== */
-let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),3400);}
+let toastT=0;function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),6000);}
 let radioT=0,radioTyper=0;
 function radio(m){const e=$('radio');clearTimeout(radioT);clearInterval(radioTyper);
   const full='📡 '+m;let i=0;e.textContent='';e.classList.add('on');
   radioTyper=setInterval(()=>{i+=2;e.textContent=full.slice(0,i);
-    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),4200);}},16);}
+    if(i>=full.length){clearInterval(radioTyper);radioT=setTimeout(()=>e.classList.remove('on'),8400);}},16);}
 
 /* ===== easter eggs ===== */
 function eggCheck(raw){
@@ -383,10 +392,11 @@ function eggCheck(raw){
 
 /* ===== scoring helpers ===== */
 function wrongAttempt(fb,el,msg){
-  phaseWrong[phase]++;wrongTotal++;score=Math.max(0,score-2);
+  const pen=((typeof diff!=='undefined'&&diff==='easy')?1:2);
+  phaseWrong[phase]++;wrongTotal++;score=Math.max(0,score-pen);
   $('tsAtt').textContent=wrongTotal;setScore();
   if(el)el.classList.add('error');
-  if(fb)fb.innerHTML='<span class="bad">'+msg+'</span>'+(phaseWrong[phase]>=3?' <span class="warn">Stuck? Press H for a strategy hint.</span>':'');
+  if(fb)fb.innerHTML='<span class="bad">'+msg+' (−'+pen+' pts)</span>'+(phaseWrong[phase]>=3?' <span class="warn">Stuck? Press H for a hint — it now stays on screen.</span>':'');
   sndFail();
 }
 function setScore(){$('tsScore').textContent=score;$('xpFill').style.width=Math.min(100,score)+'%';
@@ -427,7 +437,7 @@ const INSIGHTS={
     law:'⚖️ Law of the case: estimate first (0.1²=0.01 → √0.009 sits just under 0.1). Estimation catches calculator typos before they cost points.'},
  4:{q:'Why can a SINGLE transit never reveal the orbital period?',
     opts:[
-     {t:'because the period is the time BETWEEN two transits — one event has no "between" to measure',ok:true},
+     {t:'because the period is the time between two transits — one event has no "between" to measure',ok:true},
      {t:'because one transit is too noisy',why:'Noise limits precision, not possibility. Even a noiseless single transit contains no interval.'},
      {t:'because the star wobbles',why:'Stellar wobble is the radial-velocity method — a different technique, irrelevant to transit timing.'},
      {t:'because the planet slows down after each pass',why:'A planet at fixed orbital distance keeps a constant period — Kepler again. Nothing slows it.'}],
@@ -448,30 +458,36 @@ const INSIGHTS={
     law:'⚖️ Law of the case: ρ = M/V — density is a COMPOSITION fingerprint, not a weight contest. Big M with huge V still floats.'}
 };
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function appendWhyCorrect(box,spec){
+  const c=spec.opts.find(o=>o.ok);if(!c)return;
+  const w=document.createElement('div');w.className='whycorrect';
+  w.innerHTML='<div class="wc-head">✓ Correct answer — here’s why</div><div class="wc-opt">“'+c.t+'”</div><div class="wc-law">'+spec.law+'</div>';
+  box.appendChild(w);}
+function showHintBar(txt){const b=$('hintBar');if(!b)return;const el=$('hintBarText');if(el)el.innerHTML='💡 '+txt;b.classList.remove('hidden');}
+function hideHintBar(){const b=$('hintBar');if(b)b.classList.add('hidden');}
 function buildMCQ(container,idx,onPass,alreadyDone){
   const spec=INSIGHTS[idx];
   const box=document.createElement('div');box.className='insight';
   box.innerHTML=`<h3>🧠 Insight check — reasoning unlocks the numbers</h3><div class="q">${spec.q}</div>`;
   const opts=shuffle(spec.opts.slice());
-  let solved=false;
+  let solved=false,wrongN=0;
   opts.forEach(o=>{
     const b=document.createElement('button');b.className='mcq-opt';b.textContent=o.t;
     b.addEventListener('click',()=>{ensureAudio();
       if(solved)return;
       if(o.ok){solved=true;b.classList.add('right');
         box.querySelectorAll('.mcq-opt').forEach(x=>x.disabled=true);
-        const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+        appendWhyCorrect(box,spec);
         sndNotebookOK();onPass();
       }else{
-        b.classList.add('wrong');b.disabled=true;
-        wrongAttempt(null,null,'');
+        b.classList.add('wrong');b.disabled=true;wrongN++;const free=((typeof diff!=='undefined'&&diff==='easy')&&wrongN===1);if(free){sndFail();}else{wrongAttempt(null,null,'');}
         const fb=box.querySelector('.mcq-fb')||(()=>{const d=document.createElement('div');d.className='mini mcq-fb';d.style.marginTop='6px';box.appendChild(d);return d;})();
-        fb.innerHTML='<span class="bad">✗ '+o.why+' (−2 pts)</span>';
+        fb.innerHTML='<span class="bad">✗ '+o.why+(free?' (no penalty on Easy — try again)':' (−'+((typeof diff!=='undefined'&&diff==='easy')?1:2)+' pts)')+'</span>';
       }});
     box.appendChild(b);});
   if(alreadyDone){solved=true;
     box.querySelectorAll('.mcq-opt').forEach(x=>{x.disabled=true;if(spec.opts.find(o=>o.ok&&o.t===x.textContent))x.classList.add('right');});
-    const law=document.createElement('div');law.className='lawline';law.textContent=spec.law;box.appendChild(law);
+    appendWhyCorrect(box,spec);
     setTimeout(onPass,0);
   } else {
     const note=document.createElement('div');note.className='gate-note';note.textContent='🔒 The numeric inputs below unlock when you answer correctly.';box.appendChild(note);
@@ -558,7 +574,7 @@ function useHint(){ensureAudio();
   const hs=HINTS[phase]||['Trust the formula sheet.'];
   const h=hs[hints%hs.length];hints++;score=Math.max(0,score-D.hint);
   $('tsHints').textContent=hints;setScore();
-  $('mLog').textContent='💡 '+h;toast('💡 Hint (−'+D.hint+' pts)');playTone(440,.08,'triangle',.06);}
+  $('mLog').textContent='💡 '+h;showHintBar(h);toast('💡 Hint (−'+D.hint+' pts)');playTone(440,.08,'triangle',.06);}
 
 /* ===== phase bar / navigation ===== */
 function buildPhaseBar(){const bar=$('phaseBar');bar.innerHTML='';
@@ -568,7 +584,7 @@ function buildPhaseBar(){const bar=$('phaseBar');bar.innerHTML='';
     b.textContent=name;
     b.addEventListener('click',()=>{if(!locked)setPhase(i);else toast('🔒 Finish the previous phase first.');});
     bar.appendChild(b);});}
-function setPhase(p){phase=p;$('tsPhase').textContent=(p+1)+'/7';activeCheck=null;buildPhaseBar();buildCurrentPhase();updateCasefile();sndCompute();}
+function setPhase(p){phase=p;$('tsPhase').textContent=(p+1)+'/7';activeCheck=null;hideHintBar();buildPhaseBar();buildCurrentPhase();updateCasefile();sndCompute();}
 function completePhase(p,solutionHTML){
   if(!phaseComplete[p]){phaseComplete[p]=true;score+=PHASE_PTS[p];setScore();}
   unlockedMax=Math.max(unlockedMax,Math.min(6,p+1));saveUnlock();
@@ -1117,6 +1133,7 @@ function startGame(){ensureAudio();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  const _hx=document.getElementById('hintBarX');if(_hx)_hx.onclick=hideHintBar;
   $$('#iLangs .ibtn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
   $$('#iDiffs .ibtn').forEach(b=>b.addEventListener('click',()=>setDiff(b.dataset.diff)));
   $$('#gLangs .ibtn').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
