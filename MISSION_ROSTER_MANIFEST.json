@@ -1,0 +1,219 @@
+{
+  "schemaVersion": "1.0.0",
+  "project": "Mission ATLAS",
+  "repository": "physicsplay/Astrojourneys",
+  "snapshotDate": "2026-08-10",
+  "rosterPolicy": {
+    "canonicalCoreCount": 13,
+    "experimentalCount": 1,
+    "totalTracked": 14,
+    "rule": "Core and experimental membership is explicit. index.html/README must be validated against this manifest rather than maintained as independent rosters."
+  },
+  "coreMissions": [
+    {
+      "order": 1,
+      "id": "mission:lunar-rescue",
+      "slug": "lunar-rescue",
+      "title": "Lunar Rescue",
+      "filename": "Lunar_Rescue.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 2,
+      "id": "mission:orbital-rendezvous",
+      "slug": "orbital-rendezvous",
+      "title": "Orbital Rendezvous",
+      "filename": "Orbital_Rendezvous.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 3,
+      "id": "mission:mars-landing-window",
+      "slug": "mars-landing-window",
+      "title": "Mars Landing Window",
+      "filename": "Mars_Landing_Window.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 4,
+      "id": "mission:mars-eva-traverse",
+      "slug": "mars-eva-traverse",
+      "title": "Mars EVA Traverse",
+      "filename": "Mars_EVA_Traverse.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 5,
+      "id": "mission:habitat-blackout",
+      "slug": "habitat-blackout",
+      "title": "Habitat Blackout",
+      "filename": "Habitat_blackout.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": false,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "source-missing-in-uploaded-snapshot",
+      "notes": "Canonical core mission; source must be recovered/audited before any new publication claim."
+    },
+    {
+      "order": 6,
+      "id": "mission:asteroid-deflection",
+      "slug": "asteroid-deflection",
+      "title": "Asteroid Deflection — The 31.5 Rule",
+      "filename": "asteroid_deflection_v3.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 7,
+      "id": "mission:comet-lander-rosetta",
+      "slug": "comet-lander-rosetta",
+      "title": "Comet Lander: Rosetta's Philae",
+      "filename": "Comet_Lander_Rosetta.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 8,
+      "id": "mission:exocase-kelt3b",
+      "slug": "exocase-kelt3b",
+      "title": "ExoCase: Space Detective — KELT-3b",
+      "filename": "ExoCase_KELT3b.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 9,
+      "id": "mission:lunar-lava-tube",
+      "slug": "lunar-lava-tube",
+      "title": "Lunar Lava Tube Scout — The Echo Rule",
+      "filename": "lunar_lava_tube_scout_v3.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 10,
+      "id": "mission:quantum-rescue",
+      "slug": "quantum-rescue",
+      "title": "Quantum Rescue — The Photoelectric Key",
+      "filename": "Quantum_Rescue.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 11,
+      "id": "mission:star-autopsy-wien",
+      "slug": "star-autopsy-wien",
+      "title": "Star Autopsy — The Wien Files",
+      "filename": "Star_Autopsy_Wien.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 12,
+      "id": "mission:ghost-particle-debroglie",
+      "slug": "ghost-particle-debroglie",
+      "title": "Ghost Particle — The de Broglie Gate",
+      "filename": "Ghost_Particle_deBroglie.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    },
+    {
+      "order": 13,
+      "id": "mission:recoil-compton",
+      "slug": "recoil-compton",
+      "title": "Recoil — The Compton Verdict",
+      "filename": "Recoil_Compton.html",
+      "collectionRole": "core",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": true,
+      "expectedInReadme": true,
+      "publicationState": "tracked",
+      "notes": ""
+    }
+  ],
+  "experimentalMissions": [
+    {
+      "order": "EXP-01",
+      "id": "mission:galilean-resonance",
+      "slug": "galilean-resonance",
+      "title": "Galilean Resonance: Triple Signal",
+      "filename": "galilean_resonance_triple_signal.html",
+      "collectionRole": "experimental",
+      "sourcePresentInSnapshot": true,
+      "expectedInPublicIndex": false,
+      "expectedInReadme": false,
+      "publicationState": "experimental",
+      "notes": "Author-confirmed +1 experimental mission. Do not count toward the canonical 13 or expose as a normal core mission unless explicitly promoted later."
+    }
+  ],
+  "knownSnapshotDefects": [
+    {
+      "type": "missing-source",
+      "id": "mission:habitat-blackout",
+      "filename": "Habitat_blackout.html",
+      "action": "Recover/upload canonical source, audit it, then validate link."
+    },
+    {
+      "type": "stale-readme-filename",
+      "id": "mission:lunar-lava-tube",
+      "readmeFilename": "lunar_lava_tube_scout.html",
+      "canonicalSnapshotFilename": "lunar_lava_tube_scout_v3.html",
+      "action": "Update README from manifest/generated roster."
+    },
+    {
+      "type": "intentional-unlisted-experimental",
+      "id": "mission:galilean-resonance",
+      "filename": "galilean_resonance_triple_signal.html",
+      "action": "Keep outside core public roster unless author explicitly promotes it."
+    }
+  ]
+}
