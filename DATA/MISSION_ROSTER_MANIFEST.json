@@ -72,8 +72,8 @@
       "sourcePresentInSnapshot": true,
       "expectedInPublicIndex": true,
       "expectedInReadme": true,
-      "publicationState": "source-missing-in-uploaded-snapshot",
-      "notes": "Canonical core mission; source must be recovered/audited before any new publication claim."
+      "publicationState": "tracked",
+      "notes": "Canonical core mission #5. Source recovered and audited 2026-08-10."
     },
     {
       "order": 6,
