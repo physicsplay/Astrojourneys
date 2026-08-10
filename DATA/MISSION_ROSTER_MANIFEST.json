@@ -69,7 +69,7 @@
       "title": "Habitat Blackout",
       "filename": "Habitat_blackout.html",
       "collectionRole": "core",
-      "sourcePresentInSnapshot": false,
+      "sourcePresentInSnapshot": true,
       "expectedInPublicIndex": true,
       "expectedInReadme": true,
       "publicationState": "source-missing-in-uploaded-snapshot",
