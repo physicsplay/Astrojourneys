@@ -196,12 +196,7 @@
     }
   ],
   "knownSnapshotDefects": [
-    {
-      "type": "missing-source",
-      "id": "mission:habitat-blackout",
-      "filename": "Habitat_blackout.html",
-      "action": "Recover/upload canonical source, audit it, then validate link."
-    },
+  
     {
       "type": "stale-readme-filename",
       "id": "mission:lunar-lava-tube",
