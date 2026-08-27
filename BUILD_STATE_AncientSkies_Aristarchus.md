@@ -15,8 +15,8 @@ confirms it against whatever design notes exist outside this repo.
 | A10 | Done (outside this repo) | Header: "Built at gate A10 by Claude Fable 5 · 2026-08-04". |
 | **A11** | **Partial — see below** | No `tools/` checks or `.github/workflows/checks.yml` exist anywhere in this repo (not just for this game). Ran manual equivalents in-container instead (see "Checks run this session"). |
 | A12 | Two Charter violations found and fixed this session | See "Fixes applied". |
-| A13 | **Blocked on the author** | Perfect-student grading pass done manually (below); the five-item hand test has not been run on a real device. |
-| A14–A17 | Not started | |
+| **A13** | **Closed** | Hand test done by the author on a real iPhone (see "A13 hand test result"). Two real bugs surfaced and were fixed in the process — see "Fixes found during A13". |
+| A14–A17 | Not started | A14 (visual pass) and A16 (independent review) need a model switch this session cannot perform itself — see "Open items". |
 
 ## Fixes applied this session (model: Sonnet 5)
 
@@ -49,6 +49,43 @@ confirms it against whatever design notes exist outside this repo.
    size is what was declared, floored at 13 real CSS px. Verified with Playwright post-fix:
    effective size is now ≥13.0px at 375px width (measured 13.02px for a declared "13px" font).
 
+## Fixes found during A13 (real hand test, iPhone)
+
+The hand test did what it's chartered to do — it found two things no automated check could:
+
+4. **Content — Predict stage misattributed the Moon method to Archimedes.** The ARISTARCHUS
+   dialogue in the Predict (Moon) stage credited Archimedes' cylinder-on-a-rod / Sand Reckoner
+   technique — which is correctly cited elsewhere for the Crisis (Sun-box) stage — for Aristarchus'
+   own bead method. Rewritten to remove the misattribution while keeping the hand-wobble framing.
+   Reported by the author reading the briefing text.
+5. **Boot — dead START MISSION button in restricted mobile webviews.** `init()` only ran on the
+   `window` `load` event. On the author's iPhone, opening the downloaded file falls to iOS's
+   built-in preview handler (no browser appears as an "Open In" option, even with Chrome
+   installed — an iOS file-association limitation, not a Charter defect), and that handler never
+   dispatches a full `load` event for a local file with zero subresources. The title screen
+   (static markup) rendered; every button was dead with no visible error. Fixed by booting on
+   `DOMContentLoaded` (or immediately if the script runs after the DOM is already parsed), keeping
+   `load` only as a fallback. Verified with Playwright (no regression) — the actual restricted-webview
+   behavior itself isn't reproducible from this environment, only inferred and corrected for.
+
+Because neither iOS route (Files "Open In", Quick Look) would run the fixed file's JavaScript
+either — that limitation is about how iOS hands a *local* file to an app, independent of the fix —
+final verification was done by having the author open the committed branch content as a normal
+web page via `https://raw.githack.com/physicsplay/Astrojourneys/claude/ancient-skies-game-plan-mrf9bd/AncientSkies_Aristarchus.html`
+(a third-party CDN mirror of GitHub content, used here only as a temporary test URL — not part of
+the shipped game, and not a substitute for the real publish step in Track E, which still switches
+`index.html`/`README.md` last, after A14/A16).
+
+## A13 hand test result
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Touch controls, real phone | ✅ iPhone, played a full stage by touch |
+| 2 | Layout at 375px | ✅ "η αναγνωσιμότητα και το layout είναι ok" |
+| 3 | Cold reload | ✅ Covered by repeated close/reopen cycles during this debugging session |
+| 4 | Runs with network off | ✅ Loaded, airplane mode on, kept playing without a reload |
+| 5 | Debrief shows prediction/actual/error%/worked solution | ✅ "όλα καθαρά και κατανοητά" |
+
 ## Checks run this session (manual, in-container — no `tools/` scripts exist yet)
 
 - `node --check` on the extracted inline script — **pass**, both before and after edits.
@@ -72,16 +109,12 @@ the instrumented paint audit, and the formal perfect-student grading test across
 per stage. This is a gap in the repo generally, not specific to this game — every one of the 13
 existing games has presumably shipped without this pipeline too.
 
-## Open items for the author (nothing further to decide from me right now)
+## Open items for the author
 
-1. **A13 hand test — only you can do this.** Five things, on a real phone if possible:
-   - Touch controls work on a real phone.
-   - The layout holds at 375px (I've verified the *canvas font* survives at that width; I have not
-     verified the surrounding page layout, card stacking, or touch target sizing by eye).
-   - A hard reload starts cleanly in a fresh browser.
-   - The file runs with the network off.
-   - The debrief shows prediction, actual, error percentage, and the worked solution (confirmed
-     present in code; please confirm it reads well).
+1. **A14 (visual pass, Kimi K3) and A16 (independent review, GPT-5.6 Sol) need a different model.**
+   This session cannot switch models itself. Decide: skip both and go straight to publish, run them
+   yourself in a separate session/tool and bring back findings as proposals, or hold the PR open
+   until that's done.
 2. **Do you have a `DESIGN_LOCK.md` for this pilot outside the repo?** If so, send it so gates
    A1–A9 can be checked against it rather than left as "inferred from code."
 3. **Repo-wide decision, not just this game:** none of the ten pre-delivery checks are automated
