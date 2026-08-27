@@ -165,6 +165,54 @@ performance budget; `localStorage` privacy/retention policy; persisted-state ver
 standing rule; the Article 7 vs Check 8 threat-model split; shipping the regression tests
 alongside the game; cognitive-load/duration target.
 
+## A16 round 2 — the Crisis A8 internal-consistency defect
+
+Sol re-reviewed the corrected build, confirmed all six earlier fixes, **withdrew** its Article 14
+"two representations share one canvas" finding (agreeing the Charter's wording, not the game,
+is what needs changing), and raised one new blocking item plus one refinement.
+
+**The new finding is a red gate the Mission ATLAS skill already documents by name:**
+
+> "A scenario whose endorsed method cannot reproduce its own graded target is a red gate — one
+> shipped (**C3, Aristarchus**) taught 'value kept' while grading the corrected number."
+
+Sol rediscovered this independently and blind. Verified: C3 endorsed the student to *declare the
+correction negligible and keep the plain value* (→ 1,417,211 km) while grading against the
+*corrected* 1,392,000 km — 1.81% apart. The student following the taught method exactly was
+graded against a number that method does not produce.
+
+Checking further turned up a milder second instance Sol did **not** catch: C1 and C2's worked
+solutions displayed `149,600,000 × 9.30/1000 = 1,392,000 km`, but that arithmetic gives
+**1,391,280**. A student checking the line by hand got a different number than the line claimed.
+
+Fix (Sol's option A, which is also what the skill's rule requires — *grade the reasoning model the
+student was told to use*): `analytic` is now what each scenario's endorsed method actually produces.
+
+| Scenario | Endorsed method | Graded target (was → now) |
+|---|---|---|
+| C1 | subtract the hole width | 1,392,000 → **1,391,280** |
+| C2 | subtract the hole width | 1,392,000 → **1,391,280** |
+| C3 | declare negligible, keep the plain value | 1,392,000 → **1,417,211** |
+
+The modern 1,392,000 km stays as the MODERN column in the debrief, and C3's worked solution now
+states the ~1.8% gap explicitly as the declared cost of the correction the student chose to skip —
+"the method is graded, not the gap". That is the series rule (*scoring resets, narrative
+propagates*; deviation from modern values is celebrated, never penalised), now actually honoured.
+
+Verified: on all three variants the endorsed method earns Gold 100/100 and the worked solution's
+displayed arithmetic matches its displayed result. On C3 the discouraged "correct anyway" choice
+lands 1.76% off — still inside the 5% band, which is correct: the numeric component cannot resolve
+a 1.8% judgement call, and the judgement is what the concept MCQ grades (25% of the composite).
+
+**Also taken (refinement, not a violation):** Sol noted Watch's free-text prompt asked a different
+conceptual question than the MCQ that followed it. Reworded so the student first generates their
+own qualitative prediction about the *same* proportional change the MCQ then tests.
+
+**Article 14 canvas wording — Charter amendment proposed, not applied.** Both Sol and this session
+now agree the implementation is right and the Charter sentence is over-specified. Amending the
+Charter is an author decision, so the proposed wording is parked in "Open items" rather than
+written in.
+
 ## Checks run this session (manual, in-container — no `tools/` scripts exist yet)
 
 - `node --check` on the extracted inline script — **pass**, both before and after edits.
@@ -194,9 +242,16 @@ existing games has presumably shipped without this pipeline too.
    Track C hard limits; on return, diff against `PHYSICS_SNAPSHOT_AncientSkies_Aristarchus.js`
    (regenerated after the A16 fixes — the pre-review snapshot is stale and must not be used).
    Any byte difference in those functions = reject the whole pass.
-2. **Two Charter questions raised by A16 that only the author can settle:** whether source-visible
-   answers count as an Article 7 breach at all given Article 10 (see "Rejected, with reasons"), and
-   whether Article 13's DATA layer must be literally one tap rather than its own card.
+2. **Three Charter questions raised by A16 that only the author can settle.** All three are
+   Charter ambiguities, not defects in this game — no code change is pending on any of them:
+   - **Article 14, "never share a canvas".** Both reviewers now agree the tabbed single-canvas
+     implementation is correct and the sentence is over-specified — it forbids the very remedy the
+     same paragraph prescribes. Proposed amendment: *"Two different kinds of diagram never share a
+     **surface at the same time**. One canvas redrawn per tab satisfies this; two diagram types
+     painted simultaneously onto one surface does not."* Approve and I'll write it in.
+   - **Article 7 vs Check 8** — whether source-visible answers count as a breach at all, given
+     Article 10 makes hiding them structurally impossible (see "Rejected, with reasons").
+   - **Article 13** — whether the DATA layer must be literally one tap rather than its own card.
 3. **Do you have a `DESIGN_LOCK.md` for this pilot outside the repo?** If so, send it so gates
    A1–A9 can be checked against it rather than left as "inferred from code."
 4. **Repo-wide decision, not just this game:** none of the ten pre-delivery checks are automated

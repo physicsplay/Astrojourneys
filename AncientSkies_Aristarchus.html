@@ -376,10 +376,17 @@ const POOL = {
     { id:"I2", L:670, analytic:388042 },
     { id:"I3", L:700, analytic:405417 },
   ],
-  crisis: [ // box length L (mm), hole width p (mm), measured image s_meas (mm), analytic corrected D (km), naive error %
-    { id:"C1", L:1000, p:1.90, sMeas:11.20, analytic:1392000, naiveErr:20.4 },
-    { id:"C2", L:500,  p:1.86, sMeas:6.51,  analytic:1392000, naiveErr:40.0 },
-    { id:"C3", L:1500, p:0.25, sMeas:14.21, analytic:1392000, naiveErr:1.8, negligible:true },
+  // Crisis. `analytic` is what THIS scenario's ENDORSED method actually produces — not the modern
+  // Sun diameter. Grade the reasoning model the student was told to use (A8 internal consistency):
+  //   C1, C2 (correction matters)  -> endorsed = subtract the hole width p, then d*(sMeas-p)/L
+  //   C3     (correction negligible) -> endorsed = declare it negligible and KEEP the plain value,
+  //                                     so the target is d*sMeas/L, uncorrected, by design.
+  // The modern 1,392,000 km stays as the MODERN column in the debrief — the declared gap between
+  // the ancient method and the modern value is celebrated there, never graded (series rule).
+  crisis: [ // box length L (mm), hole width p (mm), measured image s_meas (mm), analytic = endorsed D (km), naive error %
+    { id:"C1", L:1000, p:1.90, sMeas:11.20, analytic:1391280, naiveErr:20.4 },
+    { id:"C2", L:500,  p:1.86, sMeas:6.51,  analytic:1391280, naiveErr:40.0 },
+    { id:"C3", L:1500, p:0.25, sMeas:14.21, analytic:1417211, naiveErr:1.8, negligible:true },
   ],
 };
 const BANDS = { watch:[5,12,25], predict:[5,12,25], inverse:[5,12,25], crisis:[5,10,15] };
@@ -494,7 +501,7 @@ watch: {
     <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Hold the bead on the rod. Slide it until the tower just vanishes behind it.
     Then read where it sits. The rest is one proportion."</div></div>
     <p class="note">Observational task: while you slide, notice <b>how many bead-widths away</b> the bead sits when it exactly covers the tower.</p>`,
-  ideaPrompt:"Before any choices: the bead is a few millimetres wide and the Pharos is 120 m tall. In your own words, how can the small one possibly stand in for the big one? (never scored, never stored)",
+  ideaPrompt:"Before any choices: your bead just covered the Pharos from this quay. If you rowed out until the tower was twice as far, what would have to change about where you hold the bead for it to cover the tower again — and which way? (never scored, never stored)",
   gate:{ q:"You slide the bead until it just covers the Pharos. If you rowed out to twice the distance and covered it again, the bead would sit…",
     opts:[
       "twice as far from your eye",
@@ -952,7 +959,10 @@ function workedHtml(){
   if(scn.negligible) return `<p>The instrument&#8217;s signature: disk = projection + hole width.</p>
     <div class="formula">correction p = ${scn.p.toFixed(2)} mm on ${scn.sMeas.toFixed(2)} mm ≈ ${(scn.p/(scn.sMeas-scn.p)*100).toFixed(1)}%</div>
     <p>Smaller than the method&#8217;s own wobble — <b>declared negligible, value kept:</b></p>
-    <div class="formula">D ≈ d × s/L = 149,600,000 × ${scn.sMeas.toFixed(2)}/${fmt(scn.L,0)} ≈ ${fmt(C.d_SUN*scn.sMeas/scn.L,0)} km</div>`;
+    <div class="formula">D = d × s/L = 149,600,000 × ${scn.sMeas.toFixed(2)}/${fmt(scn.L,0)} = ${fmt(scn.analytic,0)} km</div>
+    <p class="note">That is the number you were graded against — the one your declared method actually produces.
+    The modern books say 1,392,000 km, about ${(Math.abs(scn.analytic-C.D_SUN)/C.D_SUN*100).toFixed(1)}% away: the honest cost of the
+    correction you chose to skip. Judged worth skipping, and declared. <b>The method is graded, not the gap.</b></p>`;
   return `<p>The wall&#8217;s disk carries the hole&#8217;s width. Subtract the instrument:</p>
     <div class="formula">s = ${scn.sMeas.toFixed(2)} − ${scn.p.toFixed(2)} = ${sTrue.toFixed(2)} mm</div>
     <div class="formula">D = d × s/L = 149,600,000 × ${sTrue.toFixed(2)}/${fmt(scn.L,0)} = ${fmt(scn.analytic,0)} km</div>

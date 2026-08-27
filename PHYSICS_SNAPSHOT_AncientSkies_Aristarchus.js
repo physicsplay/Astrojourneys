@@ -1,7 +1,7 @@
 /* PHYSICS/SCORING SNAPSHOT — AncientSkies_Aristarchus.html
-   REGENERATED after the A16 independent-review fixes. Supersedes the pre-review snapshot:
-   medalFor (Gold now strictly <5%), finalizeStage and startStage (no free Watch concept
-   score) all changed, so the earlier snapshot no longer matches and must not be used.
+   REGENERATED after the SECOND A16 review round (crisis A8 internal-consistency fix).
+   Supersedes both earlier snapshots: POOL.crisis analytic values changed on all three
+   scenarios, so any older snapshot will now mis-report a clean visual pass as dirty.
 
    Taken before the Kimi K3 visual pass (Track C).
 
@@ -40,10 +40,17 @@ const POOL = {
     { id:"I2", L:670, analytic:388042 },
     { id:"I3", L:700, analytic:405417 },
   ],
-  crisis: [ // box length L (mm), hole width p (mm), measured image s_meas (mm), analytic corrected D (km), naive error %
-    { id:"C1", L:1000, p:1.90, sMeas:11.20, analytic:1392000, naiveErr:20.4 },
-    { id:"C2", L:500,  p:1.86, sMeas:6.51,  analytic:1392000, naiveErr:40.0 },
-    { id:"C3", L:1500, p:0.25, sMeas:14.21, analytic:1392000, naiveErr:1.8, negligible:true },
+  // Crisis. `analytic` is what THIS scenario's ENDORSED method actually produces — not the modern
+  // Sun diameter. Grade the reasoning model the student was told to use (A8 internal consistency):
+  //   C1, C2 (correction matters)  -> endorsed = subtract the hole width p, then d*(sMeas-p)/L
+  //   C3     (correction negligible) -> endorsed = declare it negligible and KEEP the plain value,
+  //                                     so the target is d*sMeas/L, uncorrected, by design.
+  // The modern 1,392,000 km stays as the MODERN column in the debrief — the declared gap between
+  // the ancient method and the modern value is celebrated there, never graded (series rule).
+  crisis: [ // box length L (mm), hole width p (mm), measured image s_meas (mm), analytic = endorsed D (km), naive error %
+    { id:"C1", L:1000, p:1.90, sMeas:11.20, analytic:1391280, naiveErr:20.4 },
+    { id:"C2", L:500,  p:1.86, sMeas:6.51,  analytic:1391280, naiveErr:40.0 },
+    { id:"C3", L:1500, p:0.25, sMeas:14.21, analytic:1417211, naiveErr:1.8, negligible:true },
   ],
 };
 
@@ -141,7 +148,10 @@ function workedHtml(){
   if(scn.negligible) return `<p>The instrument&#8217;s signature: disk = projection + hole width.</p>
     <div class="formula">correction p = ${scn.p.toFixed(2)} mm on ${scn.sMeas.toFixed(2)} mm ≈ ${(scn.p/(scn.sMeas-scn.p)*100).toFixed(1)}%</div>
     <p>Smaller than the method&#8217;s own wobble — <b>declared negligible, value kept:</b></p>
-    <div class="formula">D ≈ d × s/L = 149,600,000 × ${scn.sMeas.toFixed(2)}/${fmt(scn.L,0)} ≈ ${fmt(C.d_SUN*scn.sMeas/scn.L,0)} km</div>`;
+    <div class="formula">D = d × s/L = 149,600,000 × ${scn.sMeas.toFixed(2)}/${fmt(scn.L,0)} = ${fmt(scn.analytic,0)} km</div>
+    <p class="note">That is the number you were graded against — the one your declared method actually produces.
+    The modern books say 1,392,000 km, about ${(Math.abs(scn.analytic-C.D_SUN)/C.D_SUN*100).toFixed(1)}% away: the honest cost of the
+    correction you chose to skip. Judged worth skipping, and declared. <b>The method is graded, not the gap.</b></p>`;
   return `<p>The wall&#8217;s disk carries the hole&#8217;s width. Subtract the instrument:</p>
     <div class="formula">s = ${scn.sMeas.toFixed(2)} − ${scn.p.toFixed(2)} = ${sTrue.toFixed(2)} mm</div>
     <div class="formula">D = d × s/L = 149,600,000 × ${sTrue.toFixed(2)}/${fmt(scn.L,0)} = ${fmt(scn.analytic,0)} km</div>
