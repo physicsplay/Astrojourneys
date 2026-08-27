@@ -19,7 +19,14 @@
   font-size:17px;
 }
 html.presentation{ font-size:23px; }
-html.presentation body{ --fs-num:30px; --fs-body:23px; --fs-label:19px; --fs-floor:18px; }
+/* Article 13: Presentation Mode is ×1.35 root font AND higher contrast — for a projector
+   in a lit classroom, where the normal muted palette washes out. Darker grounds, brighter
+   ink, stronger borders. Object identity colours (papyrus/cyan/moon) are NOT remapped. */
+html.presentation body{
+  --fs-num:30px; --fs-body:23px; --fs-label:19px; --fs-floor:18px;
+  --bg:#000308; --bg2:#0a1120; --panel:#0d1526; --panel2:#152036; --line:#5b779f;
+  --ink:#ffffff; --muted:#dae5f4;
+}
 *{ box-sizing:border-box; }
 body{
   margin:0; background:radial-gradient(120% 90% at 50% -10%, #1b2a4d 0%, var(--bg) 55%);
@@ -385,15 +392,19 @@ const store = {
 };
 const S = {
   stage:null, stepIdx:0, scn:null,
-  medals: store.get("ari_v1_stages",{}),         // {watch:"Gold",...}
-  best: store.get("ari_v1_best",{}),             // {watch: 87, ...}
+  // GRADED state is keyed v2: medal semantics changed (Easy no longer widens bands, the medal is
+  // now composite-capped, Gold is strictly <5%, and Watch has a real concept gate). A medal earned
+  // under the old rules does not mean the same thing, so it must not carry over. Preferences below
+  // stay at v1 on purpose — they carry no grading meaning and a teacher shouldn't lose them.
+  medals: store.get("ari_v2_stages",{}),         // {watch:"Gold",...}
+  best: store.get("ari_v2_best",{}),             // {watch: 87, ...}
   settings: store.get("ari_v1_settings",{easy:false}),
   wrong:0, hintsUsed:0, gateScore:0, selfScore:0, conf:null,
   committed:null, analytic:null, errPct:null, medal:null,
   crisisPhase:0, slidLocked:false, transferDone:false,
   usedScn: {},                                    // avoid immediate repeat per stage
 };
-function saveProgress(){ store.set("ari_v1_stages",S.medals); store.set("ari_v1_best",S.best); store.set("ari_v1_settings",S.settings); }
+function saveProgress(){ store.set("ari_v2_stages",S.medals); store.set("ari_v2_best",S.best); store.set("ari_v1_settings",S.settings); }
 
 /* ============ Audio — inherited synth set, verbatim names, zero files (Article 10) ============ */
 let AC=null;
@@ -454,8 +465,9 @@ function toast(msg,ms){ const t=$("toast"); t.textContent=msg; t.style.display="
   clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",ms||2600); }
 function medalFor(errPct,stage){
   // Article 6: bands are mode-independent — a medal means the same thing in every mode.
+  // Article 9: Gold requires error STRICTLY below 5% — errPct<g, not <=g.
   const [g,s,b]=BANDS[stage];
-  return errPct<=g?"Gold":errPct<=s?"Silver":errPct<=b?"Bronze":null;
+  return errPct<g?"Gold":errPct<=s?"Silver":errPct<=b?"Bronze":null;
 }
 function medalFrac(m){ return m==="Gold"?1:m==="Silver"?0.7:m==="Bronze"?0.4:0; }
 function compositeBand(score){ return score>=90?"Gold":score>=75?"Silver":score>=60?"Bronze":null; }
@@ -472,7 +484,7 @@ function shuffledIdx(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ c
 const DEF = {
 watch: {
   title:"Stage 1 · WATCH — The Pharos",
-  steps:["brief","compute","run","debrief1","debrief2"],
+  steps:["brief","gate","compute","run","debrief1","debrief2"],
   story: ()=>`
     <div class="npc"><span class="who">NAUSIKA</span><div class="say">"Aristarchus says he can measure the Moon with a <i>bead</i>.
     I fund instruments, not poetry. Prove the trick works on something I can check —
@@ -482,6 +494,19 @@ watch: {
     <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Hold the bead on the rod. Slide it until the tower just vanishes behind it.
     Then read where it sits. The rest is one proportion."</div></div>
     <p class="note">Observational task: while you slide, notice <b>how many bead-widths away</b> the bead sits when it exactly covers the tower.</p>`,
+  ideaPrompt:"Before any choices: the bead is a few millimetres wide and the Pharos is 120 m tall. In your own words, how can the small one possibly stand in for the big one? (never scored, never stored)",
+  gate:{ q:"You slide the bead until it just covers the Pharos. If you rowed out to twice the distance and covered it again, the bead would sit…",
+    opts:[
+      "twice as far from your eye",
+      "half as far — the tower looks smaller, so the bead comes closer",
+      "in the same place — the bead's position has nothing to do with the tower",
+      "at the same place, but you would need a bead twice as wide"],
+    right:0,
+    feeds:[
+      "Yes — double the distance halves how tall the tower looks, so the ratio s/L must halve too. With s fixed, L doubles.",
+      "Careful: a smaller-looking tower needs a smaller-looking bead, and the bead looks smaller when it is FARTHER from your eye, not nearer. Strategy: ask which way L must move to shrink s/L.",
+      "It has everything to do with it — cover means the two view-ratios are equal, so changing one forces the other. Strategy: write s/L = H/d and change d.",
+      "A wider bead is the opposite of what a smaller-looking tower needs. Strategy: you only have one bead — the thing you can change is where it sits."] },
   actionPrompt:"Slide until the Pharos just hides behind the bead. Then answer below.",
   question:{ q:"Your notebook reads: bead width s = 6.0 mm, cover distance L = 250 mm. Compute L ÷ s — how many bead-widths away from your eye does the bead sit? (This distance-to-width ratio IS the method.)",
     unit:"bead-widths", accept:[41,42.5], analytic:41.7 },
@@ -491,6 +516,7 @@ watch: {
     <div class="formula">s / L = 6.0 / 250 = 1 / 41.7</div>
     <p>The bead sits <b class="tnum">41.7</b> of its own widths away. And the tower must obey the same ratio:
     H / d = 120 / 5,000 = 1 / 41.7. It checks. <b>Where we can verify, the proportion holds.</b></p>`,
+  selfPrompt:"In your own words: the bead is millimetres wide, the Pharos is 120 m tall — why did the same fraction describe both?",
   selfMcq:{ q:"Why does the bead-cover trick work at ANY distance?",
     opts:[
       "Cover means equal view-ratios — s/L must equal H/d, whatever the distances",
@@ -594,7 +620,8 @@ crisis: {
     The Sun's distance, from the geometers: <b class="tnum">149,600,000 km</b>. Give me its true width — and be right,
     or the funding sails at dawn."</div></div>
     <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Careful. During a total eclipse the Moon covers the Sun <i>exactly</i> —
-    the sky itself proved their view-ratios equal, near 1 part in 110. If your box disagrees with the eclipse, the box is lying somewhere."</div></div>`,
+    the sky itself proved their two view-ratios <i>equal</i>. You have measured the Moon&#8217;s ratio yourself, on an earlier night.
+    If your box disagrees with the eclipse, the box is lying somewhere."</div></div>`,
   ideaPrompt:"Before choices: the image on the wall — is it exactly the Sun's projection, or could the box itself add something? Your thought, in your own words.",
   gate:{ q:"The hole is not a point — it has width p. What does that do to the bright disk on the wall?",
     opts:["Nothing — a hole is a hole","It adds about its own width p to the disk","It subtracts p — holes trim images","It only blurs the edge; size is untouched"],
@@ -605,7 +632,7 @@ crisis: {
       "It blurs AND widens: each edge of the hole shifts a full copy of the disk."] },
   actionPrompt:"Decide what the scribes' measurement really contains, then commit the Sun's true width D. The eclipse ratio watches over you.",
   hints:["Strategy: ask what the wall would show if the Sun were a single point — the answer is the hole's own signature.",
-         "Strategy: compare your ratio against the eclipse's 1-in-110 before you trust the box."],
+         "Strategy: the eclipse says the Sun's view-ratio equals the Moon's. Ask whether your box's raw ratio could honestly be that — and what in the box would push it the wrong way."],
   easyHint:"Extra nudge: the wall's disk = true projection + hole width p — decide first whether p is big enough next to the disk to matter at all.",
   selfPrompt:"The naive reading gives a Sun too big. Explain in your own words where the extra width comes from.",
   selfMcq:{ q:"Why does the uncorrected box overstate the Sun?",
@@ -680,7 +707,8 @@ function renderStageList(){
   });
 }
 function startStage(st){
-  S.stage=st; S.scn=pickScn(st); S.wrong=0; S.hintsUsed=0; S.gateScore=(st==="watch"?1:0);
+  // Article 4: every stage grades all four components — no stage gets a free concept score.
+  S.stage=st; S.scn=pickScn(st); S.wrong=0; S.hintsUsed=0; S.gateScore=0;
   S.selfScore=0; S.conf=null; S.committed=null; S.analytic=null; S.errPct=null; S.medal=null;
   S.crisisPhase=0; S.slidLocked=false; S.transferDone=false; S.gateWrongs=0; S.selfFirstTry=true; S.hintPenalty=0;
   $("stageTitle").textContent=DEF[st].title;
@@ -795,7 +823,7 @@ function renderGiven(){
     gv("box depth L",fmt(S.scn.L,0),"mm","carpenters vouch"); gv("hole width p",S.scn.p.toFixed(2),"mm","measured with calipers");
     gv("disk on wall",S.scn.sMeas.toFixed(2),"mm","the scribes' measurement");
     gv("Sun distance d","149,600,000","km","the geometers");
-    $("dataNote").textContent="The eclipse fact is your cross-check: Moon and Sun show the same view-ratio, near 1/110.";
+    $("dataNote").textContent="The eclipse fact is your cross-check: Moon and Sun show the same view-ratio — whatever that ratio is, your box must agree with it.";
   }
 }
 function updateCommitReady(){
@@ -832,8 +860,9 @@ function commit(){
     if(!S.scn.negligible && offNaive<3 ){ // they committed the uncorrected value on a variant where it matters
       S.crisisPhase=1; sndFail();
       $("runText").innerHTML=`<p>${NAUSIKA.eclipseClash}</p>
-        <p class="note">Box ratio: ${S.scn.sMeas.toFixed(2)}/${fmt(S.scn.L,0)} = 1/${fmt(S.scn.L/S.scn.sMeas,1)} —
-        but every total eclipse fixes the Sun&#8217;s view-ratio at the Moon&#8217;s, near 1/110. The sky disagrees with your reading. Recheck what the wall really shows, then commit again.</p>`;
+        <p class="note">You read the wall as ${S.scn.sMeas.toFixed(2)} mm across a ${fmt(S.scn.L,0)} mm box and took that ratio at face value —
+        but every total eclipse fixes the Sun&#8217;s view-ratio at the Moon&#8217;s, and that ratio is <i>narrower</i> than what your box just claimed.
+        Something in the box is widening the disk. Recheck what the wall really shows, then commit again.</p>`;
       wrongAttempt(); setStep("run"); show($("btnRunNext"),false);
       setTimeout(()=>{ setStep("compute"); $("answerIn").value=""; updateCommitReady(); },5200);
       return;
@@ -878,8 +907,8 @@ function debrief1(){
     (S.conf==="low"&&S.medal==="Gold")?"Gold while calling yourself unsure — trust your own arithmetic a little more; the calibration score rewards it.":"";
   const d=DEF[S.stage];
   $("selfPrompt").textContent=d.selfPrompt||"In one sentence: why did your number land where it did?";
-  if(S.stage==="watch"){ // watch keeps it light: no free-text, straight to its MCQ — result card stays on screen
-    show($("selfTextWrap"),false); show($("selfMcqWrap"),true); openSelfMcq(); }
+  // Article 15b is binding in EVERY stage: ungraded free-text first, then the graded MCQ.
+  // Watch previously skipped straight to the MCQ — that exception is removed.
 }
 function openSelfMcq(){
   const d=DEF[S.stage];
@@ -1052,7 +1081,7 @@ function drawSight(x,cv){
 function drawGeom(x,cv){
   const w=cv.width,h=cv.height; x.fillStyle="#0d1526"; x.fillRect(0,0,w,h);
   const cy=h/2-20;
-  const GOLD="#ffd166", CYAN="#6fd3ff", PAP="#e8d5a3";
+  const GOLD="#ffd166", CYAN="#6fd3ff", PAP="#e8d5a3", MOON="#e5e2d3"; // MOON matches the SIGHT disk (Article 14 shared identity)
   function dim(x1,x2,y,color,label,brk){ // labeled dimension line with arrowheads (+break marks = compressed)
     x.strokeStyle=color; x.fillStyle=color; x.lineWidth=1.5;
     x.beginPath(); x.moveTo(x1,y); x.lineTo(x2,y); x.stroke();
@@ -1097,9 +1126,13 @@ function drawGeom(x,cv){
     x.beginPath(); x.moveTo(midX,cy-beadY); x.lineTo(midX,cy+beadY); x.stroke();
     x.fillStyle=GOLD; x.font="15px system-ui"; x.textAlign="left";
     x.fillText("bead",midX+8,cy-beadY-8); x.fillText("s = 6.0 mm",midX+8,cy+6);
-    x.strokeStyle=CYAN; x.lineWidth=5;                                            // the target (D)
+    // Article 14 shared identity: the target keeps the colour it has in the SIGHT view —
+    // papyrus for the Pharos, moon-cream for the Moon. Cyan stays reserved for DISTANCES,
+    // which are not objects (see the legend below).
+    const TGT=S.stage==="watch"?PAP:MOON;
+    x.strokeStyle=TGT; x.lineWidth=5;                                             // the target (D)
     x.beginPath(); x.moveTo(farX,cy-farY); x.lineTo(farX,cy+farY); x.stroke();
-    x.fillStyle=CYAN; x.textAlign="right";
+    x.fillStyle=TGT; x.textAlign="right";
     const tgtName=S.stage==="watch"?"Pharos":"Moon";
     const dLabel=S.stage==="watch"?"H = 120 m":(S.stage==="predict"?"D = ?  (your wager)":"D = 3,475 km");
     x.fillText(tgtName,farX-10,cy-farY-8); x.fillText(dLabel,farX-10,cy+6);
@@ -1109,7 +1142,7 @@ function drawGeom(x,cv){
     x.fillStyle="#aebcd2"; x.font="14px system-ui"; x.textAlign="center";
     x.fillText("similar triangles share the vertex at the eye  →  s/L = "+(S.stage==="watch"?"H":"D")+"/d",w/2,26);
     x.fillStyle=PAP; x.font="13px system-ui";
-    x.fillText("gold = bead pair (s, L) · blue = target pair ("+(S.stage==="watch"?"H":"D")+", d) · broken line = compressed ~600,000× — read numbers, not lengths",w/2,50);
+    x.fillText("gold = the bead · "+(S.stage==="watch"?"papyrus = the Pharos":"cream = the Moon")+" (same colours as the SIGHT view) · blue = the two distances · broken line = compressed ~600,000× — read numbers, not lengths",w/2,50);
   }
 }
 /* ============ Fireworks (inherited pattern; reduced-motion honored) ============ */

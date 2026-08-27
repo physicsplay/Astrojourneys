@@ -16,7 +16,9 @@ confirms it against whatever design notes exist outside this repo.
 | **A11** | **Partial — see below** | No `tools/` checks or `.github/workflows/checks.yml` exist anywhere in this repo (not just for this game). Ran manual equivalents in-container instead (see "Checks run this session"). |
 | A12 | Two Charter violations found and fixed this session | See "Fixes applied". |
 | **A13** | **Closed** | Hand test done by the author on a real iPhone (see "A13 hand test result"). Two real bugs surfaced and were fixed in the process — see "Fixes found during A13". |
-| A14–A17 | Not started | A14 (visual pass) and A16 (independent review) need a model switch this session cannot perform itself — see "Open items". |
+| A14 | Not started | Visual pass (Kimi K3) — hand off using the regenerated physics snapshot. |
+| **A16** | **Done, findings adjudicated** | Independent review by GPT-5.6 Sol. Six Articles claimed; four upheld, one partly upheld, two rejected with evidence. See "A16 independent review". |
+| A15, A17 | Not started | |
 
 ## Fixes applied this session (model: Sonnet 5)
 
@@ -86,6 +88,83 @@ the shipped game, and not a substitute for the real publish step in Track E, whi
 | 4 | Runs with network off | ✅ Loaded, airplane mode on, kept playing without a reload |
 | 5 | Debrief shows prediction/actual/error%/worked solution | ✅ "όλα καθαρά και κατανοητά" |
 
+## A16 independent review (GPT-5.6 Sol) — findings and adjudication
+
+Sent blind: `CHARTER.md` + the game file, no design rationale. Sol reported violations of
+Articles 4, 7, 9, 13, 14, 15. Each was checked against the source before anything was changed
+(Charter: findings arrive as proposals; only the checks decide).
+
+### Upheld and fixed
+
+6. **Article 7 — the 1/110 leak (Sol found it; Sol understated it).** Crisis told the student
+   pre-commit that the Moon and Sun share a view-ratio "near 1 part in 110" — in the NPC dialogue,
+   the Data card note, and a hint. Sol called this "a direct numerical route to approximately the
+   target diameter". Computed: `149,600,000 / 110 = 1,360,000 km` against an analytic
+   `1,392,000 km` = **2.30% error, inside the 5% Gold band**. A student could skip the box, the
+   hole correction and the entire Crisis lesson, divide by 110, and be awarded Gold. Promoted to
+   the top of the fix list. Fix: the eclipse cross-check is now stated qualitatively (the two
+   view-ratios are *equal*; the box's raw ratio is *too wide*) in the dialogue, the Data note, the
+   hint and the post-rejection message. The number survives only in the end-of-game cinematic,
+   which fires after all four stages are already Gold. Verified: pre-commit UI scraped at the
+   Crisis compute step with both hints spent — no `1/110` anywhere; perfect student still Gold.
+7. **Articles 4 + 15(a) — Watch's free concept score.** `startStage()` had
+   `S.gateScore=(st==="watch"?1:0)` and Watch's `steps` had no `"gate"` — 25 composite points
+   awarded for a concept gate that never ran, against Article 4's explicit "*every stage* grades
+   all four components". Fix: Watch now has a real concept gate (a proportional-reasoning MCQ on
+   what happens to L when the target's distance doubles, distractors drawn from the game's own
+   misconception map) plus its own free-idea prompt, and `S.gateScore` starts at 0 for every stage.
+8. **Article 15(b) — Watch skipped the ungraded free-text box.** The exception in `debrief1()` is
+   removed; Watch now runs free-text → graded MCQ like every other stage, with its own `selfPrompt`.
+9. **Article 9 — Gold at exactly 5%.** `errPct<=g` granted Gold at 5.000% where the Charter says
+   *<5%*. Now `errPct<g`. Verified: 4.999% Gold, 5.000% Silver.
+10. **Article 13 — Presentation Mode had no contrast change.** It scaled fonts (×1.35, verified
+   17px→23px) and persisted, but changed no colour. Added darker grounds, brighter ink and
+   stronger borders under `html.presentation`; object identity colours are deliberately not
+   remapped. Verified: `--ink`, `--bg`, `--muted`, `--line` all change.
+
+### Partly upheld
+
+11. **Article 14 — shared colour identity.** True: the Moon was cream in SIGHT and cyan in
+   GEOMETRY (so was the Pharos, papyrus vs cyan). Fixed by giving the target object its SIGHT
+   colour in the geometry diagram and reserving cyan for *distances*, which are not objects; the
+   legend now says so explicitly. Low severity, but a real inconsistency.
+
+### Rejected, with reasons
+
+- **Article 14 "two representations share one canvas"** — Sol called this "the strongest structural
+  violation". Rejected: the Charter *prescribes tabs as the remedy* ("the answer is one card with
+  tabs … tabs count as one card and force the student to notice the representations are distinct").
+  The prohibition targets simultaneous co-mingling ("a force diagram drawn on top of a map"). Only
+  one representation paints at a time and the passport swaps with it. This is the prescribed fix,
+  not a violation of it.
+- **Article 7 "analytic answers sit in the source"** — rejected as a code fix. Every stored
+  `analytic` is *exactly* recomputable from data already displayed to the student
+  (P1: `363,300 × 6.0 / 580 = 3758.3`; I1: `3,475 × 620 / 6.0 = 359,083`), so deleting the literals
+  buys nothing, and Article 10 (single file, offline, no server) makes hiding the answer
+  structurally impossible. Sol identified this correctly in its own gap list (#8: Article 7 and
+  Check 8 use different threat models) — it is a Charter question for the author, not a defect.
+- **Article 13 three-layer architecture** — not logged as a violation. The compute step shows
+  Action + Data + Canvas = exactly 3 cards, within Article 5; whether DATA must be literally
+  "one tap" rather than its own card is genuinely ambiguous in the Charter text. Needs an author
+  ruling, not a unilateral change.
+
+### Consequential side-effect handled
+
+Sol's gap #7 (persisted state is not version-safe) bites here: medal *semantics* changed twice now
+(Easy-mode band widening removed, composite cap added, Gold made strict, Watch gate added), so a
+medal earned under the old rules no longer means the same thing. Graded keys bumped
+`ari_v1_stages`/`ari_v1_best` → `ari_v2_stages`/`ari_v2_best`. Preference keys deliberately left at
+v1 — they carry no grading meaning and a teacher should not lose their projector setting.
+
+### Charter gaps Sol raised that remain open (author decisions, no code change)
+
+Historical-accuracy standard (apt — the A13 hand test caught an Archimedes misattribution that no
+Article governs); accessibility beyond font size and keyboard parity (WCAG contrast, screen
+readers, canvas alternatives); colour must never be the *sole* identifier; browser/platform matrix;
+performance budget; `localStorage` privacy/retention policy; persisted-state versioning as a
+standing rule; the Article 7 vs Check 8 threat-model split; shipping the regression tests
+alongside the game; cognitive-load/duration target.
+
 ## Checks run this session (manual, in-container — no `tools/` scripts exist yet)
 
 - `node --check` on the extracted inline script — **pass**, both before and after edits.
@@ -111,13 +190,16 @@ existing games has presumably shipped without this pipeline too.
 
 ## Open items for the author
 
-1. **A14 (visual pass, Kimi K3) and A16 (independent review, GPT-5.6 Sol) need a different model.**
-   This session cannot switch models itself. Decide: skip both and go straight to publish, run them
-   yourself in a separate session/tool and bring back findings as proposals, or hold the PR open
-   until that's done.
-2. **Do you have a `DESIGN_LOCK.md` for this pilot outside the repo?** If so, send it so gates
+1. **A14 (visual pass, Kimi K3) is the only build gate left.** Hand off the current file with the
+   Track C hard limits; on return, diff against `PHYSICS_SNAPSHOT_AncientSkies_Aristarchus.js`
+   (regenerated after the A16 fixes — the pre-review snapshot is stale and must not be used).
+   Any byte difference in those functions = reject the whole pass.
+2. **Two Charter questions raised by A16 that only the author can settle:** whether source-visible
+   answers count as an Article 7 breach at all given Article 10 (see "Rejected, with reasons"), and
+   whether Article 13's DATA layer must be literally one tap rather than its own card.
+3. **Do you have a `DESIGN_LOCK.md` for this pilot outside the repo?** If so, send it so gates
    A1–A9 can be checked against it rather than left as "inferred from code."
-3. **Repo-wide decision, not just this game:** none of the ten pre-delivery checks are automated
+4. **Repo-wide decision, not just this game:** none of the ten pre-delivery checks are automated
    here. Worth a separate initiative to build `tools/` + `.github/workflows/checks.yml` once,
    rather than re-deriving manual checks by hand for every game (this one included) going forward.
 

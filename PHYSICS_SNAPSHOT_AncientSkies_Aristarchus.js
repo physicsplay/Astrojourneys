@@ -1,5 +1,9 @@
 /* PHYSICS/SCORING SNAPSHOT — AncientSkies_Aristarchus.html
-   Taken before the Kimi K3 visual pass (Track C), at commit 7bd2243.
+   REGENERATED after the A16 independent-review fixes. Supersedes the pre-review snapshot:
+   medalFor (Gold now strictly <5%), finalizeStage and startStage (no free Watch concept
+   score) all changed, so the earlier snapshot no longer matches and must not be used.
+
+   Taken before the Kimi K3 visual pass (Track C).
 
    These are every function/constant that computes or grades a number in this game
    (the "physics" of a proportion-and-measurement game). None of this should change
@@ -8,7 +12,7 @@
    visual pass is allowed to touch.
 
    After the visual pass, diff the same block in the returned file against this file.
-   Any difference at all = reject the pass, per the Charter's Track C.
+   Any difference at all = reject the pass, per the Charter Track C.
 */
 
 // ---- C ----
@@ -49,11 +53,18 @@ const BANDS = { watch:[5,12,25], predict:[5,12,25], inverse:[5,12,25], crisis:[5
 // ---- STAGES ----
 const STAGES = ["watch","predict","inverse","crisis"];
 
+/* ============ State & storage (keys per gate A5; self-explanation text NEVER stored — 15b) ============ */
+const store = {
+  get(k,fb){ try{ const v=localStorage.getItem(k); return v==null?fb:JSON.parse(v); }catch(e){ return fb; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+};
+
 // ---- medalFor ----
 function medalFor(errPct,stage){
   // Article 6: bands are mode-independent — a medal means the same thing in every mode.
+  // Article 9: Gold requires error STRICTLY below 5% — errPct<g, not <=g.
   const [g,s,b]=BANDS[stage];
-  return errPct<=g?"Gold":errPct<=s?"Silver":errPct<=b?"Bronze":null;
+  return errPct<g?"Gold":errPct<=s?"Silver":errPct<=b?"Bronze":null;
 }
 
 // ---- medalFrac ----
@@ -102,8 +113,9 @@ function commit(){
     if(!S.scn.negligible && offNaive<3 ){ // they committed the uncorrected value on a variant where it matters
       S.crisisPhase=1; sndFail();
       $("runText").innerHTML=`<p>${NAUSIKA.eclipseClash}</p>
-        <p class="note">Box ratio: ${S.scn.sMeas.toFixed(2)}/${fmt(S.scn.L,0)} = 1/${fmt(S.scn.L/S.scn.sMeas,1)} —
-        but every total eclipse fixes the Sun&#8217;s view-ratio at the Moon&#8217;s, near 1/110. The sky disagrees with your reading. Recheck what the wall really shows, then commit again.</p>`;
+        <p class="note">You read the wall as ${S.scn.sMeas.toFixed(2)} mm across a ${fmt(S.scn.L,0)} mm box and took that ratio at face value —
+        but every total eclipse fixes the Sun&#8217;s view-ratio at the Moon&#8217;s, and that ratio is <i>narrower</i> than what your box just claimed.
+        Something in the box is widening the disk. Recheck what the wall really shows, then commit again.</p>`;
       wrongAttempt(); setStep("run"); show($("btnRunNext"),false);
       setTimeout(()=>{ setStep("compute"); $("answerIn").value=""; updateCommitReady(); },5200);
       return;
@@ -178,3 +190,4 @@ function finalizeStage(){
   if(awarded&&i<3&&!S.medals[STAGES[i+1]]) setTimeout(()=>{ toast("🔓 "+DEF[STAGES[i+1]].title+" unlocked"); sndUnlock(); },1800);
   if(STAGES.every(st=>S.medals[st]==="Gold")&&S.stage==="crisis") setTimeout(pullback,2200);
 }
+
