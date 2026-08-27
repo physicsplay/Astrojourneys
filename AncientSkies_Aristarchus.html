@@ -1200,7 +1200,16 @@ function init(){
       (TAB==="sight"?$("tabSight"):$("tabGeom")).focus(); } }));
   drawCv();
 }
-window.addEventListener("load",init);
+// Boot on DOMContentLoaded, not "load": iOS Quick Look and other restricted preview
+// webviews can fail to ever dispatch a full "load" event for a locally-opened file with
+// no subresources (Article 10 — this game has none) — leaving every button dead with no
+// error. DOMContentLoaded fires reliably in those contexts; "load" is kept as a fallback
+// for any environment where DOMContentLoaded was somehow missed before this script ran.
+let _booted=false;
+function boot(){ if(_booted) return; _booted=true; init(); }
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+else boot();
+window.addEventListener("load",boot);
 </script>
 </body>
 </html>
