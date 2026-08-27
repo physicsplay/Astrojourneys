@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Mission ATLAS · Ancient Skies 1 — "Aristarchus' Wager"
+  Single-file game. One relationship: D/d = s/L (ratios only, no radians in any graded path).
+  Built at gate A10 by Claude Fable 5 · 2026-08-04 · Design: DESIGN_LOCK.md (gates A1-A9)
+  Charter: 15 Articles. Scoring 40/25/25/10 (Article 4). Gold < 5% (Article 9).
+-->
+<title>Aristarchus' Wager — Mission ATLAS</title>
+<style>
+:root{
+  --bg:#0b1020; --bg2:#131b33; --panel:#182238; --panel2:#1f2c47; --line:#2e4166;
+  --ink:#f2f5fa; --muted:#aebcd2; --papyrus:#e8d5a3; --accent:#ffd166; --cyan:#6fd3ff;
+  --good:#5ce39a; --bad:#ff7a8a; --gold:#ffd166; --silver:#cdd7e4; --bronze:#d99a66;
+  --fs-num:22px; --fs-body:17px; --fs-label:14px; --fs-floor:13px;
+  font-size:17px;
+}
+html.presentation{ font-size:23px; }
+html.presentation body{ --fs-num:30px; --fs-body:23px; --fs-label:19px; --fs-floor:18px; }
+*{ box-sizing:border-box; }
+body{
+  margin:0; background:radial-gradient(120% 90% at 50% -10%, #1b2a4d 0%, var(--bg) 55%);
+  color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:var(--fs-body); line-height:1.5; min-height:100vh;
+}
+button, input, select, textarea{ font:inherit; color:inherit; }
+.num, .tnum{ font-variant-numeric:tabular-nums; }
+h1{ font-size:1.9rem; line-height:1.45; margin:.2em 0; }
+h2{ font-size:1.15rem; line-height:1.45; margin:.2em 0 .4em; color:var(--papyrus); }
+.screen{ max-width:1200px; margin:0 auto; padding:16px; display:none; }
+.screen.active{ display:block; }
+/* HUD — never zoomed, always on top */
+#hud{
+  position:sticky; top:0; z-index:40; display:none; gap:10px; align-items:center;
+  background:rgba(11,16,32,.92); border-bottom:1px solid var(--line); padding:8px 12px;
+  backdrop-filter:blur(4px);
+}
+#hud.active{ display:flex; }
+#hud .grow{ flex:1; }
+.hudlabel{ font-size:var(--fs-label); color:var(--muted); }
+.badge{ display:inline-block; font-size:var(--fs-floor); padding:2px 8px; border:1px solid var(--line); border-radius:10px; color:var(--muted); background:var(--panel); }
+.card{
+  background:linear-gradient(180deg,var(--panel) 0%,var(--bg2) 100%);
+  border:1px solid var(--line); border-radius:14px; padding:16px; margin:12px 0;
+}
+.card h2{ display:flex; align-items:center; gap:8px; }
+.cards{ display:grid; grid-template-columns:1fr; gap:12px; }
+@media(min-width:900px){ .cards.two{ grid-template-columns:1fr 1fr; } .cards.three{ grid-template-columns:1fr 1fr 1fr; }
+  #stageCards.withCanvas{ grid-template-columns:1.05fr 1fr; align-items:start; }
+  #stageCards.withCanvas > .card{ grid-column:1; }
+  #stageCards.withCanvas > #cardCanvas{ grid-column:2; grid-row:1 / span 4; position:sticky; top:64px; } }
+[data-step]{ display:none; }
+[data-step].on{ display:block; }
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:48px; min-width:44px; padding:10px 20px; border-radius:12px; cursor:pointer;
+  border:1px solid var(--line); background:var(--panel2); color:var(--ink); font-size:1rem;
+}
+.btn.primary{ background:linear-gradient(180deg,#ffd166,#e0a63f); color:#241a05; font-weight:700; border-color:#e0a63f; }
+.btn.big{ font-size:1.2rem; padding:14px 30px; }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn:focus-visible, input:focus-visible, textarea:focus-visible, [role="tab"]:focus-visible{ outline:3px solid var(--cyan); outline-offset:2px; }
+.opt{
+  display:block; width:100%; text-align:left; margin:8px 0; padding:12px 14px; border-radius:10px;
+  border:1px solid var(--line); background:var(--panel2); cursor:pointer; min-height:48px; font-size:1rem; line-height:1.45;
+}
+.opt.sel{ border-color:var(--cyan); background:#203552; }
+.opt.right{ border-color:var(--good); background:#15301f; }
+.opt.wrong{ border-color:var(--bad); background:#33202a; }
+.npc{ display:flex; gap:10px; margin:.5em 0; }
+.npc .who{ min-width:86px; color:var(--accent); font-weight:700; font-size:var(--fs-label); padding-top:2px; }
+.npc.ari .who{ color:var(--cyan); }
+.npc .say{ flex:1; }
+.given{ display:flex; flex-wrap:wrap; gap:10px; margin:10px 0; }
+.gv{ background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; }
+.gv .k{ font-size:var(--fs-label); color:var(--muted); display:block; }
+.gv .v{ font-size:var(--fs-num); font-weight:700; font-variant-numeric:tabular-nums; }
+.gv .u{ font-size:var(--fs-floor); color:var(--muted); }
+.formula{
+  text-align:center; font-size:var(--fs-num); background:var(--panel2); border:1px dashed var(--line);
+  border-radius:10px; padding:10px; margin:8px 0; font-variant-numeric:tabular-nums;
+}
+.note{ font-size:var(--fs-label); color:var(--muted); line-height:1.5; }
+.wob{ color:var(--papyrus); }
+input[type=number], input[type=text]{
+  width:100%; max-width:260px; background:#0d1526; border:1px solid var(--line); border-radius:10px;
+  padding:12px; font-size:var(--fs-num); font-variant-numeric:tabular-nums;
+}
+textarea{
+  width:100%; background:#0d1526; border:1px solid var(--line); border-radius:10px; padding:12px;
+  font-size:1rem; min-height:84px; line-height:1.5;
+}
+input[type=range]{ width:100%; height:44px; accent-color:var(--accent); }
+.conf{ display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+.conf label{
+  flex:1; min-width:96px; text-align:center; border:1px solid var(--line); border-radius:10px;
+  padding:10px; cursor:pointer; background:var(--panel2); min-height:48px; display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.conf input{ accent-color:var(--accent); width:18px; height:18px; }
+.conf label.sel{ border-color:var(--accent); background:#33301f; }
+/* canvas card */
+#cardCanvas .tabs{ display:flex; gap:6px; margin-bottom:8px; }
+[role="tab"]{
+  flex:1; min-height:44px; border-radius:10px 10px 0 0; border:1px solid var(--line); border-bottom:none;
+  background:var(--panel2); cursor:pointer; font-size:var(--fs-label); color:var(--muted); padding:8px;
+}
+[role="tab"][aria-selected="true"]{ background:#203552; color:var(--ink); border-color:var(--cyan); }
+#passport{
+  display:flex; flex-wrap:wrap; gap:6px 14px; font-size:var(--fs-floor); color:var(--muted);
+  border:1px solid var(--line); border-radius:8px; padding:6px 10px; margin-bottom:6px; background:rgba(13,21,38,.7);
+}
+#passport b{ color:var(--papyrus); font-weight:700; }
+#cvWrap{ position:relative; }
+canvas#cv{ width:100%; height:auto; display:block; border-radius:10px; background:#070c18; border:1px solid var(--line); }
+#stageTitle{ color:var(--papyrus); }
+.medal{ font-size:var(--fs-label); font-weight:700; }
+.medal.Gold{ color:var(--gold); } .medal.Silver{ color:var(--silver); } .medal.Bronze{ color:var(--bronze); }
+.stagebtn{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left; margin:10px 0; padding:14px;
+  border-radius:12px; border:1px solid var(--line); background:var(--panel); cursor:pointer; min-height:64px;
+}
+.stagebtn .n{ font-size:1.4rem; }
+.stagebtn small{ display:block; color:var(--muted); font-size:var(--fs-label); line-height:1.45; }
+.stagebtn:disabled{ opacity:.5; }
+.result-line{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed var(--line); font-variant-numeric:tabular-nums; }
+.result-line b{ font-size:var(--fs-num); }
+.cols3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center; }
+.cols3 .col{ background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 6px; }
+.cols3 .col .v{ font-size:var(--fs-num); font-weight:700; font-variant-numeric:tabular-nums; }
+.cols3 .col .k{ font-size:var(--fs-label); color:var(--muted); }
+details{ border:1px solid var(--line); border-radius:10px; padding:10px 14px; margin:10px 0; background:var(--bg2); }
+summary{ cursor:pointer; color:var(--papyrus); font-size:var(--fs-label); min-height:44px; display:flex; align-items:center; }
+#toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:60;
+  background:#203552; border:1px solid var(--cyan); border-radius:12px; padding:12px 20px;
+  display:none; max-width:90vw; text-align:center;
+}
+#fx{ position:fixed; inset:0; pointer-events:none; z-index:50; }
+#cine{ position:fixed; inset:0; z-index:55; background:#05080f; display:none; }
+#cine canvas{ width:100%; height:100%; display:block; }
+#cine .skip{ position:absolute; top:14px; right:14px; z-index:56; }
+.center{ text-align:center; }
+.startwrap{ min-height:88vh; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:14px; text-align:center; }
+.subtitle{ color:var(--muted); max-width:640px; }
+.settings{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.chk{ display:flex; gap:8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:10px 14px; min-height:48px; cursor:pointer; background:var(--panel); }
+.chk input{ width:20px; height:20px; accent-color:var(--accent); }
+@media (max-width:520px){
+  .cols3{ grid-template-columns:1fr; }
+  h1{ font-size:1.5rem; }
+  .screen{ padding:10px; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <span id="hudStage" class="hudlabel">—</span>
+  <span id="hudScn" class="badge tnum">—</span>
+  <span class="grow"></span>
+  <span id="hudMedals" class="hudlabel tnum">—</span>
+  <span id="hudAtt" class="badge tnum" title="wrong attempts">✗ 0</span>
+  <button class="btn" id="btnPres" aria-pressed="false" title="Presentation Mode">🖥 A+</button>
+  <button class="btn" id="btnBack">Stages</button>
+</div>
+
+<!-- START -->
+<section class="screen active" id="scrStart">
+  <div class="startwrap">
+    <div class="badge">MISSION ATLAS · ANCIENT SKIES 1</div>
+    <h1>Aristarchus&#8217; Wager</h1>
+    <p class="subtitle">Alexandria, ~250 BC. Aristarchus claims worlds can be measured without leaving Earth.
+    Nausika, the merchant captain who funds the Library&#8217;s instruments, demands proof.
+    You have a bead, a box with a hole, and one proportion.</p>
+    <div class="formula" aria-label="the one relationship">D / d &nbsp;=&nbsp; s / L</div>
+    <p class="note">One relationship. Real size over real distance equals bead size over bead distance.<br>
+    Used four times: a lighthouse, the Moon, a distance, the Sun.</p>
+    <button class="btn primary big" id="btnStart">START MISSION</button>
+    <div class="settings">
+      <label class="chk"><input type="checkbox" id="chkEasy"> Easy mode</label>
+      <label class="chk"><input type="checkbox" id="chkPres"> Presentation Mode</label>
+    </div>
+    <details>
+      <summary>Mission brief — assumptions, units, scoring (tap to open)</summary>
+      <div class="note">
+        <p><b>Declared simplifications (Article 3):</b> light travels in straight lines; the disks are treated as perfect circles;
+        chord ≈ arc for such narrow angles (error ~0.001%); the Moon&#8217;s distance is <i>tonight&#8217;s</i>, not an average — it varies ±5.5%;
+        distances you are given carry a declared origin; <b>the bead position your hand finds carries the method&#8217;s real wobble (a few %)</b> — that spread is the ancient method itself, and your medal never depends on it: you are graded on computing correctly <i>from your own measurement</i>.</p>
+        <p><b>Angular size (for lyceum):</b> the ratio s/L <i>is</i> what astronomers call angular size — we simply never need the word to play.</p>
+        <p><b>Historical liberties:</b> Nausika is fictional. Archimedes really did measure the rising Sun with a cylinder on a rod
+        (<i>Sand Reckoner</i>) — we replace his direct viewing with a safe projection. <b>Never look at the Sun.</b></p>
+        <p><b>Scoring (Article 4):</b> 40% numerical prediction · 25% concept gate · 25% explanation · 10% confidence calibration.
+        Medals: Gold &lt;5% · Silver · Bronze. Language: English first; translations are separate passes.</p>
+        <p><b>Sources:</b> Aristarchus, <i>On Sizes and Distances</i>; Archimedes, <i>Sand Reckoner</i> (preserves Aristarchus&#8217; Moon at 1/720 of the circle).</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- STAGE SELECT -->
+<section class="screen" id="scrSelect">
+  <h1>Choose your task</h1>
+  <p class="note">Each stage unlocks at Bronze or better in the one before. Same proportion throughout.</p>
+  <div id="stageList"></div>
+</section>
+
+<!-- STAGE PLAY -->
+<section class="screen" id="scrStage">
+  <h2 id="stageTitle">—</h2>
+  <div class="cards" id="stageCards">
+
+    <div class="card" id="cardStory" data-step="brief">
+      <h2>📜 Briefing</h2>
+      <div id="storyText"></div>
+      <button class="btn primary" id="btnBrief">Continue</button>
+    </div>
+
+    <div class="card" id="cardCanvas" data-step="brief gate compute run">
+      <div class="tabs" role="tablist" aria-label="representations">
+        <button role="tab" id="tabSight" aria-selected="true" aria-controls="cvWrap">👁 SIGHT</button>
+        <button role="tab" id="tabGeom" aria-selected="false" aria-controls="cvWrap">⛰ GEOMETRY</button>
+      </div>
+      <div id="passport"></div>
+      <div id="cvWrap"><canvas id="cv" width="900" height="520"></canvas></div>
+    </div>
+
+    <div class="card" id="cardGate" data-step="gate">
+      <h2>🧭 Find the method</h2>
+      <div id="gateIdeaWrap">
+        <p id="gateIdeaPrompt"></p>
+        <textarea id="ideaBox" maxlength="400" aria-label="your own idea first"></textarea>
+        <p class="note"><span id="ideaCount" class="tnum">0</span>/20 characters — your idea is never scored, never stored. Writing it first is the point.</p>
+        <button class="btn" id="btnIdea" disabled>Show the choices</button>
+      </div>
+      <div id="gateMcqWrap" hidden>
+        <p id="gateQ"></p>
+        <div id="gateOpts"></div>
+        <p class="note" id="gateFeed" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="card" id="cardAction" data-step="compute">
+      <h2>🖊 Compute &amp; commit</h2>
+      <p id="actionPrompt"></p>
+      <div id="obsWrap">
+        <label for="sliderL" id="sliderLabel">Slide the bead along the rod until it just covers the disk</label>
+        <input type="range" id="sliderL" min="200" max="900" step="1" value="850">
+        <p class="tnum" id="sliderRead" aria-live="polite">L = 850 mm</p>
+        <button class="btn primary" id="btnRecord" disabled>📓 Record the reading</button>
+        <button class="btn" id="btnRemeasure" hidden>↺ Measure again</button>
+      </div>
+      <div id="commitWrap" hidden>
+        <label for="answerIn" id="answerLabel">Your number</label><br>
+        <input type="number" id="answerIn" inputmode="decimal" step="any" autocomplete="off">
+        <span id="answerUnit" class="note">km</span>
+        <div class="conf" role="radiogroup" aria-label="How sure are you?">
+          <label><input type="radio" name="conf" value="low"> unsure</label>
+          <label><input type="radio" name="conf" value="med"> fairly sure</label>
+          <label><input type="radio" name="conf" value="high"> certain</label>
+        </div>
+        <button class="btn primary big" id="btnCommit" disabled>COMMIT — this locks the sky</button>
+        <p class="note">Committing locks the run. Trial-and-error costs attempts and never beats one good computation.</p>
+        <p class="note"><button class="btn" id="btnHint">Hint (first is free)</button> <span id="hintOut" aria-live="polite"></span></p>
+      </div>
+    </div>
+
+    <div class="card" id="cardData" data-step="compute">
+      <h2>🧮 Data</h2>
+      <div class="given" id="givenList"></div>
+      <div class="formula">D / d = s / L</div>
+      <p class="note" id="dataNote"></p>
+    </div>
+
+    <div class="card" id="cardRun" data-step="run">
+      <h2>🌒 The run</h2>
+      <div id="runText" aria-live="polite"></div>
+      <button class="btn primary" id="btnRunNext" hidden>See the verdict</button>
+    </div>
+
+    <div class="card" id="cardResult" data-step="debrief1">
+      <h2>📏 Precision, not politeness</h2>
+      <div id="resultLines"></div>
+      <p id="npcVerdict"></p>
+    </div>
+
+    <div class="card" id="cardSelf" data-step="debrief1">
+      <h2>💬 Explain it</h2>
+      <div id="selfTextWrap">
+        <p id="selfPrompt"></p>
+        <textarea id="selfText" maxlength="500"></textarea>
+        <p class="note"><span id="selfCount" class="tnum">0</span>/30 characters — ungraded, never stored.</p>
+        <button class="btn" id="btnSelf" disabled>Continue</button>
+      </div>
+      <div id="selfMcqWrap" hidden>
+        <p id="selfQ"></p>
+        <div id="selfOpts"></div>
+        <p class="note" id="selfFeed" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="card" id="cardWorked" data-step="debrief2">
+      <h2>🔍 The worked solution</h2>
+      <div id="workedOut"></div>
+    </div>
+
+    <div class="card" id="cardColumns" data-step="debrief2">
+      <h2>🏛 Across 2,300 years</h2>
+      <div class="cols3" id="threeCols"></div>
+      <p id="greatLine" class="note"></p>
+    </div>
+
+    <div class="card" id="cardTransfer" data-step="debrief2">
+      <h2>🔁 Same proportion, different world</h2>
+      <p id="transQ"></p>
+      <div id="transOpts"></div>
+      <p class="note" id="transFeed" aria-live="polite"></p>
+      <div class="center" style="margin-top:10px">
+        <button class="btn" id="btnRetry">Retry (new night)</button>
+        <button class="btn primary" id="btnDone" disabled>Finish stage</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="toast" role="status"></div>
+<canvas id="fx"></canvas>
+<div id="cine"><button class="btn skip" id="btnSkip">Skip</button><canvas id="cineCv"></canvas></div>
+
+<script>
+"use strict";
+/* ============ I18N — English first (Article 12). EL/IT arrive as later passes. ============ */
+const I18N = { en: {
+  watch_title:"Stage 1 · WATCH — The Pharos",
+  predict_title:"Stage 2 · PREDICT — The Moon",
+  inverse_title:"Stage 3 · INVERSE — How far?",
+  crisis_title:"Stage 4 · CRISIS — The Sun that came out big",
+}};
+const LANG="en";
+function t(k){ return (I18N[LANG]&&I18N[LANG][k])||I18N.en[k]||k; }
+
+/* ============ Constants (Article 3 — every one shown on screen with its justification) ============ */
+const C = {
+  D_MOON: 3475,                 // km, modern — declared "reset" value
+  D_SUN: 1392000,               // km
+  d_SUN: 149600000,             // km
+  BEAD: 6.0,                    // mm
+  PHAROS_H: 120,                // m (sources give 100-140; declared)
+  PHAROS_D: 5000,               // m
+  PHAROS_L: 250.0,              // mm = s*d/H
+  EARTH_D: 12742,               // km (for the Aristarchus band)
+  ARI_LO: 4035, ARI_HI: 5073,   // km — 19/60..43/108 of Earth (On Sizes)
+};
+/* Scenario pools — numbers verified in Python at gate A8 (17/17). analytic = graded center. */
+const POOL = {
+  predict: [ // night label, d (km), L given by "your hand" (mm, wobble declared), analytic D (km)
+    { id:"P1", night:"perigee night", d:363300, L:580, analytic:3758.3, wob:"-7.5" },
+    { id:"P2", night:"an average night", d:384400, L:690, analytic:3342.6, wob:"+4.0" },
+    { id:"P3", night:"apogee night", d:405500, L:745, analytic:3265.8, wob:"+6.4" },
+  ],
+  inverse: [ // night NOT named. L (mm) -> analytic d (km)
+    { id:"I1", L:620, analytic:359083 },
+    { id:"I2", L:670, analytic:388042 },
+    { id:"I3", L:700, analytic:405417 },
+  ],
+  crisis: [ // box length L (mm), hole width p (mm), measured image s_meas (mm), analytic corrected D (km), naive error %
+    { id:"C1", L:1000, p:1.90, sMeas:11.20, analytic:1392000, naiveErr:20.4 },
+    { id:"C2", L:500,  p:1.86, sMeas:6.51,  analytic:1392000, naiveErr:40.0 },
+    { id:"C3", L:1500, p:0.25, sMeas:14.21, analytic:1392000, naiveErr:1.8, negligible:true },
+  ],
+};
+const BANDS = { watch:[5,12,25], predict:[5,12,25], inverse:[5,12,25], crisis:[5,10,15] };
+const STAGES = ["watch","predict","inverse","crisis"];
+
+/* ============ State & storage (keys per gate A5; self-explanation text NEVER stored — 15b) ============ */
+const store = {
+  get(k,fb){ try{ const v=localStorage.getItem(k); return v==null?fb:JSON.parse(v); }catch(e){ return fb; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+};
+const S = {
+  stage:null, stepIdx:0, scn:null,
+  medals: store.get("ari_v1_stages",{}),         // {watch:"Gold",...}
+  best: store.get("ari_v1_best",{}),             // {watch: 87, ...}
+  settings: store.get("ari_v1_settings",{easy:false}),
+  wrong:0, hintsUsed:0, gateScore:0, selfScore:0, conf:null,
+  committed:null, analytic:null, errPct:null, medal:null,
+  crisisPhase:0, slidLocked:false, transferDone:false,
+  usedScn: {},                                    // avoid immediate repeat per stage
+};
+function saveProgress(){ store.set("ari_v1_stages",S.medals); store.set("ari_v1_best",S.best); store.set("ari_v1_settings",S.settings); }
+
+/* ============ Audio — inherited synth set, verbatim names, zero files (Article 10) ============ */
+let AC=null;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } } return AC; }
+function tone(f,dur,type,gain,when){ const a=ac(); if(!a) return; const o=a.createOscillator(),g=a.createGain();
+  o.type=type||"sine"; o.frequency.value=f; g.gain.value=gain||0.12;
+  o.connect(g); g.connect(a.destination); const t0=a.currentTime+(when||0);
+  g.gain.setValueAtTime(gain||0.12,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.start(t0); o.stop(t0+dur+0.02); }
+function sndMissionReady(){ tone(392,.18,"triangle",.1); tone(523,.22,"triangle",.1,.12); tone(659,.3,"triangle",.1,.24); }
+function sndCompute(){ tone(660,.08,"square",.06); }
+function sndRunStart(){ tone(196,.4,"sawtooth",.07); tone(294,.35,"sawtooth",.05,.1); }
+function sndNotebookOK(){ tone(523,.1,"sine",.1); tone(784,.16,"sine",.1,.08); }
+function sndUnlock(){ tone(440,.1,"triangle",.1); tone(587,.1,"triangle",.1,.1); tone(880,.2,"triangle",.1,.2); }
+function sndFanfareGold(){ [523,659,784,1047].forEach((f,i)=>tone(f,.35,"triangle",.12,i*.13)); }
+function sndFanfareSilver(){ [494,622,740].forEach((f,i)=>tone(f,.3,"triangle",.1,i*.13)); }
+function sndFanfareBronze(){ [440,554].forEach((f,i)=>tone(f,.3,"triangle",.1,i*.14)); }
+function sndFail(){ tone(233,.3,"sawtooth",.08); tone(175,.4,"sawtooth",.08,.15); }
+
+/* ============ Article 13 — clamp every canvas font at >=13px REAL CSS PIXELS on the PROTOTYPE ============
+   Two independent corrections stack: Presentation Mode (scale UP) and the backing/displayed
+   mismatch (scale to SURVIVE the CSS shrink — a 900px-wide canvas card renders at ~321px on a
+   375px phone, so an uncorrected "13px" ctx.font paints at ~4.6px on screen). Both must apply,
+   or a legal-looking source file still ships illegible canvas text on mobile. */
+(function(){
+  if(typeof CanvasRenderingContext2D==="undefined") return; // boot must survive environments without canvas (Node shims)
+  const proto=CanvasRenderingContext2D.prototype;
+  const desc=Object.getOwnPropertyDescriptor(proto,"font");
+  if(!desc||!desc.set) return;
+  Object.defineProperty(proto,"font",{
+    get(){ return desc.get.call(this); },
+    set(v){
+      try{
+        const pres=document.documentElement.classList.contains("presentation")?1.35:1;
+        let shrink=1;
+        if(this.canvas&&this.canvas.getBoundingClientRect){
+          const rect=this.canvas.getBoundingClientRect();
+          const dispW=(rect&&rect.width>0)?rect.width:this.canvas.width;
+          if(this.canvas.width>0) shrink=this.canvas.width/dispW; // backing px per displayed CSS px
+        }
+        v=String(v).replace(/(\d+(?:\.\d+)?)px/,(m,n)=>{
+          let cssPx=parseFloat(n)*pres;             // intended on-screen size after Presentation Mode
+          if(cssPx<13) cssPx=13;                     // Article 13 floor, in real CSS pixels
+          return (Math.ceil(cssPx*shrink*10)/10).toFixed(1)+"px"; // round UP so the floor survives .toFixed truncation
+        });
+      }catch(e){}
+      desc.set.call(this,v);
+    },
+    configurable:true
+  });
+})();
+
+/* ============ Small utilities ============ */
+const $=id=>document.getElementById(id);
+function fmt(x,dp){ return Number(x).toLocaleString("en-US",{minimumFractionDigits:dp||0,maximumFractionDigits:dp==null?1:dp}); }
+function show(el,on){ el.hidden=!on; }
+function toast(msg,ms){ const t=$("toast"); t.textContent=msg; t.style.display="block";
+  clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",ms||2600); }
+function medalFor(errPct,stage){
+  // Article 6: bands are mode-independent — a medal means the same thing in every mode.
+  const [g,s,b]=BANDS[stage];
+  return errPct<=g?"Gold":errPct<=s?"Silver":errPct<=b?"Bronze":null;
+}
+function medalFrac(m){ return m==="Gold"?1:m==="Silver"?0.7:m==="Bronze"?0.4:0; }
+function compositeBand(score){ return score>=90?"Gold":score>=75?"Silver":score>=60?"Bronze":null; }
+function calScore(conf,ok){ const p={low:0.25,med:0.6,high:0.9}[conf||"med"]; const o=ok?1:0; return 1-(p-o)*(p-o); }
+function pickScn(stage){
+  const pool=POOL[stage]; if(!pool) return null;
+  let i=Math.floor(Math.random()*pool.length);
+  if(pool.length>1 && S.usedScn[stage]===i) i=(i+1)%pool.length;   // re-roll: never the same twice running
+  S.usedScn[stage]=i; return pool[i];
+}
+function wrongAttempt(){ S.wrong++; $("hudAtt").textContent="✗ "+S.wrong; }
+function shuffledIdx(n){ const a=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; } // MCQ options shuffle every render — no positional tell
+/* ============ Stage definitions — text, gates, hints (strategy only, NEVER numbers — Article 7) ============ */
+const DEF = {
+watch: {
+  title:"Stage 1 · WATCH — The Pharos",
+  steps:["brief","compute","run","debrief1","debrief2"],
+  story: ()=>`
+    <div class="npc"><span class="who">NAUSIKA</span><div class="say">"Aristarchus says he can measure the Moon with a <i>bead</i>.
+    I fund instruments, not poetry. Prove the trick works on something I can check —
+    the Pharos. My pilots know it stands about <b class="tnum">120 m</b> tall
+    (the harbor books say 100&ndash;140 — we declare that), and this quay lies
+    <b class="tnum">5,000 m</b> out. If your bead-arithmetic returns the right height, you may aim it at the sky."</div></div>
+    <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Hold the bead on the rod. Slide it until the tower just vanishes behind it.
+    Then read where it sits. The rest is one proportion."</div></div>
+    <p class="note">Observational task: while you slide, notice <b>how many bead-widths away</b> the bead sits when it exactly covers the tower.</p>`,
+  actionPrompt:"Slide until the Pharos just hides behind the bead. Then answer below.",
+  question:{ q:"Your notebook reads: bead width s = 6.0 mm, cover distance L = 250 mm. Compute L ÷ s — how many bead-widths away from your eye does the bead sit? (This distance-to-width ratio IS the method.)",
+    unit:"bead-widths", accept:[41,42.5], analytic:41.7 },
+  hints:["Strategy: the answer is a ratio of two lengths you already know — no new measurement needed."],
+  easyHint:"Extra nudge: write s/L as one fraction first, then just count how many times it divides — no other step exists.",
+  worked: ()=>`<p>The bead covers the tower, so both fill the same view:</p>
+    <div class="formula">s / L = 6.0 / 250 = 1 / 41.7</div>
+    <p>The bead sits <b class="tnum">41.7</b> of its own widths away. And the tower must obey the same ratio:
+    H / d = 120 / 5,000 = 1 / 41.7. It checks. <b>Where we can verify, the proportion holds.</b></p>`,
+  selfMcq:{ q:"Why does the bead-cover trick work at ANY distance?",
+    opts:[
+      "Cover means equal view-ratios — s/L must equal H/d, whatever the distances",
+      "Because the bead is small, and small things measure well",
+      "It only works when bead and target are the same real size",
+      "Luck — the Pharos happens to match the bead"],
+    right:0,
+    feeds:["Yes — cover IS the statement s/L = H/d. That sentence is the whole game.",
+      "Smallness helps your arm, not the law — any width works at its own L.",
+      "They never are the same size — only the same view-ratio.",
+      "Run it on any tower in the harbor — it never misses. Laws are not luck."] },
+  transfer:{ q:"Your thumb (20 mm) at arm's length (700 mm) just covers a distant statue. The statue's height-to-distance ratio is…",
+    opts:["20/700 — the same as the thumb's","bigger — statues are big","impossible to know without the statue's height"], right:0,
+    feed:"Same cover, same ratio — that is the whole method." },
+},
+predict: {
+  title:"Stage 2 · PREDICT — The Moon",
+  steps:["brief","gate","compute","run","debrief1","debrief2"],
+  story: (scn)=>`
+    <div class="npc"><span class="who">NAUSIKA</span><div class="say">"The tower was on land, assistant. Tonight —
+    <b>${scn.night}</b> — the target hangs where no boat sails. The eclipse ledger gives its distance:
+    <b class="tnum">${fmt(scn.d,0)} km</b>. Write me its true width. Before you see it drawn. That is the wager."</div></div>
+    <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Archimedes did this with a cylinder on a rod and wrote it in the <i>Sand Reckoner</i>.
+    Your hand will wobble a few parts in a hundred — mine does too. We declare it, and we compute honestly from what <i>we</i> measured."</div></div>`,
+  ideaPrompt:"Before any choices: in your own words, how could a bead in your hand give the true width of the Moon? (never scored, never stored)",
+  gate:{ q:"Which observation can give the Moon's true width D?",
+    opts:[
+      "How bright it shines — brighter means bigger",
+      "The bead-cover ratio s/L, together with the Moon's distance d",
+      "Comparing it with the stars right beside it",
+      "Waiting for Earth's shadow to touch it during an eclipse"],
+    right:1,
+    feeds:[
+      "Brightness betrays you — a lamp near looks like a star far. Strategy: find something you can measure with lengths.",
+      "Yes. Cover it, read s/L, and the distance turns a ratio into kilometres.",
+      "The stars are pinpoints beyond all bead-cover — they give no length to compare. Strategy: use lengths you control.",
+      "That path exists — it is the eclipse method, another expedition. Tonight you have no eclipse; only your bead."] },
+  actionPrompt:"Slide until the Moon just hides. Your hand's wobble is part of the measurement — declared, and never your fault.",
+  hints:["Strategy: first turn your two hand-lengths into one pure ratio; only then bring in the distance.",
+         "Strategy: the Moon's D relates to d exactly as s relates to L — write the proportion before any arithmetic."],
+  easyHint:"Extra nudge: write D/d = s/L, circle the one unknown, then move everything else to the other side before you touch a calculator.",
+  selfPrompt:"Your value came out a few percent away from the modern books. Why, in your own words?",
+  selfMcq:{ q:"Best explanation for the gap between your D and the modern value?",
+    opts:[
+      "The measured L carries the hand's wobble — the method's honest spread",
+      "The Moon truly changes width from night to night",
+      "The proportion D/d = s/L only roughly holds",
+      "Modern astronomers are still unsure of the width"],
+    right:0,
+    feeds:["Exactly — the spread lives in the measurement, not in the law.",
+      "Its distance changes; its rock does not. The width is fixed.",
+      "For such narrow views the proportion is near-perfect (declared error ~0.001%).",
+      "Laser ranging pins it to metres. The spread is ours, and we declared it."] },
+  transfer:{ q:"A lighthouse-keeper's daughter covers a distant sail (mast 12 m) with the same 6 mm bead at 400 mm. The ship's distance is…",
+    opts:["12 m × (400/6) ≈ 800 m","12 m × (6/400) ≈ 0.18 m","She must first know the ship's distance"], right:0,
+    feed:"Same proportion, third use: unknown on the other side." },
+},
+inverse: {
+  title:"Stage 3 · INVERSE — How far?",
+  steps:["brief","gate","compute","run","debrief1","debrief2"],
+  story: ()=>`
+    <div class="npc"><span class="who">NAUSIKA</span><div class="say">"New wager. The eclipse ledger — Aristarchus' own shadow-work —
+    fixes the Moon's true width at <b class="tnum">3,475 km</b>. Tonight nobody tells you the distance.
+    Your bead just covered it. So: <b>how far is the Moon tonight?</b> My navigators do this with mastheads every day."</div></div>
+    <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"The same proportion, read the other way. Size was the unknown; now it is distance."</div></div>`,
+  ideaPrompt:"In your own words: knowing the true width D, how does the bead give you tonight's distance? (never scored, never stored)",
+  gate:{ q:"Tonight the cover point sits at a LARGER L than last month. The Moon tonight is…",
+    opts:["nearer — big L means big Moon","farther — the disk looks narrower, so the bead covers it from farther back","the same — L cannot change"],
+    right:1,
+    feeds:["Bigger L means the bead had to retreat — the disk looks narrower, not wider. Strategy: think what a narrower view says about distance.",
+      "Right — a narrower view at fixed true width means a longer journey.",
+      "It does change — the orbit is no circle (±5.5%, declared). That is why every night is its own measurement."] },
+  actionPrompt:"Slide until the Moon just hides, read your L, then compute tonight's distance d.",
+  hints:["Strategy: same proportion, new unknown — decide which side of the equals sign you are solving for before touching numbers.",
+         "Strategy: if the ratio s/L narrows, distance must grow in the same proportion as the true width demands."],
+  easyHint:"Extra nudge: rearrange D/d = s/L to isolate d BEFORE plugging in a single number — d = D × (L/s).",
+  selfPrompt:"Say in your own words why a larger L must mean a farther Moon.",
+  selfMcq:{ q:"Why does a larger cover-distance L imply a farther Moon?",
+    opts:[
+      "Fixed true width seen narrower means greater distance — the ratio says so",
+      "Because the bead shrinks with distance",
+      "It doesn't — L varies only from hand error",
+      "Because the Moon speeds up at apogee"],
+    right:0,
+    feeds:["Yes — D fixed, s/L narrower, so d must stretch.",
+      "The bead never changes; only its distance from your eye does.",
+      "Hand wobble exists (declared) but the orbit's ±5.5% is real and larger.",
+      "Kepler would smile, but speed is not width."] },
+  transfer:{ q:"A sailor knows a lighthouse is 30 m tall. Her thumb (20 mm at 700 mm) just covers it. Distance to shore?",
+    opts:["30 × (700/20) ≈ 1,050 m","30 × (20/700) ≈ 0.9 m","Cannot be found without the lighthouse's distance"], right:0,
+    feed:"Navigation by proportion — Nausika's crews live by this." },
+},
+crisis: {
+  title:"Stage 4 · CRISIS — The Sun that came out big",
+  steps:["brief","gate","compute","run","debrief1","debrief2"],
+  story: (scn)=>`
+    <div class="npc"><span class="who">NAUSIKA</span><div class="say">"The scholars are assembled and my patience is a short pier.
+    Ship's order, assistant: <b>no one looks at the Sun. Ever.</b> We use the box:
+    sunlight through a hole of width <b class="tnum">${scn.p.toFixed(2)} mm</b>, a bright little disk on the back wall,
+    <b class="tnum">${fmt(scn.L,0)} mm</b> deep. The scribes measured the disk: <b class="tnum">${scn.sMeas.toFixed(2)} mm</b> wide.
+    The Sun's distance, from the geometers: <b class="tnum">149,600,000 km</b>. Give me its true width — and be right,
+    or the funding sails at dawn."</div></div>
+    <div class="npc ari"><span class="who">ARISTARCHUS</span><div class="say">"Careful. During a total eclipse the Moon covers the Sun <i>exactly</i> —
+    the sky itself proved their view-ratios equal, near 1 part in 110. If your box disagrees with the eclipse, the box is lying somewhere."</div></div>`,
+  ideaPrompt:"Before choices: the image on the wall — is it exactly the Sun's projection, or could the box itself add something? Your thought, in your own words.",
+  gate:{ q:"The hole is not a point — it has width p. What does that do to the bright disk on the wall?",
+    opts:["Nothing — a hole is a hole","It adds about its own width p to the disk","It subtracts p — holes trim images","It only blurs the edge; size is untouched"],
+    right:1,
+    feeds:["If the hole had width zero you'd be right — and the wall would be dark. Strategy: imagine two pinpricks at the hole's two edges.",
+      "Yes — every point of the hole paints its own little Sun, shifted by the hole's width. The disk = true image + p.",
+      "Nothing in the box removes light from the edges — it can only add.",
+      "It blurs AND widens: each edge of the hole shifts a full copy of the disk."] },
+  actionPrompt:"Decide what the scribes' measurement really contains, then commit the Sun's true width D. The eclipse ratio watches over you.",
+  hints:["Strategy: ask what the wall would show if the Sun were a single point — the answer is the hole's own signature.",
+         "Strategy: compare your ratio against the eclipse's 1-in-110 before you trust the box."],
+  easyHint:"Extra nudge: the wall's disk = true projection + hole width p — decide first whether p is big enough next to the disk to matter at all.",
+  selfPrompt:"The naive reading gives a Sun too big. Explain in your own words where the extra width comes from.",
+  selfMcq:{ q:"Why does the uncorrected box overstate the Sun?",
+    opts:[
+      "The measured disk = true projection + the hole's width p",
+      "Sunlight expands in boxes",
+      "The wall's distance L was measured wrong",
+      "The Sun really is that big and the eclipse misleads"],
+    right:0,
+    feeds:["Exactly — subtract the instrument from the measurement (unless it is too small to matter).",
+      "Light travels straight — that assumption is the whole game (declared).",
+      "The carpenters vouch for L; the flaw is at the other end of the box.",
+      "The eclipse is the sky's own experiment — the box must answer to it."] },
+  selfMcqNeg:{ q:"This box's hole is 0.25 mm against a 14 mm disk. The wise move is…",
+    opts:[
+      "Declare it negligible (~2%) — smaller than the method's own wobble — and keep the plain value",
+      "Correct anyway — corrections are always applied",
+      "Abandon the box — no hole, no error",
+      "Enlarge the hole so at least the error is visible"],
+    right:0,
+    feeds:["Judgment, not ritual: a correction smaller than your spread buys nothing. Declaring it is the honest move.",
+      "A correction far below the noise changes nothing but your ink supply. Declare it instead.",
+      "Every instrument carries error — the craft is knowing when it matters.",
+      "Growing the flaw to notice it — Nausika would dock your pay."] },
+  transfer:{ q:"A doctor's scale always reads 0.2 kg heavy. For a 70 kg patient the wise report is…",
+    opts:["≈70 kg — note the offset, it is under the daily variation","69.8 kg exactly, always subtract","The scale is useless"], right:0,
+    feed:"Instruments carry signatures. Know them; subtract when they matter." },
+},
+};
+/* Nausika's run-verdict lines (Article 8 — precise, never 'good try') */
+const NAUSIKA = {
+  fitGold: '"…It fits. To the width of a rope-thread, it fits. A bead, assistant. You measured a moon with a <i>bead</i>."',
+  fitSilver: '"Close. Off by more than my patience but less than my doubt — the wobble we declared is eating your margin."',
+  fitBronze: '"Within a harbor&#8217;s honesty, no better. Check where your ratio leaked before the next wager."',
+  fitNone: '"That sky is wrong, assistant. Your disk %DIR% the bead by far — the proportion did not fail; the arithmetic did."',
+  eclipseClash: '"Your Sun would spill around the Moon in every eclipse ever logged. The sky already voted against your box-reading — find the flaw."',
+  easter42: '"Forty-two? The answer to everything is not a distance, assistant. Compute."',
+};
+/* ============ Screens & step engine (Article 5 — one step visible, earlier cards HIDDEN) ============ */
+function screen(id){ ["scrStart","scrSelect","scrStage"].forEach(s=>$(s).classList.toggle("active",s===id));
+  $("hud").classList.toggle("active",id!=="scrStart"); }
+function setStep(name){
+  document.querySelectorAll("[data-step]").forEach(el=>{
+    el.classList.toggle("on",(el.dataset.step||"").split(" ").includes(name));
+  });
+  S.step=name;
+  $("stageCards").classList.toggle("withCanvas",["brief","gate","compute","run"].includes(name));
+  if(name==="compute"){ renderGiven(); }
+  drawCv();
+}
+function medalsLine(){ return STAGES.map(st=>{
+    const m=S.medals[st]; const dot=m==="Gold"?"🥇":m==="Silver"?"🥈":m==="Bronze"?"🥉":"·"; return dot; }).join(" "); }
+function refreshHud(){
+  $("hudStage").textContent=S.stage?DEF[S.stage].title:"—";
+  $("hudScn").textContent=S.scn?("scenario "+S.scn.id):"—";
+  $("hudMedals").textContent=medalsLine();
+  $("hudAtt").textContent="✗ "+S.wrong;
+}
+function renderStageList(){
+  const el=$("stageList"); el.innerHTML="";
+  STAGES.forEach((st,i)=>{
+    const unlocked = i===0 || !!S.medals[STAGES[i-1]];
+    const m=S.medals[st];
+    const b=document.createElement("button");
+    b.className="stagebtn"; b.disabled=!unlocked;
+    b.innerHTML=`<span class="n">${["🗼","🌕","📐","☀️"][i]}</span>
+      <span><b>${DEF[st].title}</b>
+      <small>${unlocked?(m?("best: "+m+(S.best[st]!=null?(" · score "+S.best[st]):"")):"not yet attempted"):"locked — earn Bronze in the previous stage"}</small></span>
+      <span class="grow"></span><span class="medal ${m||""}">${m||""}</span>`;
+    b.addEventListener("click",()=>startStage(st));
+    el.appendChild(b);
+  });
+}
+function startStage(st){
+  S.stage=st; S.scn=pickScn(st); S.wrong=0; S.hintsUsed=0; S.gateScore=(st==="watch"?1:0);
+  S.selfScore=0; S.conf=null; S.committed=null; S.analytic=null; S.errPct=null; S.medal=null;
+  S.crisisPhase=0; S.slidLocked=false; S.transferDone=false; S.gateWrongs=0; S.selfFirstTry=true; S.hintPenalty=0;
+  $("stageTitle").textContent=DEF[st].title;
+  $("storyText").innerHTML=DEF[st].story?DEF[st].story(S.scn):"";
+  resetGateUi(); resetComputeUi(); resetDebriefUi();
+  screen("scrStage"); refreshHud(); setStep("brief"); sndMissionReady();
+}
+/* ---------- gate (Article 15a: free idea first, then MCQ; strategy feedback; retry allowed) ---------- */
+function resetGateUi(){
+  const d=DEF[S.stage];
+  show($("gateIdeaWrap"),true); show($("gateMcqWrap"),false);
+  $("ideaBox").value=""; $("ideaCount").textContent="0"; $("btnIdea").disabled=true;
+  if(d.ideaPrompt) $("gateIdeaPrompt").textContent=d.ideaPrompt;
+  $("gateFeed").textContent="";
+}
+function openGateMcq(){
+  const d=DEF[S.stage]; show($("gateIdeaWrap"),false); show($("gateMcqWrap"),true);
+  $("gateQ").textContent=d.gate.q;
+  const box=$("gateOpts"); box.innerHTML="";
+  shuffledIdx(d.gate.opts.length).forEach(i=>{
+    const b=document.createElement("button"); b.className="opt"; b.textContent=d.gate.opts[i];
+    b.addEventListener("click",()=>answerGate(i,b)); box.appendChild(b);
+  });
+}
+function answerGate(i,btn){
+  const d=DEF[S.stage];
+  const right=i===d.gate.right;
+  $("gateFeed").textContent=d.gate.feeds[i];
+  if(right){
+    btn.classList.add("right"); sndNotebookOK();
+    const w=S.gateWrongs||0;
+    S.gateScore = w===0?1 : w===1?0.5 : 0.25; // scored on first attempt (15a) — mode-independent (Article 6)
+    [...$("gateOpts").children].forEach(b=>b.disabled=true);
+    setTimeout(()=>setStep("compute"),1400);
+  } else {
+    btn.classList.add("wrong"); btn.disabled=true;
+    S.gateWrongs=(S.gateWrongs||0)+1;
+    wrongAttempt();
+    sndFail();
+  }
+}
+/* ---------- compute & commit (Article 4 / 7) ---------- */
+function resetComputeUi(){
+  const d=DEF[S.stage];
+  $("actionPrompt").textContent=d.actionPrompt;
+  $("hintOut").textContent=""; $("answerIn").value="";
+  document.querySelectorAll('input[name="conf"]').forEach(r=>{ r.checked=false; r.closest("label").classList.remove("sel"); });
+  $("btnCommit").disabled=true;
+  const obs=S.stage!=="crisis";
+  show($("obsWrap"),obs); show($("commitWrap"),!obs);
+  if(obs){
+    const max=S.stage==="watch"?400:900;
+    const sl=$("sliderL"); sl.disabled=false; sl.min=S.stage==="watch"?120:400; sl.max=max; sl.value=max; S.slidLocked=false;
+    show($("btnRecord"),true); $("btnRecord").disabled=true; show($("btnRemeasure"),false);
+    $("sliderLabel").textContent="Slide the bead along the rod until it just covers the disk — try both directions, then record";
+    updateSlider();
+  }
+  $("answerUnit").textContent=S.stage==="watch"?"bead-widths":"km";
+  $("answerLabel").textContent=
+    S.stage==="watch"?"L ÷ s = ? (bead-widths)":
+    S.stage==="predict"?"The Moon's true width D, in km":
+    S.stage==="inverse"?"Tonight's distance d to the Moon, in km":
+    "The Sun's true width D, in km";
+}
+function coverL(){ // where "just covers" truly happens for this scenario (the hand-wobble lives here, declared)
+  if(S.stage==="watch") return C.PHAROS_L;
+  if(S.stage==="predict"||S.stage==="inverse") return S.scn.L;
+  return null;
+}
+function updateSlider(){
+  const L=+$("sliderL").value; const tgt=coverL();
+  const covered=Math.abs(L-tgt)<=3;
+  if(!S.slidLocked){
+    $("sliderRead").innerHTML = covered
+      ? "L = <b>"+L+" mm</b> — ✔ just covered. Record the reading."
+      : "L = "+L+" mm — "+(L>tgt?"disk peeks around the bead (come nearer)":"bead overflows the disk (go farther)");
+    $("btnRecord").disabled=!covered;
+  }
+  drawCv();
+}
+function recordReading(){
+  const tgt=coverL(); S.slidLocked=true;
+  $("sliderL").value=tgt; $("sliderL").disabled=true;
+  $("sliderRead").innerHTML="L locked in your notebook: <b>"+tgt+" mm</b>";
+  show($("btnRecord"),false); show($("btnRemeasure"),true);
+  sndNotebookOK(); show($("commitWrap"),true); renderGiven(); drawCv();
+}
+function remeasure(){
+  if(S.committed!=null) return;
+  S.slidLocked=false; $("sliderL").disabled=false;
+  show($("btnRecord"),true); show($("btnRemeasure"),false);
+  show($("commitWrap"),false); updateSlider();
+}
+function renderGiven(){
+  const g=$("givenList"); g.innerHTML="";
+  function gv(k,v,u,note){ g.insertAdjacentHTML("beforeend",
+    `<div class="gv"><span class="k">${k}</span><span class="v">${v}</span> <span class="u">${u||""}</span>${note?`<span class="k">${note}</span>`:""}</div>`); }
+  if(S.stage==="watch"){
+    gv("bead width s","6.0","mm"); gv("Pharos height H","120","m","declared: sources 100–140");
+    gv("distance d","5,000","m","harbor charts");
+    if(S.slidLocked) gv("your cover L","250","mm","your slide");
+    $("dataNote").textContent="Units inside the ratio must match: mm with mm, m with m. The ratio itself is a pure number.";
+  } else if(S.stage==="predict"){
+    gv("bead width s","6.0","mm"); gv("Moon distance d",fmt(S.scn.d,0),"km","eclipse ledger — the shadow method");
+    if(S.slidLocked) gv("your cover L",S.scn.L,"mm",`includes your hand&#8217;s wobble (declared ≈ ${S.scn.wob}%)`);
+    $("dataNote").textContent="mm with mm on one side, km on the other — the ratio s/L is pure, then D = d × (s/L).";
+  } else if(S.stage==="inverse"){
+    gv("bead width s","6.0","mm"); gv("Moon true width D","3,475","km","eclipse method (declared origin)");
+    if(S.slidLocked) gv("your cover L",S.scn.L,"mm","includes hand wobble, declared");
+    $("dataNote").textContent="Same proportion, other unknown: d = D × (L/s).";
+  } else {
+    gv("box depth L",fmt(S.scn.L,0),"mm","carpenters vouch"); gv("hole width p",S.scn.p.toFixed(2),"mm","measured with calipers");
+    gv("disk on wall",S.scn.sMeas.toFixed(2),"mm","the scribes' measurement");
+    gv("Sun distance d","149,600,000","km","the geometers");
+    $("dataNote").textContent="The eclipse fact is your cross-check: Moon and Sun show the same view-ratio, near 1/110.";
+  }
+}
+function updateCommitReady(){
+  const v=$("answerIn").value.trim();
+  S.conf=(document.querySelector('input[name="conf"]:checked')||{}).value||null;
+  document.querySelectorAll(".conf label").forEach(l=>l.classList.toggle("sel",l.querySelector("input").checked));
+  $("btnCommit").disabled=!(v!==""&&isFinite(+v)&&S.conf);
+}
+function useHint(){
+  const d=DEF[S.stage];
+  // Article 6: Easy mode's only permitted effect is one extra scaffold hint — same free-first/paid-rest cost in every mode.
+  const hs=S.settings.easy&&d.easyHint?d.hints.concat([d.easyHint]):d.hints;
+  const i=Math.min(S.hintsUsed,hs.length-1);
+  $("hintOut").textContent=hs[i];
+  if(S.hintsUsed>0){ S.hintPenalty=(S.hintPenalty||0)+5; toast("Later hints cost 5 mission points each. The first was free — always."); }
+  S.hintsUsed++;
+}
+function analyticFor(){
+  if(S.stage==="watch") return DEF.watch.question.analytic;
+  if(S.stage==="predict") return S.scn.analytic;
+  if(S.stage==="inverse") return S.scn.analytic;
+  return S.scn.analytic; // crisis: corrected D (never in DOM before commit — computed here, at commit time)
+}
+function commit(){
+  const v=+$("answerIn").value;
+  if(v===42 && S.stage!=="watch"){ $("hintOut").innerHTML=NAUSIKA.easter42; $("answerIn").value=""; updateCommitReady(); return; }
+  sndCompute();
+  S.committed=v; S.analytic=analyticFor();
+  S.errPct=Math.abs(v-S.analytic)/S.analytic*100;
+  if(S.stage==="crisis"&&S.crisisPhase===0){
+    // phase 0: the sky itself audits the box-reading against the eclipse ratio
+    const naive=C.d_SUN*S.scn.sMeas/S.scn.L;
+    const offNaive=Math.abs(v-naive)/naive*100;
+    if(!S.scn.negligible && offNaive<3 ){ // they committed the uncorrected value on a variant where it matters
+      S.crisisPhase=1; sndFail();
+      $("runText").innerHTML=`<p>${NAUSIKA.eclipseClash}</p>
+        <p class="note">Box ratio: ${S.scn.sMeas.toFixed(2)}/${fmt(S.scn.L,0)} = 1/${fmt(S.scn.L/S.scn.sMeas,1)} —
+        but every total eclipse fixes the Sun&#8217;s view-ratio at the Moon&#8217;s, near 1/110. The sky disagrees with your reading. Recheck what the wall really shows, then commit again.</p>`;
+      wrongAttempt(); setStep("run"); show($("btnRunNext"),false);
+      setTimeout(()=>{ setStep("compute"); $("answerIn").value=""; updateCommitReady(); },5200);
+      return;
+    }
+  }
+  S.medal=medalFor(S.errPct,S.stage);
+  runPhase();
+}
+/* ---------- run (the locked sky) ---------- */
+function runPhase(){
+  setStep("run"); sndRunStart(); refreshHud(); show($("btnRunNext"),false);
+  RUN.t0=performance.now(); RUN.active=true;
+  const app=S.stage==="inverse"?S.analytic/S.committed:S.committed/S.analytic;
+  const dir=app>1?"bulges past":"hides too deep behind";
+  const line = S.medal==="Gold"?NAUSIKA.fitGold : S.medal==="Silver"?NAUSIKA.fitSilver :
+               S.medal==="Bronze"?NAUSIKA.fitBronze : NAUSIKA.fitNone.replace("%DIR%",dir);
+  setTimeout(()=>{ $("runText").innerHTML=`<div class="npc"><span class="who">NAUSIKA</span><div class="say">${line}</div></div>`;
+    show($("btnRunNext"),true); },2600);
+}
+/* ---------- debrief (Articles 8, 15b, 15-transfer) ---------- */
+function resetDebriefUi(){
+  show($("selfTextWrap"),true); show($("selfMcqWrap"),false);
+  $("selfText").value=""; $("selfCount").textContent="0"; $("btnSelf").disabled=true;
+  $("selfFeed").textContent=""; $("transFeed").textContent=""; $("btnDone").disabled=true;
+  // Article 7 / check 8: previous debriefs must not linger in the DOM (hidden cards are still DOM)
+  ["resultLines","npcVerdict","workedOut","threeCols","greatLine","transOpts","selfOpts","runText","gateOpts","gateFeed","hintOut"].forEach(id=>{ $(id).innerHTML=""; });
+}
+function debrief1(){
+  setStep("debrief1"); RUN.active=false;
+  const unit=S.stage==="watch"?" bead-widths":" km";
+  const dp=S.stage==="watch"?1:0;
+  $("resultLines").innerHTML=
+    `<div class="result-line"><span>Your committed value</span><b>${fmt(S.committed,dp)}${unit}</b></div>
+     <div class="result-line"><span>Analytic value from YOUR data</span><b>${fmt(S.analytic,dp)}${unit}</b></div>
+     <div class="result-line"><span>Absolute error</span><b>${fmt(Math.abs(S.committed-S.analytic),dp)}${unit}</b></div>
+     <div class="result-line"><span>Relative error</span><b>${S.errPct.toFixed(2)}%</b></div>
+     <div class="result-line"><span>Numeric band (provisional)</span><b class="medal ${S.medal||""}">${S.medal||"no medal"}</b></div>
+     <p class="note">Your final medal also needs the concept gate, your explanation and your calibration — see the debrief.</p>`;
+  const highWrong=(S.conf==="high"&&!S.medal);
+  $("npcVerdict").innerHTML = highWrong?
+    "<b>You were certain, and you were wrong — this is the most valuable moment in the lesson.</b> Certainty that survives a miss becomes real knowledge. Retry the night.":
+    (S.conf==="low"&&S.medal==="Gold")?"Gold while calling yourself unsure — trust your own arithmetic a little more; the calibration score rewards it.":"";
+  const d=DEF[S.stage];
+  $("selfPrompt").textContent=d.selfPrompt||"In one sentence: why did your number land where it did?";
+  if(S.stage==="watch"){ // watch keeps it light: no free-text, straight to its MCQ — result card stays on screen
+    show($("selfTextWrap"),false); show($("selfMcqWrap"),true); openSelfMcq(); }
+}
+function openSelfMcq(){
+  const d=DEF[S.stage];
+  const mc=(S.stage==="crisis"&&S.scn.negligible)?d.selfMcqNeg:(d.selfMcq||null);
+  show($("selfTextWrap"),false); show($("selfMcqWrap"),true);
+  if(!mc){ S.selfScore=1; debrief2(); return; }
+  $("selfQ").textContent=mc.q; const box=$("selfOpts"); box.innerHTML="";
+  shuffledIdx(mc.opts.length).forEach(i=>{ const o=mc.opts[i]; const b=document.createElement("button"); b.className="opt"; b.textContent=o;
+    b.addEventListener("click",()=>{ 
+      $("selfFeed").textContent=mc.feeds[i];
+      if(i===mc.right){ b.classList.add("right"); sndNotebookOK();
+        S.selfScore=S.selfFirstTry?1:0.5; [...box.children].forEach(x=>x.disabled=true);
+        setTimeout(debrief2,1500);
+      } else { b.classList.add("wrong"); b.disabled=true; S.selfFirstTry=false; wrongAttempt(); sndFail(); }
+    }); box.appendChild(b); });
+}
+function debrief2(){
+  setStep("debrief2");
+  $("workedOut").innerHTML=workedHtml();
+  threeColsHtml();
+  const d=DEF[S.stage];
+  $("transQ").textContent=d.transfer.q; const box=$("transOpts"); box.innerHTML="";
+  shuffledIdx(d.transfer.opts.length).forEach(i=>{ const o=d.transfer.opts[i]; const b=document.createElement("button"); b.className="opt"; b.textContent=o;
+    b.addEventListener("click",()=>{ $("transFeed").textContent=(i===d.transfer.right)?d.transfer.feed:"Hold the proportion steady and try once more — which quantity is unknown here?";
+      if(i===d.transfer.right){ b.classList.add("right"); sndNotebookOK(); S.transferDone=true; [...box.children].forEach(x=>x.disabled=true); finalizeStage(); }
+      else { b.classList.add("wrong"); b.disabled=true; wrongAttempt(); sndFail(); }
+    }); box.appendChild(b); });
+}
+function workedHtml(){
+  const scn=S.scn;
+  if(S.stage==="watch") return DEF.watch.worked();
+  if(S.stage==="predict") return `<p>Ratio first (mm with mm):</p>
+    <div class="formula">s / L = 6.0 / ${scn.L} = 1 / ${fmt(scn.L/6,1)}</div>
+    <p>The Moon obeys the same ratio at its distance:</p>
+    <div class="formula">D = d × s/L = ${fmt(scn.d,0)} / ${fmt(scn.L/6,1)} = ${fmt(scn.analytic,0)} km</div>
+    <p class="note">Graded against YOUR measurement (${scn.L} mm, wobble declared ${scn.wob}%) — not against the modern books. Scoring resets; the story propagates.</p>`;
+  if(S.stage==="inverse") return `<p>Same proportion, unknown on the other side:</p>
+    <div class="formula">d = D × L/s = 3,475 × ${scn.L}/6.0 = ${fmt(scn.analytic,0)} km</div>
+    <p class="note">Tonight&#8217;s answer. Another night, another L, another d — the orbit is no circle (±5.5%, declared).</p>`;
+  const sTrue=scn.sMeas-scn.p;
+  if(scn.negligible) return `<p>The instrument&#8217;s signature: disk = projection + hole width.</p>
+    <div class="formula">correction p = ${scn.p.toFixed(2)} mm on ${scn.sMeas.toFixed(2)} mm ≈ ${(scn.p/(scn.sMeas-scn.p)*100).toFixed(1)}%</div>
+    <p>Smaller than the method&#8217;s own wobble — <b>declared negligible, value kept:</b></p>
+    <div class="formula">D ≈ d × s/L = 149,600,000 × ${scn.sMeas.toFixed(2)}/${fmt(scn.L,0)} ≈ ${fmt(C.d_SUN*scn.sMeas/scn.L,0)} km</div>`;
+  return `<p>The wall&#8217;s disk carries the hole&#8217;s width. Subtract the instrument:</p>
+    <div class="formula">s = ${scn.sMeas.toFixed(2)} − ${scn.p.toFixed(2)} = ${sTrue.toFixed(2)} mm</div>
+    <div class="formula">D = d × s/L = 149,600,000 × ${sTrue.toFixed(2)}/${fmt(scn.L,0)} = ${fmt(scn.analytic,0)} km</div>
+    <p class="note">Uncorrected, the box overstates by ${scn.naiveErr}% — and the eclipse ratio catches it, exactly as it caught you if you tried.</p>`;
+}
+function threeColsHtml(){
+  let yours, ancient, modern, kAnc, great;
+  if(S.stage==="watch"){ yours=fmt(S.committed,1)+" bw"; ancient="1/41.7"; modern="1/41.7"; kAnc="the proportion";
+    great="Where a boat can check it, the bead already tells the truth. Now the sky.";}
+  else if(S.stage==="predict"){ yours=fmt(S.committed,0)+" km"; ancient="4,035–5,073 km"; modern="3,475 km"; kAnc="Aristarchus (On Sizes)";
+    great="With a bead at arm&#8217;s length you landed within a few percent of a world 380,000 km away — Aristarchus, with no second try and no laser, landed within ~25%. Both of you measured, neither looked it up.";}
+  else if(S.stage==="inverse"){ yours=fmt(S.committed,0)+" km"; ancient="~60 Earth radii ≈ 382,000 km"; modern=fmt(S.scn.analytic,0)+" km (tonight)"; kAnc="the ancient ladder";
+    great="Sixty Earth-radii, said the ancients — from shadows and beads alone. Your bead just re-climbed their ladder.";}
+  else { yours=fmt(S.committed,0)+" km"; ancient="'vastly larger than Earth' — Aristarchus"; modern="1,392,000 km"; kAnc="the ancient verdict";
+    great="Aristarchus could not get the Sun&#8217;s number — his tools stopped at 'enormous, and therefore central?'. He asked the right question 1,800 years early. Your box, plus honesty about its hole, finishes his sentence.";}
+  $("threeCols").innerHTML=
+    `<div class="col"><span class="k">YOURS — tonight</span><span class="v">${yours}</span></div>
+     <div class="col"><span class="k">${kAnc}</span><span class="v" style="font-size:1rem">${ancient}</span></div>
+     <div class="col"><span class="k">MODERN</span><span class="v">${modern}</span></div>`;
+  $("greatLine").innerHTML=great;
+}
+/* ---------- scoring & stage end (Article 4: 40/25/25/10) ---------- */
+function finalizeStage(){
+  const numMedal=S.medal; // numeric-band medal, set at commit() from errPct alone
+  const numFrac=medalFrac(numMedal);
+  const cal=calScore(S.conf,!!numMedal);
+  let score=Math.round(100*(0.40*numFrac+0.25*S.gateScore+0.25*S.selfScore+0.10*cal))-(S.hintPenalty||0);
+  score=Math.max(0,score);
+  // Article 4: the AWARDED medal is min(numeric-band, composite-band) — never raw error alone.
+  const order={Gold:3,Silver:2,Bronze:1,undefined:0,null:0};
+  const compMedal=compositeBand(score);
+  const awarded=order[compMedal]<order[numMedal]?compMedal:numMedal;
+  S.medal=awarded;
+  if(order[awarded]>(order[S.medals[S.stage]]||0)) S.medals[S.stage]=awarded;
+  if(S.best[S.stage]==null||score>S.best[S.stage]) S.best[S.stage]=score;
+  saveProgress(); refreshHud();
+  $("btnDone").disabled=false;
+  if(awarded){ fireworks(awarded); ({Gold:sndFanfareGold,Silver:sndFanfareSilver,Bronze:sndFanfareBronze})[awarded]();
+    toast(awarded+" — mission score "+score+" / 100"); }
+  else if(numMedal){ toast("Numeric band was "+numMedal+", but the composite (concept + explanation + calibration) held it to no medal — score "+score+". Retry rolls a new night."); }
+  else { toast("No medal — score "+score+". Retry rolls a new night."); }
+  const i=STAGES.indexOf(S.stage);
+  if(awarded&&i<3&&!S.medals[STAGES[i+1]]) setTimeout(()=>{ toast("🔓 "+DEF[STAGES[i+1]].title+" unlocked"); sndUnlock(); },1800);
+  if(STAGES.every(st=>S.medals[st]==="Gold")&&S.stage==="crisis") setTimeout(pullback,2200);
+}
+/* ============ Canvas — one surface per representation (Article 14), passports always on ============ */
+const RUN={active:false,t0:0};
+let TAB="sight";
+const PASSPORT={
+  sight: ()=>`<span><b>VIEW</b> 👁 sighting view — what your eye sees</span>
+    <span><b>SHOWS</b> ${S.stage==="crisis"?"the bright disk on the box wall, now":"the target disk and your bead, this instant"}</span>
+    <span><b>AXES</b> none — angular view: <b>nothing here is to linear scale</b>${S.step==="run"||S.step==="debrief1"?"; km ruler shown after commit only":""}</span>
+    <span><b>READ IT</b> does the bead just cover the disk? (s/L vs D/d)</span>`,
+  geom: ()=>`<span><b>VIEW</b> ⛰ side view — schematic of the two similar triangles</span>
+    <span><b>SHOWS</b> eye → bead (s at L) → target (D at d)${S.stage==="crisis"?" — here: hole → wall inside the box":""}</span>
+    <span><b>AXES</b> lengths labeled in mm / km — <b>declared distortion: distances compressed ~600,000×; read numbers, not lengths</b></span>
+    <span><b>READ IT</b> equal ratios: s/L = D/d</span>`,
+};
+function setTab(tb){ TAB=tb;
+  $("tabSight").setAttribute("aria-selected",tb==="sight");
+  $("tabGeom").setAttribute("aria-selected",tb==="geom");
+  drawCv();
+}
+function drawCv(){
+  const cv=$("cv"); if(!cv||!cv.getContext) return; const x=cv.getContext("2d"); if(!x) return;
+  x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,cv.width,cv.height);
+  if(!S.stage) return;
+  $("passport").innerHTML=PASSPORT[TAB]();
+  if(TAB==="geom") drawGeom(x,cv); else drawSight(x,cv);
+}
+function starfield(x,w,h){ x.fillStyle="#0a1122"; x.fillRect(0,0,w,h);
+  for(let i=0;i<70;i++){ const sx=(i*97)%w, sy=(i*151)%h; x.fillStyle=i%7?"#31425f":"#8fa4c8"; x.fillRect(sx,sy,2,2); } }
+function drawSight(x,cv){
+  const w=cv.width,h=cv.height,cx=w/2,cy=h/2;
+  starfield(x,w,h);
+  const R=120;
+  // target disk
+  if(S.stage==="watch"){ // Pharos silhouette, drawn at its TRUE angular size: full height = the cover disk's diameter
+    x.fillStyle="#122036"; x.fillRect(0,cy+R*0.95,w,h);
+    x.fillStyle="#e8d5a3";
+    x.fillRect(cx-R*0.14,cy-R*0.47,R*0.28,R*1.42);                    // body: fits inside the cover circle
+    x.beginPath(); x.moveTo(cx-R*0.26,cy-R*0.47); x.lineTo(cx,cy-R*0.97); x.lineTo(cx+R*0.26,cy-R*0.47); x.closePath(); x.fill();
+    x.fillStyle="#f7e9bf"; x.fillRect(cx-R*0.05,cy-R*0.62,R*0.10,R*0.10); // beacon
+  } else if(S.stage==="crisis"){ // the projected solar disk on the wall
+    x.fillStyle="#1c1408"; x.fillRect(0,0,w,h);
+    const g=x.createRadialGradient(cx,cy,10,cx,cy,R); g.addColorStop(0,"#fff3c4"); g.addColorStop(1,"#e8b64c");
+    x.fillStyle=g; x.beginPath(); x.arc(cx,cy,R,0,7); x.fill();
+    x.strokeStyle="#7a5b22"; x.lineWidth=2; x.beginPath(); x.arc(cx,cy,R,0,7); x.stroke();
+  } else { // the Moon
+    const g=x.createRadialGradient(cx-R*0.3,cy-R*0.3,R*0.2,cx,cy,R); g.addColorStop(0,"#f2efe4"); g.addColorStop(1,"#b9b4a2");
+    x.fillStyle=g; x.beginPath(); x.arc(cx,cy,R,0,7); x.fill();
+    x.fillStyle="rgba(90,88,76,.5)";
+    [[-.3,-.2,.18],[.25,.1,.13],[-.05,.35,.11],[.05,-.38,.09]].forEach(m=>{ x.beginPath(); x.arc(cx+m[0]*R,cy+m[1]*R,m[2]*R,0,7); x.fill(); });
+  }
+  // bead silhouette (not in crisis — no bead can face the Sun; ship's order)
+  if(S.stage!=="crisis"){
+    const L=S.slidLocked?coverL():+$("sliderL").value;
+    const tgt=coverL();
+    const rBead=R*(tgt/L);            // bead angular size relative to target's: s/L vs s/tgt
+    x.fillStyle="#0b0f18"; x.beginPath(); x.arc(cx,cy,Math.max(6,rBead),0,7); x.fill();
+    x.strokeStyle="#ffd166"; x.lineWidth=2.5; x.beginPath(); x.arc(cx,cy,Math.max(6,rBead),0,7); x.stroke();
+    x.fillStyle="#aebcd2"; x.font="14px system-ui"; x.textAlign="center";
+    x.fillText("bead on the rod — angular ruler: bead-widths, not km",cx,h-16);
+    if(S.step==="compute"||S.step==="gate"||S.step==="brief"){
+      x.fillStyle="#ffd166"; x.font="16px system-ui"; x.textAlign="left";
+      x.fillText(S.slidLocked?("L locked: "+coverL()+" mm"):("bead distance L = "+L+" mm — slide until covered"),16,30);
+    }
+  }
+  // RUN: draw the committed disk vs the truth (post-commit only — Article 7: km ruler appears now)
+  if((S.step==="run"||S.step==="debrief1")&&S.committed!=null&&S.stage!=="watch"){
+    const ratio=S.stage==="inverse"?S.analytic/S.committed:S.committed/S.analytic; // apparent-size ratio: farther = smaller
+    const rr=Math.max(4,Math.min(R*ratio,h*0.48));
+    x.strokeStyle=Math.abs(ratio-1)<0.05?"#5ce39a":"#ff7a8a"; x.setLineDash([6,5]); x.lineWidth=3;
+    x.beginPath(); x.arc(cx,cy,rr,0,7); x.stroke(); x.setLineDash([]);
+    x.fillStyle="#f2f5fa"; x.font="15px system-ui"; x.textAlign="center";
+    x.fillText("dashed = the disk YOUR number draws",cx,26);
+    // km ruler (post-commit)
+    const kmPerPx=(S.stage==="inverse"?C.D_MOON:S.analytic)/(2*R);
+    const rulerPx=140;
+    x.strokeStyle="#e8d5a3"; x.lineWidth=2; x.beginPath(); x.moveTo(24,h-34); x.lineTo(24+rulerPx,h-34); x.stroke();
+    x.beginPath(); x.moveTo(24,h-40); x.lineTo(24,h-28); x.moveTo(24+rulerPx,h-40); x.lineTo(24+rulerPx,h-28); x.stroke();
+    x.fillStyle="#e8d5a3"; x.font="13px system-ui"; x.textAlign="left";
+    x.fillText(fmt(kmPerPx*rulerPx,0)+" km (ruler valid AFTER commit only)",24,h-46);
+  }
+}
+function drawGeom(x,cv){
+  const w=cv.width,h=cv.height; x.fillStyle="#0d1526"; x.fillRect(0,0,w,h);
+  const cy=h/2-20;
+  const GOLD="#ffd166", CYAN="#6fd3ff", PAP="#e8d5a3";
+  function dim(x1,x2,y,color,label,brk){ // labeled dimension line with arrowheads (+break marks = compressed)
+    x.strokeStyle=color; x.fillStyle=color; x.lineWidth=1.5;
+    x.beginPath(); x.moveTo(x1,y); x.lineTo(x2,y); x.stroke();
+    x.beginPath(); x.moveTo(x1,y); x.lineTo(x1+8,y-4); x.lineTo(x1+8,y+4); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(x2,y); x.lineTo(x2-8,y-4); x.lineTo(x2-8,y+4); x.closePath(); x.fill();
+    if(brk){ const mx=(x1+x2)/2; x.strokeStyle="#0d1526"; x.lineWidth=8;
+      x.beginPath(); x.moveTo(mx-7,y); x.lineTo(mx+7,y); x.stroke();
+      x.strokeStyle=color; x.lineWidth=1.5;
+      x.beginPath(); x.moveTo(mx-10,y+6); x.lineTo(mx-2,y-6); x.moveTo(mx+2,y+6); x.lineTo(mx+10,y-6); x.stroke(); }
+    x.font="15px system-ui"; x.textAlign="center"; x.fillText(label,(x1+x2)/2,y+22);
+  }
+  if(S.stage==="crisis"){
+    const boxL=w*0.16,boxR=w*0.62,boxT=cy-120,boxB=cy+120;
+    x.strokeStyle=PAP; x.lineWidth=3; x.strokeRect(boxL,boxT,boxR-boxL,boxB-boxT);
+    x.clearRect(boxR-2,cy-14,6,28);
+    x.strokeStyle=GOLD; x.lineWidth=2;
+    [[-1,-46],[1,46]].forEach(p=>{ x.beginPath(); x.moveTo(w-40,cy+p[1]); x.lineTo(boxR,cy+p[0]*10); x.lineTo(boxL,cy-p[0]*44); x.stroke(); });
+    x.fillStyle="#fff3c4"; x.fillRect(boxL+3,cy-46,6,92);
+    x.fillStyle="#f2f5fa"; x.font="15px system-ui"; x.textAlign="center";
+    x.fillText("Sun →",w-44,cy-58);
+    // the three lengths, ON the drawing
+    dim(boxL,boxR,boxB+34,PAP,"L (box depth) = "+fmt(S.scn.L,0)+" mm",false);
+    x.strokeStyle=CYAN; x.fillStyle=CYAN; x.lineWidth=1.5;                       // p at the hole
+    x.beginPath(); x.moveTo(boxR+10,cy-14); x.lineTo(boxR+10,cy+14); x.stroke();
+    x.beginPath(); x.moveTo(boxR+6,cy-14); x.lineTo(boxR+14,cy-14); x.moveTo(boxR+6,cy+14); x.lineTo(boxR+14,cy+14); x.stroke();
+    x.font="14px system-ui"; x.textAlign="left"; x.fillText("p (hole width) = "+S.scn.p.toFixed(2)+" mm",boxR+20,cy+42);
+    x.strokeStyle=GOLD; x.fillStyle=GOLD;                                        // s at the wall
+    x.beginPath(); x.moveTo(boxL-10,cy-46); x.lineTo(boxL-10,cy+46); x.stroke();
+    x.beginPath(); x.moveTo(boxL-14,cy-46); x.lineTo(boxL-6,cy-46); x.moveTo(boxL-14,cy+46); x.lineTo(boxL-6,cy+46); x.stroke();
+    x.font="14px system-ui"; x.textAlign="left";
+    x.fillText("s (disk on wall)",boxL-6,cy-56); x.fillText("= "+S.scn.sMeas.toFixed(2)+" mm measured",boxL-6,boxB+64);
+    x.fillStyle="#aebcd2"; x.font="14px system-ui"; x.textAlign="center";
+    x.fillText("every point of the hole paints its own Sun — the wall disk carries the hole's width",(boxL+boxR)/2,boxT-16);
+  } else {
+    const eyeX=70, midX=w*0.38, farX=w-100;
+    const L=S.slidLocked?coverL():(+($("sliderL").value)||700);
+    const beadY=34, farY=110;
+    x.strokeStyle=CYAN; x.lineWidth=2;                                            // sight lines
+    x.beginPath(); x.moveTo(eyeX,cy); x.lineTo(farX,cy-farY); x.moveTo(eyeX,cy); x.lineTo(farX,cy+farY); x.stroke();
+    x.fillStyle="#f2f5fa"; x.font="16px system-ui"; x.textAlign="center"; x.fillText("👁 eye",eyeX,cy+26);
+    x.strokeStyle=GOLD; x.lineWidth=5;                                            // the bead (s)
+    x.beginPath(); x.moveTo(midX,cy-beadY); x.lineTo(midX,cy+beadY); x.stroke();
+    x.fillStyle=GOLD; x.font="15px system-ui"; x.textAlign="left";
+    x.fillText("bead",midX+8,cy-beadY-8); x.fillText("s = 6.0 mm",midX+8,cy+6);
+    x.strokeStyle=CYAN; x.lineWidth=5;                                            // the target (D)
+    x.beginPath(); x.moveTo(farX,cy-farY); x.lineTo(farX,cy+farY); x.stroke();
+    x.fillStyle=CYAN; x.textAlign="right";
+    const tgtName=S.stage==="watch"?"Pharos":"Moon";
+    const dLabel=S.stage==="watch"?"H = 120 m":(S.stage==="predict"?"D = ?  (your wager)":"D = 3,475 km");
+    x.fillText(tgtName,farX-10,cy-farY-8); x.fillText(dLabel,farX-10,cy+6);
+    dim(eyeX,midX,cy+farY+34,GOLD,"L (eye→bead) = "+L+" mm",false);               // the two distances, ON the drawing
+    const dVal=S.stage==="watch"?"d = 5,000 m (harbor charts)":(S.stage==="predict"?"d = "+fmt(S.scn.d,0)+" km (eclipse ledger)":"d = ?  (tonight's unknown)");
+    dim(eyeX,farX,cy+farY+74,CYAN,dVal,true);
+    x.fillStyle="#aebcd2"; x.font="14px system-ui"; x.textAlign="center";
+    x.fillText("similar triangles share the vertex at the eye  →  s/L = "+(S.stage==="watch"?"H":"D")+"/d",w/2,26);
+    x.fillStyle=PAP; x.font="13px system-ui";
+    x.fillText("gold = bead pair (s, L) · blue = target pair ("+(S.stage==="watch"?"H":"D")+", d) · broken line = compressed ~600,000× — read numbers, not lengths",w/2,50);
+  }
+}
+/* ============ Fireworks (inherited pattern; reduced-motion honored) ============ */
+function fireworks(medal){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv=$("fx"); cv.width=innerWidth; cv.height=innerHeight; const x=cv.getContext("2d");
+  const pal={Gold:["#ffd166","#fff3c4","#e0a63f"],Silver:["#cdd7e4","#ffffff","#9fb2c8"],Bronze:["#d99a66","#f2c49b","#a8663a"]}[medal];
+  const P=[]; for(let b=0;b<3;b++){ const bx=innerWidth*(0.25+0.25*b), by=innerHeight*0.35;
+    for(let i=0;i<46;i++){ const a=Math.PI*2*i/46, sp=2+Math.random()*3;
+      P.push({x:bx,y:by,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:60+Math.random()*30,c:pal[i%3],d:b*18}); } }
+  let f=0; (function step(){ f++; x.clearRect(0,0,cv.width,cv.height); let alive=false;
+    P.forEach(p=>{ if(f<p.d) {alive=true; return;} if(p.life<=0) return; alive=true;
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life--; x.globalAlpha=Math.max(p.life/90,0);
+      x.fillStyle=p.c; x.fillRect(p.x,p.y,3,3); });
+    x.globalAlpha=1; if(alive&&f<220) requestAnimationFrame(step); else x.clearRect(0,0,cv.width,cv.height); })();
+}
+/* ============ The pull-back — full-game Gold only. Camera is RENDERING ONLY (zero physics). ============ */
+function pullback(){
+  const wrap=$("cine"); wrap.style.display="block";
+  const cv=$("cineCv"); cv.width=innerWidth; cv.height=innerHeight; const x=cv.getContext("2d");
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const T=reduce?1:9000; const t0=performance.now(); let stop=false;
+  $("btnSkip").onclick=()=>{ stop=true; wrap.style.display="none"; toast("Nausika funds the next expedition: the shadow of the Earth. — series continues"); };
+  sndFanfareGold();
+  (function frame(now){
+    if(stop) return;
+    const u=reduce?1:Math.min(1,(now-t0)/T);
+    const w=cv.width,h=cv.height,cx=w/2,cy=h/2;
+    x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,w,h); starfield(x,w,h);
+    // log-zoom from hand scale (0.66 m) to Moon distance (384,400 km = 3.844e8 m)
+    const span=Math.pow(10,Math.log10(0.66)+(Math.log10(3.844e8)-Math.log10(0.66))*u); // metres visible across
+    const pxPerM=w*0.7/span;
+    // the line from hand to Moon
+    x.strokeStyle="#6fd3ff"; x.lineWidth=2; x.beginPath(); x.moveTo(cx-w*0.35,cy); x.lineTo(cx+w*0.35,cy); x.stroke();
+    // bead at left, Moon at right (sizes clamped for visibility; declared cinematic)
+    const rB=Math.max(2,0.006*pxPerM/2), rM=Math.max(2,Math.min(3.475e6*pxPerM/2,h*0.3));
+    x.fillStyle="#ffd166"; x.beginPath(); x.arc(cx-w*0.35,cy,Math.min(rB,40),0,7); x.fill();
+    x.fillStyle="#e5e2d3"; x.beginPath(); x.arc(cx+w*0.35,cy,rM,0,7); x.fill();
+    x.fillStyle="#f2f5fa"; x.font="18px system-ui"; x.textAlign="center";
+    x.fillText("one proportion, stretched from your palm to the sky",cx,cy-60);
+    x.font="22px system-ui"; x.fillStyle="#ffd166";
+    x.fillText("D / d  =  s / L  =  1 / 110",cx,cy+70);
+    // mandatory scale ruler that follows the zoom (Article 14)
+    const rulerPx=w*0.22; const metres=rulerPx/pxPerM;
+    const label=metres<1?fmt(metres*1000,0)+" mm":metres<1000?fmt(metres,1)+" m":fmt(metres/1000,0)+" km";
+    x.strokeStyle="#e8d5a3"; x.lineWidth=2;
+    x.beginPath(); x.moveTo(40,h-50); x.lineTo(40+rulerPx,h-50); x.stroke();
+    x.fillStyle="#e8d5a3"; x.font="14px system-ui"; x.textAlign="left"; x.fillText(label,40,h-60);
+    if(u>=1){
+      x.font="20px system-ui"; x.fillStyle="#fff"; x.textAlign="center";
+      x.fillText('NAUSIKA: "A bead. You measured a moon with a bead."',cx,h-110);
+      x.font="16px system-ui"; x.fillStyle="#aebcd2";
+      x.fillText("She funds the next expedition: the shadow of the Earth. — ANCIENT SKIES continues",cx,h-80);
+    } else requestAnimationFrame(frame);
+  })(t0);
+}
+/* ============ Wiring & init (keyboard parity: every control is a real button/input) ============ */
+function init(){
+  document.documentElement.classList.toggle("presentation",!!store.get("ari_v1_presentation",false));
+  $("chkPres").checked=!!store.get("ari_v1_presentation",false);
+  $("chkEasy").checked=!!S.settings.easy;
+  $("btnStart").addEventListener("click",()=>{ ac(); sndMissionReady(); renderStageList(); screen("scrSelect"); refreshHud(); });
+  $("chkEasy").addEventListener("change",e=>{ S.settings.easy=e.target.checked; saveProgress(); });
+  function pres(on){ document.documentElement.classList.toggle("presentation",on); store.set("ari_v1_presentation",on);
+    $("btnPres").setAttribute("aria-pressed",on); $("chkPres").checked=on; drawCv(); }
+  $("chkPres").addEventListener("change",e=>pres(e.target.checked));
+  $("btnPres").addEventListener("click",()=>pres(!document.documentElement.classList.contains("presentation")));
+  $("btnBack").addEventListener("click",()=>{ renderStageList(); screen("scrSelect"); });
+  $("btnBrief").addEventListener("click",()=>{ setStep(DEF[S.stage].steps.includes("gate")?"gate":"compute"); });
+  $("ideaBox").addEventListener("input",e=>{ const n=e.target.value.trim().length; $("ideaCount").textContent=n; $("btnIdea").disabled=n<20; });
+  $("btnIdea").addEventListener("click",openGateMcq);
+  $("sliderL").addEventListener("input",updateSlider);
+  $("btnRecord").addEventListener("click",recordReading);
+  $("btnRemeasure").addEventListener("click",remeasure);
+  $("answerIn").addEventListener("input",updateCommitReady);
+  document.querySelectorAll('input[name="conf"]').forEach(r=>r.addEventListener("change",updateCommitReady));
+  $("btnCommit").addEventListener("click",commit);
+  $("btnHint").addEventListener("click",useHint);
+  $("btnRunNext").addEventListener("click",()=>{ debrief1(); });
+  $("selfText").addEventListener("input",e=>{ const n=e.target.value.trim().length; $("selfCount").textContent=n; $("btnSelf").disabled=n<30; });
+  $("btnSelf").addEventListener("click",openSelfMcq);
+  $("btnRetry").addEventListener("click",()=>startStage(S.stage));
+  $("btnDone").addEventListener("click",()=>{ renderStageList(); screen("scrSelect"); });
+  $("tabSight").addEventListener("click",()=>setTab("sight"));
+  $("tabGeom").addEventListener("click",()=>setTab("geom"));
+  [$("tabSight"),$("tabGeom")].forEach(tb=>tb.addEventListener("keydown",e=>{
+    if(e.key==="ArrowLeft"||e.key==="ArrowRight"){ e.preventDefault(); setTab(TAB==="sight"?"geom":"sight");
+      (TAB==="sight"?$("tabSight"):$("tabGeom")).focus(); } }));
+  drawCv();
+}
+window.addEventListener("load",init);
+</script>
+</body>
+</html>
